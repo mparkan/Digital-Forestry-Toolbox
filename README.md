@@ -14,8 +14,14 @@ A collection of digital forestry tools for Matlab.
 | *SBETread.m*    | Read Applanix SBET trajectory file (.sbet)                        | 
 | *TRJread.m*     | Read Terrascan TRJ trajectory file (.trj)                         | 
 
-#### Grids
+#### Basic
 
+| Function         | Description                                                       | 
+| ---------------- | ----------------------------------------------------------------- | 
+| *LASclip.m*      | Clip 3D point cloud (LAS file) with a polygon               | 
+| *LASextent.m*    | Compute spatial extent of 3D point clouds (LAS files) and write result to ESRI shapefile (.shp)| 
+
+#### Grids
 
 | Function        | Description                                                       | 
 | --------------- | ----------------------------------------------------------------- | 
