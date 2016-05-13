@@ -40,9 +40,9 @@ A collection of digital forestry tools for Matlab.
 
 #### Airborne Laser Scanning
 
-| File                      | Location                                                          | Sensor       |
-| ------------------------- | ----------------------------------------------------------------- | ------------ |
-| *zh_6995_2710.las*        |  Zürich, Switzerland (47.58384 N, 8.76594 E), [see map][1]        | Trimble AX60 |
+| File                      | Location                                                          | Sensor       | Date              |
+| ------------------------- | ----------------------------------------------------------------- | ------------ | ----------------- |
+| *zh_6995_2710.las*        |  Zürich, Switzerland (47.58384 N, 8.76594 E), [see map][1]        | Trimble AX60 | March 10-13, 2014 |
 
 
 [1]: https://map.geo.admin.ch/?topic=ech&lang=fr&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bafu.wrz-wildruhezonen_portal,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&X=271212&Y=699817&zoom=10&crosshair=marker                                           
