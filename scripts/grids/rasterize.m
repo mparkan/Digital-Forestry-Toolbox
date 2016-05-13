@@ -1,8 +1,7 @@
 function varargout = rasterize(xyz, xv, yv, varargin)
 %RASTERIZE - creates a 2D or 3D raster from scattered points with coordinates X,Y,Z by binning
 %them in the cells defined by XV, YV and optionaly ZV, applying the FUN
-%function to the VAL values contained in each grid cell. Cells which do not
-%contain any points are filled with the FILL value.
+%function to the VAL values contained in each grid cell.
 %
 % Syntax:  [SUB, ...] = rasterize(xyz, xv, yv, ...)
 %
@@ -89,7 +88,7 @@ addOptional(arg, 'fun', [], @(x) isa(x, 'function_handle'));
 
 parse(arg, xyz, xv, yv, varargin{:});
 
-flag_raster = any(~isempty(arg.Results.val) || ~isempty(arg.Results.fun) || ~isempty(arg.Results.fill));
+flag_raster = any(~isempty(arg.Results.val) || ~isempty(arg.Results.fun)));
 
 
 %% reformat input
