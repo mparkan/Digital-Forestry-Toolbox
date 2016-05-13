@@ -30,7 +30,7 @@ function trajectory = SBETread(filepath, verbose)
 %
 % Inputs:
 %    filepath - The path to the input SBET file
-%    verbose - If set to true, will display status information in the console
+%    verbose (optional, default: true) - boolean value, verbosiy switch
 %
 % Outputs:
 %    trajectory - A structure containing the trajectory records
@@ -38,18 +38,18 @@ function trajectory = SBETread(filepath, verbose)
 % Example:
 %    trajectory = SBETread('E:\trajectories\sbet_2014041001.out', true);
 %
-% Other m-files required: none
-% Subfunctions: none
-% MAT-files required: none
-% Compatibility: tested on Matlab R2013b, GNU Octave 4.0.0 (configured for "i686-w64-mingw32")
 %
-% See also:
+% See also: TRJread.m
 %
-% Author: Matthew Parkan, EPFL - GIS Laboratory
+% This code is part of the Matlab Digital Forestry Toolbox
+%
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: September 4, 2015
-% Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
+% Last revision: May 13, 2016
+% Acknowledgments: This work was supported by the Swiss Forestry and Wood
+% Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
+
 
 %% check argument validity
 
