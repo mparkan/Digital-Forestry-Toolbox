@@ -88,7 +88,7 @@ addOptional(arg, 'fun', [], @(x) isa(x, 'function_handle'));
 
 parse(arg, xyz, xv, yv, varargin{:});
 
-flag_raster = any(~isempty(arg.Results.val) || ~isempty(arg.Results.fun)));
+flag_raster = any(~isempty(arg.Results.val) || ~isempty(arg.Results.fun));
 
 
 %% reformat input
