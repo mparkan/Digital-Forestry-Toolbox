@@ -28,6 +28,13 @@ A collection of digital forestry tools for Matlab.
 | --------------- | ----------------------------------------------------------------- | 
 | *rasterize.m*   | Convert a 3D point cloud to a 2D/3D raster                        | 
 
+#### Laser metrics
+
+| Function           | Description                                                       | 
+| ------------------ | ----------------------------------------------------------------- | 
+| *laserEchoRatio.m* | Computes the echo ratio of a 3D point cloud                       | 
+
+
 
 ## Data
 
