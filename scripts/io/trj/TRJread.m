@@ -26,13 +26,15 @@ function trajectory = TRJread(filepath, headerOnly, verbose)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2013b, GNU Octave 4.0.0 (configured for "i686-w64-mingw32")
+% Compatibility: tested on Matlab R2016a
 %
-% See also:
+% See also: SBETread.m
+%
+% This code is part of the Matlab Digital Forestry Toolbox
 %
 % Author: Matthew Parkan, EPFL - GIS Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: August 13, 2015
+% Last revision: May 13, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
