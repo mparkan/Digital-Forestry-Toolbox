@@ -18,7 +18,8 @@ A collection of digital forestry tools for Matlab.
 
 | Function         | Description                                                       | 
 | ---------------- | ----------------------------------------------------------------- | 
-| *LASclip.m*      | Clip 3D point cloud (LAS file) with a polygon               | 
+| *LASclip.m*      | Clip 3D point cloud (LAS file) with a polygon               |
+| *LASmerge.m*     | Merge 3D point clouds (LAS files)                           | 
 | *LASextent.m*    | Extract spatial extent of 3D point clouds (LAS files) and write result to ESRI shapefile (.shp)| 
 | *crossSection.m* | Extract a 2D cross-section from a 3D point cloud| 
 
