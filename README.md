@@ -34,7 +34,7 @@ A collection of digital forestry tools for Matlab.
 | Function           | Description                                                       | 
 | ------------------ | ----------------------------------------------------------------- | 
 | *laserEchoRatio.m* | Computes the echo ratio of a 3D point cloud                       | 
-
+| *laserPulses*      | determines the pulse number associated with the individual returns (sorted by acquisition GPS time) |
 
 
 ## Data
