@@ -42,7 +42,7 @@ function s = LASread(filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: April 13, 2016
+% Last revision: May 19, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -1209,7 +1209,7 @@ r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [128, 128, 128, 128, 128, 128, 144, 144, 144, 144, 144];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'int16', 'int16', 'int16', 'int16', 'int16'};
-r.record(k).storage_type = {'uchar', 'uchar', 'uchar', 'uchar', 'uchar', 'uchar', 'single', 'single', 'single', 'single', 'single'}; % short, single
+r.record(k).storage_type = {'uchar', 'uchar', 'uchar', 'uchar', 'uchar', 'uchar', 'int16', 'int16', 'int16', 'int16', 'int16'};
 r.record(k).byte_length = [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
@@ -1734,7 +1734,6 @@ for j = 1:length(r.header)
             
         case {'uint8', 'uint16', 'uint32', 'uint64', 'double' }
             
-            %r.header(j).value = cast(fread(fid, r.header(j).n_values, r.header(j).type, 0, MACHINE_FORMAT), r.header(j).type);
             r.header(j).value = fread(fid, r.header(j).n_values, r.header(j).type, 0, MACHINE_FORMAT);
             
         otherwise
@@ -1881,29 +1880,11 @@ if flag_vlr
                     r.variable_length_records(j).value(k).no_data = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).min = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).max = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
-                    
-                    %                     switch r.variable_length_records(j).value(k).data_type
-                    %
-                    %                         case num2cell(0:10) % cast to 8 bytes storage
-                    %
-                    %                             r.variable_length_records(j).value(k).no_data = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
-                    %                             r.variable_length_records(j).value(k).min = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
-                    %                             r.variable_length_records(j).value(k).max = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
-                    %
-                    %                         case num2cell(0:10) % cast to 16 bytes storage
-                    %
-                    %
-                    %                         case num2cell(0:10) % cast to 24 bytes storage
-                    %
-                    %
-                    %                     end
-                    
                     r.variable_length_records(j).value(k).scale = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).offset = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
                     
                     % append extra bytes to the point data record
-                    
                     ind_data_type = r.variable_length_records(j).value(k).data_type + 1;
                     
                     ind_record = ind_record + 1;
@@ -1991,7 +1972,6 @@ if flag_vlr
                 
                 r.variable_length_records(j).value = sprintf('%c', fread(fid, r.variable_length_records(j).record_length_after_header, 'char', 0, MACHINE_FORMAT));
                 
-                
                 % You may add custom records here
                 
             otherwise % Other
@@ -2023,9 +2003,9 @@ if flag_vlr
 else
     
     % check number of variable length records
-    %warning('The mandatory GeoKeyDirectoryTag was not specified in the LAS variable length records');
     if arg.Results.verbose
         
+        %warning('The mandatory GeoKeyDirectoryTag was not specified in the LAS variable length records');
         fprintf('WARNING: The mandatory GeoKeyDirectoryTag was not specified in the LAS variable length records\n');
         
     end
@@ -2098,24 +2078,17 @@ if ~arg.Results.headerOnly && r.header(phb_skeys.n_point_records).value > 0
                 end
                 
             end
-            
+     
             % adjust format
             switch r.record(j).storage_type{:}
                 
                 case {'single','double'}
                     
-                    %r.record(j).short_name
-                    %r.record(j).storage_type{:}
-                    
-                    %r.record(j).value = cast(byte_a, r.record(j).storage_type{:}); % cast uint32/uint64 types to single/double precision
                     r.record(j).value = typecast(byte_a, r.record(j).storage_type{:});
-                    %r.record(j).value = typecast(cast(byte_a, r.record(j).storage_type{:}), r.record(j).storage_type{:});
-                    
                     
                 case {'uchar'}
                     
                     r.record(j).value = cast(byte_a, 'int8');
-                    
                     idx_sign = (byte_a >= 128);
                     r.record(j).value(idx_sign) = int8(int16(byte_a(idx_sign)) - 256);
                     
@@ -2163,18 +2136,9 @@ if ~arg.Results.headerOnly && r.header(phb_skeys.n_point_records).value > 0
             
             % Scan Angle is a rotational position in 0.006° increments with values from +30,000 to -30,000
             % covering +180° to -180° (0° is at nadir/down, -ve is left/clockwise of nadir looking forward)
-            r.record(pdr_skeys.scan_angle).value = r.record(pdr_skeys.scan_angle).value / 15000 * 90;
+            r.record(pdr_skeys.scan_angle).value = double(r.record(pdr_skeys.scan_angle).value) / 15000 * 90;
             
     end
-    
-    % check return numbers
-    %     check_return_numbers = sum(~ismember(r.record(pdr_skeys.flag_bit_field_1).subfields(1).value,1:5));
-    %     if check_return_numbers ~= 0 && arg.Results.verbose
-    %
-    %         % warning(sprintf('There are %u points with return number different than (1-5)', check_return_numbers));
-    %         fprintf('There are %u points with return number different than (1-5)\n', check_return_numbers);
-    %
-    %     end
     
 end
 

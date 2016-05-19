@@ -34,7 +34,7 @@ function varargout = LASwrite(s, filepath, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2015b, GNU Octave 4.0.0 (configured for "i686-w64-mingw32")
+% Compatibility: tested on Matlab R2016a, GNU Octave 4.0.0 (configured for "i686-w64-mingw32")
 %
 % See also: LASREAD
 %
@@ -42,7 +42,7 @@ function varargout = LASwrite(s, filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: April 13, 2016
+% Last revision: May 19, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -818,7 +818,7 @@ r.header(k).flag_bit_field = [false, false];
 r.header(k).print_format = {'%u', '%u'};
 r.header(k).default_value = [];
 r.header(k).value = [];
-r.header(k).validation = @(x) isa(x, 'uint64') && (numel(x) == 1); % x <= intmax('uint64')
+r.header(k).validation = @(x) isa(x, 'uint64') && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
 r.header(k).warning_message = [];
@@ -1196,7 +1196,7 @@ r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [128, 128, 128, 128, 128, 128, 144, 144, 144, 144, 144];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'int16', 'int16', 'int16', 'int16', 'int16'};
-r.record(k).storage_type = {'uchar', 'uchar', 'uchar', 'uchar', 'uchar', 'uchar', 'single', 'single', 'single', 'single', 'single'}; % short, single
+r.record(k).storage_type = {'uchar', 'uchar', 'uchar', 'uchar', 'uchar', 'uchar', 'single', 'single', 'single', 'single', 'single'};
 r.record(k).byte_length = [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
@@ -1263,7 +1263,7 @@ r.record(k).short_name = 'gps_time';
 r.record(k).format_compatibility = [1, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [160, 160, 160, 160, 176, 176, 176, 176, 176];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
-r.record(k).type = {'uint64', 'uint64', 'uint64', 'uint64', 'uint64', 'uint64', 'uint64', 'uint64', 'uint64'};
+r.record(k).type = {'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double'};
 r.record(k).storage_type = {'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double'};
 r.record(k).byte_length = [8, 8, 8, 8, 8, 8, 8, 8, 8];
 r.record(k).flag_bit_field = false;
@@ -1416,7 +1416,7 @@ r.record(k).short_name = 'x_t';
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [360, 408, 376, 440];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
-r.record(k).type = {'uint32', 'uint32', 'uint32', 'uint32'};
+r.record(k).type = {'single', 'single', 'single', 'single'};
 r.record(k).storage_type = {'single', 'single', 'single', 'single'};
 r.record(k).byte_length = [4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
@@ -1433,7 +1433,7 @@ r.record(k).short_name = 'y_t';
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [392, 440, 408, 472];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
-r.record(k).type = {'uint32', 'uint32', 'uint32', 'uint32'};
+r.record(k).type = {'single', 'single', 'single', 'single'};
 r.record(k).storage_type = {'single', 'single', 'single', 'single'};
 r.record(k).byte_length = [4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
@@ -1450,7 +1450,7 @@ r.record(k).short_name = 'z_t';
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [424, 472, 440, 504];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
-r.record(k).type = {'uint32', 'uint32', 'uint32', 'uint32'};
+r.record(k).type = {'single', 'single', 'single', 'single'};
 r.record(k).storage_type = {'single', 'single', 'single', 'single'};
 r.record(k).byte_length = [4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
@@ -1678,9 +1678,7 @@ for j = 1:length(r.header)
         if isempty(r.header(j).value)
             
             try
-                
-                %%%r.header(j).short_name
-                %%%r.header(j).validation(s.header.(r.header(j).short_name))
+
                 r.header(j).value = s.header.(r.header(j).short_name);
                 
             catch
@@ -1718,8 +1716,7 @@ end
 idx_record_format = false(length(r.record),1);
 
 for j = 1:length(r.record)
-    
-    %[include_record_flag, ind_record] = ismember(s.header.point_data_format_id, r.record(j).format_compatibility);
+
     [include_record_flag, ind_record] = ismember(arg.Results.recordFormat, r.record(j).format_compatibility);
     
     if include_record_flag
@@ -1757,13 +1754,8 @@ if ~all(flag_standard_record)
         
     end
     
-    %n_extra_records = sum(~flag_standard_record);
-    %ind_extra_records = find(~flag_standard_record);
-    
     extra_record_abbreviations = record_abbreviations(~flag_standard_record);
     ind_extra_records = find([s.variable_length_records.record_id] == 4);
-    
-    %n_extra_records = length(ind_extra_records)
     
     for j = 1:length(ind_extra_records)
   
@@ -1798,109 +1790,11 @@ if ~all(flag_standard_record)
             r.record(ind_record).offset = s.variable_length_records(ind_extra_records(j)).value(k).offset(1);
             
             
-            r.record(ind_record).value = []; %s.record.(r.record(ind_record).short_name); %[];
+            r.record(ind_record).value = [];
             
         end
         
     end
-    
-    %
-    %
-    %     for k = 1:n_extra_records
-    %
-    %         % reserved, default to 0
-    %         r.variable_length_records(j).value(k).reserved = uint16(0);
-    %
-    %         % data type
-    %         try
-    %
-    %             r.variable_length_records(j).value(k).data_type = s.variable_length_records(j).value(k).data_type;
-    %
-    %         catch
-    %
-    %             error('The data type was not specified or is invalid')
-    %
-    %         end
-    %
-    %         % name
-    %         try
-    %
-    %             r.variable_length_records(j).value(k).name = s.variable_length_records(j).value(k).name;
-    %
-    %         catch
-    %
-    %             error('The extra record name was not specified or is invalid')
-    %
-    %         end
-    %
-    %         r.variable_length_records(j).value(k).unused = uint32(0); % default to 0
-    %
-    %         % no data value
-    %         try
-    %
-    %             r.variable_length_records(j).value(k).no_data = s.variable_length_records(j).value(k).no_data;
-    %             r.variable_length_records(j).value(k).options.no_data_bit = true;
-    %
-    %         catch
-    %
-    %             r.variable_length_records(j).value(k).no_data = uint8(0); % default to 0
-    %             r.variable_length_records(j).value(k).options.no_data_bit = false;
-    %
-    %         end
-    %
-    %         % min value
-    %         try
-    %
-    %             r.variable_length_records(j).value(k).min = s.variable_length_records(j).value(k).min;
-    %             r.variable_length_records(j).value(k).options.min_bit = true;
-    %
-    %         catch
-    %
-    %             r.variable_length_records(j).value(k).min = 0; % default to 0
-    %             r.variable_length_records(j).value(k).options.min_bit = false;
-    %
-    %         end
-    %
-    %         % max value
-    %         try
-    %
-    %             r.variable_length_records(j).value(k).max = s.variable_length_records(j).value(k).max;
-    %             r.variable_length_records(j).value(k).options.max_bit = true;
-    %
-    %         catch
-    %
-    %             r.variable_length_records(j).value(k).max = 0; % default to 0
-    %             r.variable_length_records(j).value(k).options.max_bit = false;
-    %
-    %         end
-    %
-    %         % scale factor
-    %         try
-    %
-    %             r.variable_length_records(j).value(k).scale = s.variable_length_records(j).value(k).scale;
-    %             r.variable_length_records(j).value(k).options.scale_bit = true;
-    %
-    %         catch
-    %
-    %             r.variable_length_records(j).value(k).scale = 0; % default to 0
-    %             r.variable_length_records(j).value(k).options.scale_bit = false;
-    %
-    %         end
-    %
-    %         % offset
-    %         try
-    %
-    %             r.variable_length_records(j).value(k).offset = s.variable_length_records(j).value(k).offset;
-    %             r.variable_length_records(j).value(k).options.offset_bit = true;
-    %
-    %         catch
-    %
-    %             r.variable_length_records(j).value(k).offset = 0; % default to 0
-    %             r.variable_length_records(j).value(k).options.offset_bit = false;
-    %
-    %         end
-    %
-    %     end
     
 end
 
@@ -1923,13 +1817,9 @@ for j = 1:length(r.record)
     try
         
         r.record(j).value = s.record.(r.record(j).short_name);
-        %%%r.record(j).short_name
-        %%%r.record(j).value(1:3)
-        
-        
+
     catch
         
-        %r.record(j).short_name
         % fill with zeros, if the record values are not specified
         r.record(j).value = cast(zeros(size(s.record.x)), r.record(j).storage_type{:});
         fprintf('WARNING: the point data record "%s" (%s) was not specified, setting to 0\n', r.record(j).short_name, r.record(j).full_name);
@@ -1956,7 +1846,7 @@ n_records_per_attribute = zeros(length(pdr_keys),1);
 
 for k = 1:length(pdr_keys)
     
-    n_records_per_attribute(k,1) = length(r.record(k).value); %length(r.record(k).value);
+    n_records_per_attribute(k,1) = length(r.record(k).value);
     
 end
 
@@ -1972,12 +1862,6 @@ end
 for j = 1:length(r.header)
     
     switch r.header(j).short_name
-        
-        %case {'global_encoding_gps_time_type', 'global_encoding_waveform_data_packets_internal', ...
-        %        'global_encoding_waveform_data_packets_external', 'global_encoding_synthetic_return_numbers', ...
-        %        'global_encoding_wkt', 'global_encoding_reserved'}
-        
-        %case 'global_encoding_gps_time_type'
         
         case 'n_variable_length_records'
             
@@ -2274,23 +2158,17 @@ if ~isempty(arg.Results.filepath)
                 case 30001
                     
                     fwrite(fid, s.variable_length_records(j).value, 'uint32', 0, MACHINE_FORMAT);
-                    %disp('30001 ok')
-                    %s.variable_length_records(j).value(1)
                     
                 case 30002
                     
                     fwrite(fid, s.variable_length_records(j).value, 'uint32', 0, MACHINE_FORMAT);
-                    %disp('30002 ok')
-                    %s.variable_length_records(j).value(2)
                     
                     % You may add custom records here
                     
                 otherwise % Other
                     
                     fwrite(fid, typecast(s.variable_length_records(j).value, 'uint8'), 'uint8', 0, MACHINE_FORMAT);
-                    %string = horzcat(s.variable_length_records(j).value, zeros(1, s.variable_length_records(j).record_length_after_header)); % zero padding
-                    %fwrite(fid, string(1:s.variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                    
+
             end
             
             byte_offset = byte_offset + 54 + s.variable_length_records(j).record_length_after_header;
@@ -2309,8 +2187,6 @@ if ~isempty(arg.Results.filepath)
         
     end
     
-    %%%byte_offset
-    
     % create blob
     n_bytes = r.header(phb_skeys.n_point_records).value * r.header(phb_skeys.point_data_record_length).value;
     blob = zeros(n_bytes, 1, 'uint8');
@@ -2319,12 +2195,7 @@ if ~isempty(arg.Results.filepath)
     bit_count = 0;
     
     for j = 1:size(r.record,2)
-        
-        %%%r.record(j).short_name
-        %%%r.record(j).byte_position
-        %%%r.record(j).type
-        %%%r.record(j).value(1:3)
-        
+
         if r.record(j).flag_bit_field % pack bit fields into byte
             
             if OCTAVE_FLAG
@@ -2342,20 +2213,15 @@ if ~isempty(arg.Results.filepath)
             if mod(bit_count, 8) == 0
                 
                 % check if array is larger than max memory size
-                %%%ind_byte = reshape(cell2mat(arrayfun(@(x) x:r.header(phb_skeys.point_data_record_length).value:n_bytes, offset + 1, 'UniformOutput', false)), 1, []);
                 ind_byte = reshape(cell2mat(arrayfun(@(x) x:r.header(phb_skeys.point_data_record_length).value:n_bytes, floor(r.record(j).byte_position) + 1, 'UniformOutput', false)), 1, []);
                 
                 blob(ind_byte) = typecast(cast(byte, 'uint8'), 'uint8'); % add values to blob part when byte is full
-                %%%offset = offset + 1; % add 1 to offset when byte is full
                 bit_count = 0; % reinitialize bit count
                 byte = zeros(r.header(phb_skeys.n_point_records).value, 1, 'uint8'); % reinitialize byte to zero
                 
             end
             
         else
-            
-            % check if array is larger than max memory size
-            % computer('arch') == 'win64';
             
             seq = (r.record(j).byte_position + 1:r.header(phb_skeys.point_data_record_length).value:n_bytes)';
             ind_byte = (seq * ones(1, r.record(j).byte_length) + repmat(0:r.record(j).byte_length-1, r.header(phb_skeys.n_point_records).value, 1))';
@@ -2371,11 +2237,7 @@ if ~isempty(arg.Results.filepath)
     
     % write blob to file
     fseek(fid, r.header(phb_skeys.offset_to_data).value, 'bof');
-    
-    %%%r.header(phb_skeys.offset_to_data).value
-    %%%a1 = ftell(fid)
     fwrite(fid, blob, 'uint8');
-    %%%a2 = ftell(fid)
     
     
     %% write extended variable length records to file
@@ -2509,9 +2371,7 @@ if ~isempty(arg.Results.filepath)
                     otherwise % Other
                         
                         fwrite(fid, typecast(s.extended_variable_length_records(j).value, 'uint8'), 'uint8', 0, MACHINE_FORMAT);
-                        %string = horzcat(s.extended_variable_length_records(j).value, zeros(1, s.extended_variable_length_records(j).record_length_after_header)); % zero padding
-                        %fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                        
+
                 end
                 
                 byte_offset = byte_offset + 60 + s.extended_variable_length_records(j).record_length_after_header;
