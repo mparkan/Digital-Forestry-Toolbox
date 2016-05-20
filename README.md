@@ -36,6 +36,7 @@ A collection of digital forestry tools for Matlab.
 | *laserEchoRatio.m* | Computes the echo ratio of a 3D point cloud                       | 
 | *laserPulses.m*     | determines the pulse number associated with the individual returns (sorted by acquisition GPS time) |
 | *laserTimeFormat.m* | Convert GPS week time to GPS satellite time, GPS adjusted time or UTC time |
+| *laserIntensityCorrection.m* | Corrects return intensity for the sensor to target range |
 
 
 ## Data
