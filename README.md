@@ -48,6 +48,12 @@ A collection of digital forestry tools for Matlab.
 | [*6995_2710.las*][1]        |  Zürich, Switzerland (47.58384 N, 8.76594 E), [see map][2]        | Trimble AX60 | March 10-13, 2014 |
 | [*6850_2475.las*][3]        |  Zürich, Switzerland (47.37460 N, 8.56824 E), [see map][4]        | Trimble AX60 | April 2, 2014 |
 
+#### National Forest Inventories
+
+| File                      | Description                                                       |
+| ------------------------- | ----------------------------------------------------------------- |
+| [*swiss_nfi_flora.xlsx*]  | Swiss Nationa Forest Inventory (NFI), tree species Latin/vernacular (English, French, German, Italian) names and codes |
+
 
 [1]: http://maps.zh.ch/download/hoehen/2014/lidar/6995_2710.laz
 [2]: https://map.geo.admin.ch/?topic=ech&lang=fr&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bafu.wrz-wildruhezonen_portal,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&X=271212&Y=699817&zoom=10&crosshair=marker                                           
