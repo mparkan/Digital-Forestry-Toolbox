@@ -52,7 +52,7 @@ A collection of digital forestry tools for Matlab.
 
 | File                      | Description                                                       |
 | ------------------------- | ----------------------------------------------------------------- |
-| *swiss_nfi_flora.xlsx*  | Swiss Nationa Forest Inventory (NFI), tree species Latin/vernacular (English, French, German, Italian) names and codes |
+| *swiss_nfi_flora.xlsx*  | Swiss National Forest Inventory (NFI), tree species Latin/vernacular (English, French, German, Italian) names and codes |
 
 
 [1]: http://maps.zh.ch/download/hoehen/2014/lidar/6995_2710.laz
