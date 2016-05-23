@@ -56,6 +56,10 @@ function [labels, tree] = treeRegionGrowing(xyz, classification, varargin)
 %
 % Example:
 %
+% pc = LASread('..\data\measurements\vector\als\zh_6995_2710_coniferous.las');
+% xyz = [pc.record.x, pc.record.y, pc.record.z];
+% classification = pc.record.classification;
+%
 % [labels, tree] = treeRegionGrowing([x y z], ...
 % classification, ...
 % 'classTerrain', [2], ...
