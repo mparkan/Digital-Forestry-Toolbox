@@ -39,6 +39,12 @@ A collection of digital forestry tools for Matlab.
 | *laserIntensityCorrection.m* | Corrects return intensity for the sensor to target range |
 
 
+#### Individual tree crown segmentation
+
+| Function           | Description                                                       | 
+| ------------------ | ----------------------------------------------------------------- | 
+| *treeRegionGrowing.m* |                                                                | 
+
 ## Data
 
 #### Airborne Laser Scanning
