@@ -1,5 +1,5 @@
 # Digital-Forestry-Toolbox
-A collection of digital forestry tools for Matlab.
+The Digital Forestry Toolbox is collection of tools and tutorials for Matlab.
 
 
 # Table of contents
@@ -13,6 +13,8 @@ A collection of digital forestry tools for Matlab.
 + [Data](#data)
   - [Airborne Laser Scanning](#data-1)
   - [National Forest Inventories](#data-2)
+
+## License
 
 ## Scripts <a id="scripts"></a>
 
