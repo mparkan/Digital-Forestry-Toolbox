@@ -55,7 +55,8 @@ A collection of digital forestry tools for Matlab.
 
 | Function           | Description                                                       | 
 | ------------------ | ----------------------------------------------------------------- | 
-| *treeRegionGrowing.m* |                                                                | 
+| *treeRegionGrowing.m* |  Extracts individual tree crowns from a 3D point cloud
+ using a modified version of the top down region growing algorithm described in Li et al. (2012) | 
 
 ## Data <a id="data"></a>
 
