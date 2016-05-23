@@ -43,7 +43,7 @@ A collection of digital forestry tools for Matlab.
 
 #### Airborne Laser Scanning
 
-| File (dowload link) | Format | Location | Sensor | Date |
+| File (download link) | Format | Location | Sensor | Date |
 | ------------------------- | ---------- | ----------------------------------------------------------------- | ------------ | ----------------- |
 | [*6995_2710.las*][1] | LAS 1.2 | Zürich, Switzerland (47.58384 N, 8.76594 E), [see map][2] | Trimble AX60 | March 10-13, 2014 |
 | [*6850_2475.las*][3] | LAS 1.2 | Zürich, Switzerland (47.37460 N, 8.56824 E), [see map][4] | Trimble AX60 | April 2, 2014 |
