@@ -9,7 +9,7 @@ A collection of digital forestry tools for Matlab.
   - [Basic](#scripts-2)
   - [Grids](#scripts-3)
   - [Laser metrics](#scripts-5)
-  - [Individual tree crown segmentation](#scripts-6)
+  - [Tree metrics](#scripts-6)
 + [Data](#data)
   - [Airborne Laser Scanning](#data-1)
   - [National Forest Inventories](#data-2)
@@ -51,7 +51,7 @@ A collection of digital forestry tools for Matlab.
 | *laserIntensityCorrection.m* | Corrects return intensity for the sensor to target range |
 
 
-#### Individual tree crown segmentation <a id="scripts-5"></a>
+#### Tree metrics <a id="scripts-5"></a>
 
 | Function           | Description                                                       | 
 | ------------------ | ----------------------------------------------------------------- | 
