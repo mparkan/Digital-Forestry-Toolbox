@@ -1,5 +1,5 @@
 # Digital-Forestry-Toolbox
-The Digital Forestry Toolbox is collection of tools and tutorials for Matlab.
+The Digital Forestry Toolbox is collection of tools and tutorials for Matlab designed to help process datasets (e.g. remote sensing, field surveys) related to forests.
 
 
 # Table of contents
