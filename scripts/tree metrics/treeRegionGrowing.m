@@ -79,7 +79,7 @@ function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
 % MAT-files required: none
 % Compatibility: tested on Matlab R2016a
 %
-% See also: TREEGEODESICVOTE
+% See also: treeGeodesicVote.m
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
@@ -162,7 +162,7 @@ if arg.Results.coordinateResolution > 0
     yv = y_min-scale:scale:y_max+scale;
     zv = z_min-scale:scale:z_max+scale;
     
-    [sub_crl] = rasterize(xyz_veg, xv, yv, zv);
+    [~, sub_crl] = rasterize(xyz_veg, xv, yv, zv);
     nrows = length(yv);
     ncols = length(xv);
     
