@@ -1,15 +1,15 @@
-function [labels, tree] = treeRegionGrowing(xyz, classification, varargin)
+function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
 %TREEREGIONGROWING - Attempts to extract individual tree crowns from a 3D point cloud
 % using a modified version of the top down region growing method described in Li et al. (2012) [1]
-% [LABELS, TREE] = TREEREGIONGROWING(XYZ, CLASSIFICATION, ...) segments individual tree
+% [POINT, TREE] = TREEREGIONGROWING(XYZ, CLASSIFICATION, ...) segments individual tree
 % crowns from the 3D point cloud XYZ with classification labels CLASSIFICATION
-% and returns the label vector LABELS and a table TREE containing tree data and metrics.
+% and returns tables POINT and TREE containing tree data and metrics at point and tree scale respectively.
 %
 % [1] Li, Wenkai, Qinghua Guo, Marek K. Jakubowski, and Maggi Kelly,
 % "A New Method for Segmenting Individual Trees from the Lidar Point Cloud",
 % Photogrammetric Engineering and Remote Sensing 78, no. 1 (2012): 75–84.
 %
-% Syntax:  [labels, trees] = treeRegionGrowing(xyz, classification, ...)
+% Syntax:  [point, trees] = treeRegionGrowing(xyz, classification, ...)
 %
 % Inputs:
 %    xyz - Nx3 numeric matrix, 3D point cloud x,y,z coordinates
@@ -50,9 +50,9 @@ function [labels, tree] = treeRegionGrowing(xyz, classification, varargin)
 %    fig (optional, default: true) - boolean value, switch to plot figures
 %
 % Outputs:
-%    labels - Nx1 numeric vector, individual tree crown label for each point
+%    point - Nx2 table, metrics and color index for each of the N input 3D points
 %
-%    tree - Table, data and metrics for each tree crown
+%    tree - Mx3 table, data, metrics and color index for each of the M tree crowns
 %
 % Example:
 %
@@ -60,7 +60,7 @@ function [labels, tree] = treeRegionGrowing(xyz, classification, varargin)
 % xyz = [pc.record.x, pc.record.y, pc.record.z];
 % classification = pc.record.classification;
 %
-% [labels, tree] = treeRegionGrowing([x y z], ...
+% [point, tree] = treeRegionGrowing([x y z], ...
 % classification, ...
 % 'classTerrain', [2], ...
 % 'classHighVegetation', [4,5,12], ...
@@ -85,7 +85,7 @@ function [labels, tree] = treeRegionGrowing(xyz, classification, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 23, 2016
+% Last revision: May 25, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -389,7 +389,7 @@ else
 end
 
 
-%% build tree objects
+%% compute tree metrics
 
 if arg.Results.verbose
     
@@ -402,35 +402,27 @@ n_trees = max(labels);
 
 data = table();
 metrics = table();
-
 warning off
 
 for j = 1:n_trees
     
-    idxl_tree = (labels == j);
+    %idxl_tree = find(labels == j);
     
     % point data
-    data.nodes(j,1) = {xyz(idxl_tree, :)};
+    data.idxn_nodes(j,1) = {find(labels == j)};
+    data.nodes(j,1) = {xyz(data.idxn_nodes{j,1}, :)};
     [z_max, idxn_top] = max(data.nodes{j}(:,3));
     z_min = interpolant(data.nodes{j}(idxn_top, 1), data.nodes{j}(idxn_top, 2));
     data.root(j,1) = {[data.nodes{j}(idxn_top, 1:2), z_min]};
         
     % point metrics
-    metrics.centroid(j,1) = {mean(data.nodes{j}(:,1:3),1)};
-    metrics.height_vertical(j,1) = z_max - z_min;
+    metrics.label(j,1) = j; % label
+    metrics.n_nodes(j,1) = length(data.idxn_nodes{j,1}); % number of nodes
+    metrics.centroid(j,1) = {mean(data.nodes{j}(:,1:3),1)}; % centroid
+    metrics.height_vertical(j,1) = z_max - z_min; % vertical height
+    metrics.height_oblique(j,1) = norm(data.root{j,1} - data.nodes{j,1}(idxn_top,:)); % oblique height
 
 end
-
-
-%% metrics = [tree.metrics];
-
-% assign distinctive colors to adjacent trees
-[color_number, ~] = pcsel(reshape(cell2mat(metrics.centroid), 3, [])', N_COLORS); % generate distinctive colors in each neighbourhood
-color_number = color_number';
-colors = hsv(N_COLORS);
-
-% merge data, metrics and color tables into tree table
-tree = table(data, metrics, colors(color_number,:), 'VariableNames',{'data' 'metrics', 'color'});
 
 if arg.Results.verbose
     
@@ -440,16 +432,61 @@ if arg.Results.verbose
 end
 
 
+%% assign a color to each tree
+
+if arg.Results.verbose
+    
+    tic
+    fprintf('assigning colors...');
+    
+end
+
+% assign distinctive colors to adjacent trees
+[idxn_color, ~] = pcsel(reshape(cell2mat(metrics.centroid), 3, [])', N_COLORS); % generate distinctive colors in each neighbourhood
+idxn_color = uint8(idxn_color');
+
+% merge data, metrics and color index tables into tree table
+tree = table(data, metrics, idxn_color, 'VariableNames', {'data', 'metrics', 'color_index'});
+
+if arg.Results.verbose
+    
+    fprintf('done!\n');
+    toc
+    
+end
+
+
+%% map tree metrics to points
+
+% sort points by label
+[~, idxn_label_sort] = sort(labels);
+idxn_unsorted = 1:length(labels);
+idxn_label_unsort(idxn_label_sort) = idxn_unsorted;
+
+% point color index
+idxn_color_tree = uint8([0; idxn_color]);
+
+idxn_color_point = cell2mat(arrayfun(@(j, n) repmat(idxn_color_tree(j,:), n, 1), ...
+    (1:size(idxn_color_tree,1))', ..., ...
+    accumarray(labels+1, labels, [], @numel), ...
+    'UniformOutput', false));
+
+idxn_color_point = idxn_color_point(idxn_label_unsort);
+
+point = table(labels, idxn_color_point, ...
+    'VariableNames',{'labels', 'color_index'});
+
+
 %% plot segments
 
 if arg.Results.fig
-    
-    xyz_trees = cell2mat(tree.data.nodes);
-    rgb_colors = cell2mat(cellfun(@(color, nodes) repmat(color, size(nodes,1), 1), mat2cell(tree(:,:).color, ones(height(tree),1), 3), tree.data.nodes, 'UniformOutput', false));
-    
+
+    idxl_labelled = (point.labels ~= 0);
+    colors = hsv(N_COLORS);
+
     figure
-    scatter3(xyz_trees(:,1), xyz_trees(:,2), xyz_trees(:,3), 12, ...
-        rgb_colors, ...
+    scatter3(xyz(idxl_labelled,1), xyz(idxl_labelled,2), xyz(idxl_labelled,3), 11, ...
+        colors(point.color_index(idxl_labelled),:), ...
         'Marker', '.');
     
     axis equal tight vis3d
