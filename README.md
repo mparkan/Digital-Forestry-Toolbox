@@ -12,7 +12,8 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
   - [Tree metrics](#scripts-5)
 + [Data](#data)
   - [Airborne Laser Scanning - 3D point clouds](#data-1)
-  - [National Forest Inventories](#data-2)
+  - [Airborne Laser Scanning - 3D point clouds](#data-2)
+  - [National Forest Inventories](#data-3)
 
 ## License
 
@@ -72,7 +73,13 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 | [*zh_2014_coniferous.laz*](data/measurements/vector/als/zh_2014_coniferous.laz) | Coniferous forest | Zürich, Switzerland (47.58378 N, 8.76275 E, ~380 m ASL), [see map][5] | Trimble AX60 | March 10-13, 2014 |
 | [*so_2014_woodland_pasture.laz*](data/measurements/vector/als/so_2014_woodland_pasture.laz) | Woodland Pasture | Solothurn, Switzerland (47.25952 N, 7.46979 E, ~830 m ASL), [see map][6] | Trimble AX60 | April 7, 2014 |
 
-#### National Forest Inventories <a id="data-2"></a>
+#### Airborne Laser Scanning - Rasters <a id="data-2"></a>
+| File | Land cover | Location | Sensor | Date |
+| ------------------------- | ---------- | ----------------------------------------------------------------- | ------------ | ----------------- |
+| [*so_2014_woodland_pasture.tif*](data/measurements/raster/chm/so_2014_woodland_pasture.tif) | Woodland Pasture | Solothurn, Switzerland (47.25952 N, 7.46979 E, ~830 m ASL), [see map][6] | Trimble AX60 | April 7, 2014 |
+
+
+#### National Forest Inventories <a id="data-3"></a>
 
 | File                      | Description                                                       |
 | ------------------------- | ----------------------------------------------------------------- |
