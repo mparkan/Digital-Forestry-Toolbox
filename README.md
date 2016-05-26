@@ -17,6 +17,9 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 
 ## License
 
+* Unless otherwise stated in the file, the code below is licensed under [GNU GPL](http://www.gnu.org/licenses/licenses.en.html#GPL GNU GPL).
+* The airborne laser scanning datasets are a courtesy of the states of Solothurn and Zürich (Switzerland). 
+
 ## Scripts <a id="scripts"></a>
 
 #### Input/Output <a id="scripts-1"></a>
