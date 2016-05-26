@@ -65,6 +65,13 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %     'fig', true, ...
 %     'verbose', true);
 %
+%     spatialRef = refmatToMapRasterReference(refmat, size(models.height.values), ...
+%       'rasterInterpretation', 'cells');
+%
+%     geotiffwrite(..\data\measurements\raster\als\so_2014_woodland_pasture.tif', ...
+%       single(models.height.values), spatialRef, ...
+%       'CoordRefSysCode', 'EPSG:21781');
+%
 % Other m-files required: rasterize.m
 % Subfunctions: none
 % MAT-files required: none
