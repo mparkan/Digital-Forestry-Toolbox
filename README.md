@@ -41,23 +41,23 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 
 | Function        | Description                                                       | 
 | --------------- | ----------------------------------------------------------------- | 
-| *rasterize.m*   | Convert a 3D point cloud to a 2D/3D raster                        | 
+| [*rasterize.m*](scripts/grids/rasterize.m)   | Convert a 3D point cloud to a 2D/3D raster                        | 
 
 #### Laser metrics <a id="scripts-4"></a>
 
 | Function           | Description                                                       | 
 | ------------------ | ----------------------------------------------------------------- | 
-| *laserEchoRatio.m* | Computes the echo ratio of a 3D point cloud                       | 
-| *laserPulses.m*     | Determines the pulse number associated with the individual returns (sorted by acquisition GPS time) |
-| *laserTimeFormat.m* | Convert GPS week time to GPS satellite time, GPS adjusted time or UTC time |
-| *laserIntensityCorrection.m* | Corrects return intensity for the sensor to target range |
+| [*laserEchoRatio.m*](scripts/laser metrics/laserEchoRatio.m) | Computes the echo ratio of a 3D point cloud                       | 
+| [*laserPulses.m*](scripts/laser metrics/laserPulses.m)     | Determines the pulse number associated with the individual returns (sorted by acquisition GPS time) |
+| [*laserTimeFormat.m*](scripts/laser metrics/laserTimeFormat.m) | Convert GPS week time to GPS satellite time, GPS adjusted time or UTC time |
+| [*laserIntensityCorrection.m*](scripts/laser metrics/laserIntensityCorrection.m) | Corrects return intensity for the sensor to target range |
 
 
 #### Tree metrics <a id="scripts-5"></a>
 
 | Function           | Description                                                       | 
 | ------------------ | ----------------------------------------------------------------- | 
-| *treeRegionGrowing.m* |  Extracts individual tree crowns from a 3D point cloud using a modified version of the top down region growing algorithm described in Li et al. (2012) | 
+| [*treeRegionGrowing.m*](scripts/tree metrics/treeRegionGrowing.m) |  Extracts individual tree crowns from a 3D point cloud using a modified version of the top down region growing algorithm described in Li et al. (2012) | 
 
 ## Data <a id="data"></a>
 
