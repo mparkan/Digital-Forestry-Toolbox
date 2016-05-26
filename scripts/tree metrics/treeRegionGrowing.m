@@ -56,7 +56,7 @@ function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
 %
 % Example:
 %
-% pc = LASread('..\data\measurements\vector\als\zh_6995_2710_coniferous.las');
+% pc = LASread('..\data\measurements\vector\als\zh_2014_coniferous.las');
 % xyz = [pc.record.x, pc.record.y, pc.record.z];
 % classification = pc.record.classification;
 %
