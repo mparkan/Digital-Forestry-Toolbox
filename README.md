@@ -74,7 +74,7 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 
 | File                      | Description                                                       |
 | ------------------------- | ----------------------------------------------------------------- |
-| *swiss_nfi_flora.xlsx* | Swiss National Forest Inventory (NFI), tree species Latin/vernacular (English, French, German, Italian) names and codes |
+| [*swiss_nfi_flora.xlsx*](/data/reference/tabular/nfi/swiss_nfi_flora.xlsx) | Swiss National Forest Inventory (NFI), tree species Latin/vernacular (English, French, German, Italian) names and codes |
 
 
 [1]: http://maps.zh.ch/download/hoehen/2014/lidar/6995_2710.laz
