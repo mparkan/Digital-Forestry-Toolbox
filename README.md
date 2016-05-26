@@ -62,8 +62,8 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 
 | Function           | Description                                                       | 
 | ------------------ | ----------------------------------------------------------------- | 
-| [*treeRegionGrowing.m*](scripts/tree metrics/treeRegionGrowing.m) |  Extract individual tree crowns from a 3D point cloud using a modified version of the top down region growing algorithm described in Li et al. (2012) | 
-| [*treeWatershed.m*](scripts/tree metrics/treeWatershed.m) | Extract individual tree crowns from a raster Canopy Height Model (CHM) the using marker-controlled watershed segmentation described in Kwak et al. (2007) |
+| [*treeRegionGrowing.m*](scripts/tree metrics/treeRegionGrowing.m) |  Extract individual tree crowns from a 3D point cloud using a modified version of the top down region growing algorithm described in [Li et al. (2012)](http://kellylab.berkeley.edu/storage/papers/2012-Li-etal-PERS.pdf) | 
+| [*treeWatershed.m*](scripts/tree metrics/treeWatershed.m) | Extract individual tree crowns from a raster Canopy Height Model (CHM) the using marker-controlled watershed segmentation described in [Kwak et al. (2007)](http://link.springer.com/article/10.1007/s10310-007-0041-9) |
 | [*treePeaks.m*](scripts/tree metrics/treePeaks.m) | Find local maxima (peaks) coordinates in a raster Canopy Height Model (CHM) |
 
 ## Data <a id="data"></a>
