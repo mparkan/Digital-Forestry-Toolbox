@@ -34,14 +34,15 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 | ---------------- | ----------------------------------------------------------------- | 
 | [*LASclip.m*](scripts/basic/LASclip.m)      | Clip 3D point cloud (LAS file) with a polygon               |
 | [*LASmerge.m*](scripts/basic/LASmerge.m)     | Merge 3D point clouds (LAS files)                           | 
-| [*LASextent.m*](scripts/basic/LASextent.m)    | Extract spatial extent of 3D point clouds (LAS files) and write result to ESRI shapefile (.shp)| 
+| [*LASextent.m*](scripts/basic/LASextent.m)    | Extract spatial extent of 3D point clouds (LAS files) and write result to ESRI shapefile (.shp) | 
 | [*crossSection.m*](scripts/crossSection.m) | Extract a 2D cross-section from a 3D point cloud| 
 
 #### Grids <a id="scripts-3"></a>
 
 | Function        | Description                                                       | 
 | --------------- | ----------------------------------------------------------------- | 
-| [*rasterize.m*](scripts/grids/rasterize.m)   | Convert a 3D point cloud to a 2D/3D raster                        | 
+| [*rasterize.m*](scripts/grids/rasterize.m) | Convert a 3D point cloud to a 2D/3D raster | 
+| [*elevationModels.m*](scripts/grids/elevationModels.m) | Compute elevation models (i.e. terrain, surface, height) from a 3D classified point cloud | 
 
 #### Laser metrics <a id="scripts-4"></a>
 
