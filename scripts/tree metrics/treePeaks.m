@@ -1,4 +1,4 @@
-function [crh, xyh] = treePeaks(chm, refmat, method, varargin)
+function [crh, xyh] = treePeaks(chm, refmat, varargin)
 % TREEPEAKS - find local maxima coordinates in a raster Canopy Height Model (CHM).
 %
 % [CRH, XYH] = TREEPEAKS(CHM, REFMAT, METHOD, ...) computes candidate
@@ -31,7 +31,9 @@ function [crh, xyh] = treePeaks(chm, refmat, method, varargin)
 %
 %    refmat - 3x2 numeric matrix, spatial referencing matrix such that [map_x map_y] = [row col 1] * refmat
 %
-%    method - string, peak detection method: 'fixedRadius', 'allometricRadius' or 'hMaxima'.
+%    method (optional, default: 'fixedRadius') - string, peak detection method: 'fixedRadius', 'allometricRadius' or 'hMaxima'.
+%
+%    minPeakHeight (optional, default: 1.5) - numeric value, minimum tree top height
 %
 %    windowRadius (optional, default: 4) - numeric value, fixed circular window radius in map units
 %    used to detect local maxima when method is set to 'fixedRadius'.
@@ -46,8 +48,10 @@ function [crh, xyh] = treePeaks(chm, refmat, method, varargin)
 %     @(h) 1.7425 * h.^0.5566; % mixed forests (Chen et al., 2006)
 %     @(h) 1.2 + 0.16 * h; % mixed forests (Pitkänen et al., 2004)
 %
-%    minimumHeight (optional, default: 0.1) - numeric value, threshold
-%    below which the H-maxima transform suppresses all local maxima when method is set to 'hMaxima'.
+%    minHeightDifference (optional, default: 0.1) - numeric value, threshold
+%    height difference below which the H-maxima transform suppresses all local maxima (only when method is set to 'hMaxima')
+%
+%    fig (optional, default: false) - boolean value, switch to plot figures
 %
 % Outputs:
 %    crh - Mx3 numeric matrix, images coordinates (col, row) and height values of tree tops
@@ -55,11 +59,14 @@ function [crh, xyh] = treePeaks(chm, refmat, method, varargin)
 %    xyh - Mx3 numeric matrix, map coordinates (x, y) and height values of tree tops
 %
 % Example:
-%
-%    [crh, xyh] = treePeaks(chm, refmat, ...
-%                 'allometricRadius', ...
-%                 'allometry', @(h) 2.51503 + 0.00901 * h.^2);
-%
+%    info = geotiffinfo('..\data\measurements\raster\chm\so_2014_woodland_pasture.tif');
+%    [chm, ~] = geotiffread('..\data\measurements\raster\chm\so_2014_woodland_pasture.tif');
+%    
+%    [crh, xyh] = treePeaks(chm, info.RefMatrix, ...
+%        'method', 'fixedRadius', ...
+%        'windowRadius', 3, ...
+%        'fig', true);
+
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
@@ -71,7 +78,7 @@ function [crh, xyh] = treePeaks(chm, refmat, method, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 25, 2016
+% Last revision: May 26, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -82,19 +89,21 @@ arg = inputParser;
 
 addRequired(arg, 'chm', @isnumeric);
 addRequired(arg, 'refmat', @isnumeric);
-addRequired(arg, 'method', @(x) any(validatestring(x, {'fixedRadius','allometricRadius','hMaxima'})));
-addParamValue(arg,'windowRadius', 4, @isnumeric);
-addParamValue(arg,'allometry', @(h) 1.2 + 0.16 * h, @(x) strfind(func2str(x),'@(h)') == 1);
-addParamValue(arg,'minimumHeight', 0.1, @isnumeric);
+addParamValue(arg, 'method', 'fixedRadius', @(x) any(validatestring(x, {'fixedRadius', 'allometricRadius', 'hMaxima'})));
+addParamValue(arg, 'minPeakHeight', 1.5, @(x) isnumeric(x) && (numel(x) == 1));
+addParamValue(arg, 'windowRadius', 4, @(x) isnumeric(x) && (numel(x) == 1));
+addParamValue(arg, 'allometry', @(h) 1.2 + 0.16 * h, @(x) strfind(func2str(x),'@(h)') == 1);
+addParamValue(arg, 'minHeightDifference', 0.1, @isnumeric);
+addParamValue(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 
-parse(arg, chm, refmat, method, varargin{:});
+parse(arg, chm, refmat, varargin{:});
 
 
 %% find tree tops
 
 gridResolution = abs(refmat(1,2));
 
-switch method
+switch arg.Results.method
     
     case 'fixedRadius'
         
@@ -136,11 +145,35 @@ switch method
     case 'hMaxima'    
         
         % The H-maxima transform suppresses all maxima in the intensity image I whose height is less than h
-        idx_lm = imextendedmax(chm, arg.Results.minimumHeight, 8);
+        idx_lm = imextendedmax(chm, arg.Results.minHeightDifference, 8);
         val_lm = chm(idx_lm);
         [row_lm, col_lm] = ind2sub(size(idx_lm), find(idx_lm));
         
 end
 
-crh = [col_lm row_lm val_lm];
-xyh = [pix2map(refmat, row_lm, col_lm) val_lm];
+crh = [col_lm, row_lm, val_lm];
+xyh = [pix2map(refmat, row_lm, col_lm), val_lm];
+
+
+%% filter tree tops below height threshold
+
+idxl_height_filter = (val_lm >= arg.Results.minPeakHeight);
+
+crh = crh(idxl_height_filter,:);
+xyh = xyh(idxl_height_filter,:);
+
+%% plot individual tree tops
+
+if arg.Results.fig
+    
+    figure
+    imagesc(chm);
+    colormap('gray');
+    colorbar;
+    hold on
+    plot(crh(:,1), crh(:,2), 'rx');
+    axis equal tight
+    xlabel('col');
+    ylabel('row');
+    
+end
