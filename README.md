@@ -12,7 +12,7 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
   - [Tree metrics](#scripts-5)
 + [Data](#data)
   - [Airborne Laser Scanning - 3D point clouds](#data-1)
-  - [Airborne Laser Scanning - 3D point clouds](#data-2)
+  - [Airborne Laser Scanning - Rasters](#data-2)
   - [National Forest Inventories](#data-3)
 
 ## License
