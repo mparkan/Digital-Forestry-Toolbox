@@ -22,11 +22,11 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 
 | Function        | Description                                                       | 
 | --------------- | ----------------------------------------------------------------- | 
-| *LASread.m*     | Read 3D point cloud from ASPRS LAS (1.0-1.4) file (.las)          | 
-| *LASwrite.m*    | Write 3D point cloud to ASPRS LAS (1.0-1.4) file (.las)           | 
-| *HDRread.m*     | Read ENVI header file (.hdr)                                      | 
-| *SBETread.m*    | Read Applanix SBET trajectory file (.sbet)                        | 
-| *TRJread.m*     | Read Terrascan TRJ trajectory file (.trj)                         | 
+| [*LASread.m*](scripts/io/las/LASread.m)     | Read 3D point cloud from ASPRS LAS (1.0-1.4) file (.las)          | 
+| [*LASwrite.m*](scripts/io/las/LASwrite.m)    | Write 3D point cloud to ASPRS LAS (1.0-1.4) file (.las)           | 
+| [*HDRread.m*](scripts/io/envi/HDRread.m)    | Read ENVI header file (.hdr)                                      | 
+| [*SBETread.m*](scripts/io/sbet/SBETread.m)    | Read Applanix SBET trajectory file (.sbet)                        | 
+| [*TRJread.m*](scripts/io/trj/TRJread.m)     | Read Terrascan TRJ trajectory file (.trj)                         | 
 
 #### Basic <a id="scripts-2"></a>
 
