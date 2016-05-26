@@ -33,7 +33,7 @@ function [crh, xyh] = treePeaks(chm, refmat, varargin)
 %
 %    method (optional, default: 'fixedRadius') - string, peak detection method: 'fixedRadius', 'allometricRadius' or 'hMaxima'.
 %
-%    minPeakHeight (optional, default: 1.5) - numeric value, minimum tree top height
+%    minPeakHeight (optional, default: 2) - numeric value, minimum tree top height
 %
 %    windowRadius (optional, default: 4) - numeric value, fixed circular window radius in map units
 %    used to detect local maxima when method is set to 'fixedRadius'.
@@ -90,7 +90,7 @@ arg = inputParser;
 addRequired(arg, 'chm', @isnumeric);
 addRequired(arg, 'refmat', @isnumeric);
 addParamValue(arg, 'method', 'fixedRadius', @(x) any(validatestring(x, {'fixedRadius', 'allometricRadius', 'hMaxima'})));
-addParamValue(arg, 'minPeakHeight', 1.5, @(x) isnumeric(x) && (numel(x) == 1));
+addParamValue(arg, 'minPeakHeight', 2, @(x) isnumeric(x) && (numel(x) == 1));
 addParamValue(arg, 'windowRadius', 4, @(x) isnumeric(x) && (numel(x) == 1));
 addParamValue(arg, 'allometry', @(h) 1.2 + 0.16 * h, @(x) strfind(func2str(x),'@(h)') == 1);
 addParamValue(arg, 'minHeightDifference', 0.1, @isnumeric);
