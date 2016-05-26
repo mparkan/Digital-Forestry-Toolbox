@@ -20,7 +20,7 @@ function echo_ratio = laserEchoRatio(xyz, varargin)
 %    echo_ratio - nx2 float vector, echo ratio
 %
 % Example:
-%    pc = LASread('..\data\measurements\vector\als\zh_6850_2475.las', false, true);
+%    pc = LASread('..\data\measurements\vector\als\6850_2475.las', false, true);
 %    x = pc.record.x;
 %    y = pc.record.y;
 %    z = pc.record.z;
@@ -38,7 +38,7 @@ function echo_ratio = laserEchoRatio(xyz, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 14, 2016
+% Last revision: May 26, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -79,11 +79,16 @@ if arg.Results.verbose
 end
 
 step = arg.Results.rasterResolution;
-xv = x_min-step:step:x_max+step;
-yv = y_min-step:step:y_max+step;
-zv = z_min-step:step:z_max+step;
 
-sub_crl = rasterize([x, y, z], xv, yv, zv);
+xv = x_min:step:x_max; %x_min-scale:scale:x_max+scale;
+yv = y_min:step:y_max;
+zv = z_min:step:z_max;
+
+xv = [xv, xv(end)+ceil(mod(x_max, step))*step];
+yv = [yv, yv(end)+ceil(mod(y_max, step))*step];
+zv = [zv, zv(end)+ceil(mod(z_max, step))*step];
+
+[~, sub_crl] = rasterize([x, y, z], xv, yv, zv);
 nrows = length(yv);
 ncols = length(xv);
 nstacks = length(zv);
