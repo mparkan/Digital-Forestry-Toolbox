@@ -68,6 +68,7 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 | ------------------------- | ---------- | ----------------------------------------------------------------- | ------------ | ----------------- |
 | [*6995_2710.laz* (external link)][1] | Mixed forest | Zürich, Switzerland (47.58384 N, 8.76594 E), [see map][2] | Trimble AX60 | March 10-13, 2014 |
 | [*6850_2475.laz* (external link)][3] | Urban, mixed forest | Zürich, Switzerland (47.37460 N, 8.56824 E), [see map][4] | Trimble AX60 | April 2, 2014 |
+| [*zh_2014_coniferous.laz*](data/measurements/vector/als/zh_2014_coniferous.laz) | Coniferous forest | Zürich, Switzerland (47.58378 N, 8.76275 E), [see map][5] | Trimble AX60 | April 2, 2014 |
 
 #### National Forest Inventories <a id="data-2"></a>
 
@@ -81,3 +82,5 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 
 [3]: http://maps.zh.ch/download/hoehen/2014/lidar/6850_2475.laz
 [4]: https://map.geo.admin.ch/?topic=ech&lang=fr&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bafu.wrz-wildruhezonen_portal,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&X=247761&Y=685308&zoom=9&crosshair=marker
+
+[5]:https://map.geo.admin.ch/?topic=ech&lang=fr&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&X=271187&Y=699615&zoom=11&crosshair=marker
