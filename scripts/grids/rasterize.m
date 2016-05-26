@@ -1,61 +1,72 @@
 function varargout = rasterize(xyz, xv, yv, varargin)
-%RASTERIZE - creates a 2D or 3D raster from scattered points with coordinates X,Y,Z by binning
-%them in the cells defined by XV, YV and optionaly ZV, applying the FUN
-%function to the VAL values contained in each grid cell.
+% RASTERIZE - creates a 2D or 3D raster from scattered points with coordinates X,Y,Z by binning
+% them in the cells defined by XV, YV and optionaly ZV, applying the FUN
+% function to the VAL values contained in each grid cell. Cells which do not
+% contain any points are filled with the FILL value.
 %
-% Syntax:  [SUB, ...] = rasterize(xyz, xv, yv, ...)
+% Syntax:  [idxl_in, sub_crl, raster] = rasterize(xyz, xv, yv, ...)
 %
 % Inputs:
-%    xyz - A nx3 vector containing the xyz coordinates
+%    xyz - Nx3 numeric matrix, xyz coordinates of the 3D points
 %
-%    xv - A numeric vector containing the ordered x (column) coordinates of the grid cells
+%    xv - Cx1 numeric vector, containing the ordered x coordinates of the
+%    grid cells column centers
 %
-%    yv - A numeric vector containing the ordered y (row) coordinates of the grid cells
+%    yv - Rx1 numeric vector, containing the ordered y coordinates of the grid
+%    cells row centers
 %
-%    zv (optional, default: []) - A numeric vector containing the ordered z (stack) coordinates of the grid cells
+%    zv (optional, default: []) - Lx1 numeric vector, containing the ordered z coordinates of the grid
+%    cells level (stack) centers
 %
-%    val (optional, default: xyz(:,3)) - A nx1 vector containing the values which will be
+%    val (optional, default: xyz(:,3)) - Nx1 numeric vector, values which will be
 %    aggregated in each cell (defaults to z)
 %
-%    fun (Optional) - An anonymous function used to aggregate the values contained in
+%    fun (Optional) - anonymous function handle, function used to aggregate the values contained in
 %    each grid cell (e.g. max, min, std, mode, etc)
 %
-% Outputs:
-%    sub - A Nx3 matrix containing the column, row, level subscripts of
-%    each point within the raster
+%    fill (Optional) - numeric value, fill value attributed to cells containing no data
 %
-%    raster (Optional) - A 2D or 3D sparse matrix containing the gridded values aggregated
+% Outputs:
+%    idxl_in - Nx1 boolean vector, flag indicating if each input point is within
+%    the defined grid extent 
+%
+%    sub_crl - Nx3 numeric matrix, column, row, level subscripts of each point
+%
+%    raster (optional) - RxC or RxCxL numeric matrix, gridded values aggregated
 %    with the specified function handle
 %
 % Example:
-%    pc = LASread('..\data\measurements\vector\als\zh_6995_2710_coniferous.las', false, true);
+%    pc = LASread('..\data\measurements\vector\als\zh_2014_coniferous.las', false, true);
 %    x = pc.record.x;
 %    y = pc.record.y;
 %    z = pc.record.z;
-%      
+%    
 %    dxy = 0.5;
-%    xv = min(x)-dxy:dxy:max(x)+dxy;
-%    yv = min(y)-dxy:dxy:max(y)+dxy;
-%    zv = min(z)-dxy:dxy:max(z)+dxy;
-%    [sub, raster] = rasterize([x, y, z], xv, yv, zv, z, @(x) numel(x));
+%    xv = min(x):dxy:max(x);
+%    yv = min(y):dxy:max(y);
+%    zv = min(z):dxy:max(z);
+%    xv = [xv, xv(end)+ceil(mod(max(x), dxy))*dxy];
+%    yv = [yv, yv(end)+ceil(mod(max(y), dxy))*dxy];
+%    zv = [zv, zv(end)+ceil(mod(max(z), dxy))*dxy];
+%    [~, sub, raster] = rasterize([x, y, z], xv, yv, zv, z, @(x) numel(x));
 %    
 %    nrows = length(yv);
 %    ncols = length(xv);
 %    nlevels = length(zv);
-%     
+%    
 %    ind = sub2ind([nrows, ncols, nlevels], sub(:,2), sub(:,1), sub(:,3)); % 3d (row, col, lev) linear index for each point
 %    [idxn_cells, ~, idxn_voxel_to_point] = unique(ind); % assign raster cell metrics to corresponding points
 %    [row_voxel, col_voxel, lev_voxel] = ind2sub([nrows, ncols, nlevels], idxn_cells);
 %    density = raster(idxn_cells);
-%     
+%    
 %    figure
 %    scatter3(col_voxel, row_voxel, lev_voxel, 20, ...
-%    density, ...
-%    'Marker', '.');
+%        density, ...
+%        'Marker', '.');
 %    xlabel('col')
 %    ylabel('row')
 %    zlabel('level')
-%    title('point count per voxel')
+%    title('Point count per voxel')
 %    colorbar
 %    axis equal tight vis3d
 %
@@ -70,7 +81,7 @@ function varargout = rasterize(xyz, xv, yv, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 13, 2016
+% Last revision: May 26, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -85,10 +96,11 @@ addRequired(arg, 'yv', @(x) ismatrix(x) && isnumeric(x));
 addOptional(arg, 'zv', [], @(x) ismatrix(x) && isnumeric(x));
 addOptional(arg, 'val', [], @(x) isnumeric(x) || islogical(x));
 addOptional(arg, 'fun', [], @(x) isa(x, 'function_handle'));
+addOptional(arg, 'fill', [], @(x) (numel(x) == 1) && (isnumeric(x) || islogical(x)));
 
 parse(arg, xyz, xv, yv, varargin{:});
 
-flag_raster = any(~isempty(arg.Results.val) || ~isempty(arg.Results.fun));
+flag_raster = any(~isempty(arg.Results.val) || ~isempty(arg.Results.fun) || ~isempty(arg.Results.fill));
 
 
 %% reformat input
@@ -97,62 +109,70 @@ x = xyz(:,1);
 y = xyz(:,2);
 z = xyz(:,3);
 
+dx = abs(xv(2) - xv(1));
+dy = abs(yv(2) - yv(1));
 
+xv = linspace(xv(1)-dx/2, xv(end)+dx/2, length(xv)+1);
+yv = linspace(yv(1)-dy/2, yv(end)+dy/2, length(yv)+1);
+
+    
 %% rasterize
 
 if isempty(arg.Results.zv) % 2D raster
     
     % check if coordinates are located within the grid extent
-    idx_extent = (x >= xv(1) & x <= xv(end) & y >= yv(1) & y <= yv(end));
+    idxl_in = (x >= xv(1) & x <= xv(end) & y >= yv(1) & y <= yv(end));
     
-    if ~all(idx_extent)
+    varargout{1} = idxl_in;
+    
+    if ~all(idxl_in)
         
-        error('some points are located outside the defined grid extent');
+        fprintf('\nWarning: %u points are located outside the defined grid extent\n', nnz(~idxl_in));
         
     end
     
     % pixel correspondance indices
-    [~, ind_col] = histc(x, xv);
-    [~, ind_row] = histc(y, yv);
+    [~, ~, ind_col] = histcounts(x(idxl_in), [xv, xv(end)]);
+    [~, ~, ind_row] = histcounts(y(idxl_in), [yv, yv(end)]);
     
-    varargout{1} = [ind_col, ind_row]; % crl
+    varargout{2} = [ind_col, ind_row];
     
     if flag_raster
 
-        ncols = length(xv);
-        nrows = length(yv);
-        ind_cr = sub2ind([nrows, ncols], ind_row, ind_col);
-        
-        varargout{2} = accumarray(ind_cr, arg.Results.val, nrows*ncols, arg.Results.fun, 0, true); % raster
+        ncols = length(xv)-1;
+        nrows = length(yv)-1;
+        varargout{3} = accumarray([ind_row, ind_col], arg.Results.val(idxl_in), [nrows, ncols], arg.Results.fun, arg.Results.fill); % raster
         
     end
     
 else % 3D raster
     
     zv = arg.Results.zv;
-    idxl_extent = (x >= xv(1) & x <= xv(end) & y >= yv(1) & y <= yv(end) & z >= zv(1) & z <= zv(end));
+    dz = abs(zv(2) - zv(1));
+    zv = linspace(zv(1)-dz/2, zv(end)+dz/2, length(zv)+1);
     
-    if ~all(idxl_extent)
+    idxl_in = (x >= xv(1) & x <= xv(end) & y >= yv(1) & y <= yv(end) & z >= zv(1) & z <= zv(end));
+    varargout{1} = idxl_in;
+    
+    if ~all(idxl_in)
         
-        error('some points are located outside the defined grid extent');
+        fprintf('\nWarning: %u points are located outside the defined grid extent\n', nnz(~idxl_in));
         
     end
     
-    [~, ind_col] = histc(x, xv);
-    [~, ind_row] = histc(y, yv);
-    [~, ind_lev] = histc(z, zv);
-
-    varargout{1} = uint32([ind_col, ind_row, ind_lev]);
+    [~, ~, ind_col] = histcounts(x(idxl_in), [xv, xv(end)]);
+    [~, ~, ind_row] = histcounts(y(idxl_in), [yv, yv(end)]);
+    [~, ~, ind_lev] = histcounts(z(idxl_in), [zv, zv(end)]);
+    
+    varargout{2} = uint32([ind_col, ind_row, ind_lev]);
     
     if flag_raster
         
-        ncols = length(xv);
-        nrows = length(yv);
-        nlevs = length(zv);
-        ind_crl = sub2ind([nrows, ncols, nlevs], ind_row, ind_col, ind_lev);
-     
-        varargout{2} = accumarray(ind_crl, arg.Results.val, [nrows*ncols*nlevs, 1], arg.Results.fun, 0, true); % raster
-
+        ncols = length(xv)-1;
+        nrows = length(yv)-1;
+        nlevs = length(zv)-1;
+        varargout{3} = accumarray([ind_row, ind_col, ind_lev], arg.Results.val(idxl_in), [nrows, ncols, nlevs], arg.Results.fun, arg.Results.fill); % raster
+        
     end
     
 end
