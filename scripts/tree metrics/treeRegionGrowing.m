@@ -1,5 +1,5 @@
 function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
-%TREEREGIONGROWING - Attempts to extract individual tree crowns from a 3D point cloud
+% TREEREGIONGROWING - Attempts to extract individual tree crowns from a 3D point cloud
 % using a modified version of the top down region growing method described in Li et al. (2012) [1]
 % [POINT, TREE] = TREEREGIONGROWING(XYZ, CLASSIFICATION, ...) segments individual tree
 % crowns from the 3D point cloud XYZ with classification labels CLASSIFICATION
@@ -85,7 +85,7 @@ function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 25, 2016
+% Last revision: May 26, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -158,9 +158,13 @@ if arg.Results.coordinateResolution > 0
     scale = arg.Results.coordinateResolution;
     
     % rasterize
-    xv = x_min-scale:scale:x_max+scale;
-    yv = y_min-scale:scale:y_max+scale;
-    zv = z_min-scale:scale:z_max+scale;
+    xv = x_min:scale:x_max; %x_min-scale:scale:x_max+scale;
+    yv = y_min:scale:y_max;
+    zv = z_min:scale:z_max;
+    
+    xv = [xv, xv(end)+ceil(mod(x_max, scale))*scale];
+    yv = [yv, yv(end)+ceil(mod(y_max, scale))*scale];
+    zv = [zv, zv(end)+ceil(mod(z_max, scale))*scale];
     
     [~, sub_crl] = rasterize(xyz_veg, xv, yv, zv);
     nrows = length(yv);
