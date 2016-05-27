@@ -6,40 +6,35 @@ function [index, footprint, profile] = crossSection(xyz, width, p0, p1, varargin
 % Syntax:  [index, footprint, profile] = crossSection(xyz, width, p0, p1, ...)
 %
 % Inputs:
-%    xyz - A Nx3 float matrix containing the xyz coordinates of the point
-%    cloud
+%    xyz - Nx3 numeric matrix,  xyz coordinates of the 3D point cloud
 %
-%    width - A float indicating the width of the buffer used when extracting the profile 
+%    width - numeric value, width of the buffer used when extracting the profile 
 %
-%    p0 - A 1x2 float matrix containing the xy coordinates of the profile
-%    start point
+%    p0 - 1x2 numeric matrix, xy coordinates of the profile start point
 %
-%    p1 - A 1x2 float matrix containing the xy coordinates of the profile
-%    end point
+%    p1 - 1x2 numeric matrix, xy coordinates of the profile end point
 %
 %    verbose (optional, default: false) - boolean value, verbosiy switch
 %
 %    fig (optional, default: false) - boolean value, switch to plot figures
 %
 % Outputs:
-%    index - A Nx1 integer vector containg the indices of points located in
-%    the cross-section buffer
+%    index - Nx1 numeric vector, indices of points located in the cross-section buffer
 %
-%    footprint - A Nx2 float matrix containing the xy coordinates of the cross-section buffer  
+%    footprint - Nx2 numeric matrix, xy coordinates of the cross-section buffer  
 %
-%    profile - A Nx3 float matrix containing the range, elevation and distance to cross-section plane
+%    profile - Nx3 numeric matrix, range, elevation and distance to cross-section plane
 %    of the points in the cross-section buffer
 %    
-%
 % Example:
-%    pc = LASread('..\data\measurements\vector\als\zh_6995_2710.las', false, true);
+%    pc = LASread('..\data\measurements\vector\als\zh_2014_coniferous.las', false, true);
 %    x = pc.record.x;
 %    y = pc.record.y;
 %    z = pc.record.z;
 %    
 %    width = 2;
-%    p0 = [699841.5, 271000.2];
-%    p1 = [699784, 271494.3];
+%    p0 = [699501, 271206];
+%    p1 = [699698, 271199];
 %    [~, ~, profile] = crossSection([x, y, z], width, p0, p1, 'verbose', false, 'fig', true);
 %
 % Other m-files required: none
@@ -53,7 +48,7 @@ function [index, footprint, profile] = crossSection(xyz, width, p0, p1, varargin
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 13, 2016
+% Last revision: May 27, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -106,7 +101,6 @@ index = find(idxl_buffer);
 
 if arg.Results.fig
     
-    % plot cross section footprint
     figure
     plot([footprint(:,1); footprint(1,1)], [footprint(:,2); footprint(1,2)], 'ro-')
     hold on
@@ -115,7 +109,6 @@ if arg.Results.fig
     plot(p1(:,1), p1(:,2), 'bx')
     axis equal
     
-    % plot 3D points with highlighted cross section 
     figure
     scatter3(pb(:,1), pb(:,2), pb(:,3), 8, pb(:,3), 'Marker', '.');
     hold on
@@ -133,7 +126,6 @@ end
 
 % direction vector of the line
 line = [p0(:,1), p0(:,2), p1(:,1)-p0(:,1), p1(:,2)-p0(:,2)]; 
- 
 vx = line(:,3);
 vy = line(:,4);
 
@@ -153,9 +145,7 @@ d = sqrt(sum((v_proj - pq(:,1:2)).^2, 2));
 
 %% compute linear coordinates
 
-%rho = [v_proj(:,1)-p0(:,1) v_proj(:,2)-p0(:,2)];
 rho = sqrt((v_proj(:,1) - p0(:,1)).^2 + (v_proj(:,2) - p0(:,2)).^2);
-
 profile = [rho, pq(:,3), d];
 
 
@@ -163,7 +153,6 @@ profile = [rho, pq(:,3), d];
 
 if arg.Results.fig
     
-    % plot cross section
     figure
     plot(rho, pq(:,3), 'k.')
     ylabel('z')
