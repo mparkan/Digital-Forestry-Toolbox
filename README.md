@@ -71,7 +71,7 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 #### Canopy metrics <a id="scripts-6"></a>
 | Function           | Description                                                       | 
 | ------------------ | ----------------------------------------------------------------- | 
-| [*canopyCover.m*](scripts/canopy metrics/canopyCover.m) |  computes a canopy crown cover map using either a convolution window or the Delaunay triangulation method described in [Eysn et al. (2012)](http://www.mdpi.com/2072-4292/4/3/762/htm) | 
+| [*canopyCover.m*](scripts/canopy metrics/canopyCover.m) |  Computes a canopy crown cover map using either a convolution window or the Delaunay triangulation method described in [Eysn et al. (2012)](http://www.mdpi.com/2072-4292/4/3/762/htm) | 
 
 
 ## Data <a id="data"></a>
