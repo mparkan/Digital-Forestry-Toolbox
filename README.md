@@ -10,6 +10,7 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
   - [Grids](#scripts-3)
   - [Laser metrics](#scripts-4)
   - [Tree metrics](#scripts-5)
+  - [Canopy metrics](#scripts-6)
 + [Data](#data)
   - [Airborne Laser Scanning - 3D point clouds](#data-1)
   - [Airborne Laser Scanning - Rasters](#data-2)
@@ -65,6 +66,13 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 | [*treeRegionGrowing.m*](scripts/tree metrics/treeRegionGrowing.m) |  Extract individual tree crowns from a 3D point cloud using a modified version of the top down region growing algorithm described in [Li et al. (2012)](http://kellylab.berkeley.edu/storage/papers/2012-Li-etal-PERS.pdf) | 
 | [*treeWatershed.m*](scripts/tree metrics/treeWatershed.m) | Extract individual tree crowns from a raster Canopy Height Model (CHM) the using marker-controlled watershed segmentation described in [Kwak et al. (2007)](http://link.springer.com/article/10.1007/s10310-007-0041-9) |
 | [*treePeaks.m*](scripts/tree metrics/treePeaks.m) | Find local maxima (peaks) coordinates in a raster Canopy Height Model (CHM) |
+
+
+#### Canopy metrics <a id="scripts-6"></a>
+| Function           | Description                                                       | 
+| ------------------ | ----------------------------------------------------------------- | 
+| [*canopyCover.m*](scripts/canopy metrics/canopyCover.m) |  computes a canopy crown cover map using either a convolution window or the Delaunay triangulation method described in [Eysn et al. (2012)](http://www.mdpi.com/2072-4292/4/3/762/htm) | 
+
 
 ## Data <a id="data"></a>
 
