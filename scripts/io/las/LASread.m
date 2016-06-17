@@ -2265,6 +2265,18 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                         
                     end
                     
+                case 5000
+                    
+                    r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT);
+                    
+                case 5001
+                    
+                    r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 2, 'uint16', 0, MACHINE_FORMAT);
+                    
+                case 5002
+                    
+                    r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 4, 'uint32', 0, MACHINE_FORMAT);
+                    
                     % You may add custom records here
                     
                 otherwise % Other
