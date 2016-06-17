@@ -1916,6 +1916,28 @@ for j = 1:length(r.header)
     
 end
 
+flag_evlr = isfield(s, 'extended_variable_length_records') & (las_version >= 14);
+
+if flag_evlr
+    
+    for j = 1:length(r.header)
+        
+        switch r.header(j).short_name
+            
+            case 'offset_to_evlr'
+                
+                r.header(j).value = r.header(phb_skeys.offset_to_data).value + r.header(phb_skeys.point_data_record_length).value * r.header(phb_skeys.n_point_records).value;
+                
+            case 'number_of_evlr'
+                
+                r.header(j).value = length(s.extended_variable_length_records);
+                
+        end
+        
+    end
+    
+end
+
 clear s.record
 clear s.header
 
@@ -2183,7 +2205,7 @@ if ~isempty(arg.Results.filepath)
     if arg.Results.verbose
         
         tic; % start timer
-        fprintf('writing point data record to "%s"...', arg.Results.filepath);
+        fprintf('writing point data record...');
         
     end
     
@@ -2238,17 +2260,20 @@ if ~isempty(arg.Results.filepath)
     % write blob to file
     fseek(fid, r.header(phb_skeys.offset_to_data).value, 'bof');
     fwrite(fid, blob, 'uint8');
-    
+    fprintf('done!\n');
     
     %% write extended variable length records to file
     
-    if las_version >= 14
+%    if las_version >= 14
         
-        flag_evlr = (r.header(phb_skeys.number_of_evlr).value > 0);
+        %flag_evlr = (r.header(phb_skeys.number_of_evlr).value > 0);
+        %flag_evlr = isfield(s, 'extended_variable_length_records');
         
         if flag_evlr
             
-            byte_offset = r.header(phb_skeys.offset_to_evlr).value;
+            byte_offset = ftell(fid); %r.header(phb_skeys.offset_to_evlr).value;
+            %r.header(phb_skeys.number_of_evlr).value = length(s.extended_variable_length_records);
+            %r.header(phb_skeys.offset_to_evlr).value = byte_offset;
             
             for j = 1:r.header(phb_skeys.number_of_evlr).value
                 
@@ -2276,6 +2301,7 @@ if ~isempty(arg.Results.filepath)
                         
                         string = horzcat(s.extended_variable_length_records(j).value, zeros(1, s.extended_variable_length_records(j).record_length_after_header)); % zero padding
                         fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
+                        fprintf('WARNING: writing Text area description (optional) EVLR\n');
                         
                     case 4 % Extra bytes (optional)
                         
@@ -2303,6 +2329,8 @@ if ~isempty(arg.Results.filepath)
                             
                         end
                         
+                        fprintf('WARNING: writing Extra bytes (optional) EVLR\n');
+                        
                     case num2cell(100:354) % Waveform Packet descriptor (required when using point formats 4, 5, 9, 10)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value.bits_per_sample, 'uint8', 0, MACHINE_FORMAT); % Bits per sample, Unsigned char, 1 byte, *
@@ -2311,18 +2339,20 @@ if ~isempty(arg.Results.filepath)
                         fwrite(fid, s.extended_variable_length_records(j).value.temporal_sample_spacing, 'uint32', 0, MACHINE_FORMAT); % Temporal Sample Spacing, Unsigned long, 4 bytes, *
                         fwrite(fid, s.extended_variable_length_records(j).value.digitizer_gain, 'double', 0, MACHINE_FORMAT); % Digitizer Gain, double, 8 bytes, *
                         fwrite(fid, s.extended_variable_length_records(j).value.digitizer_offset, 'double', 0, MACHINE_FORMAT); % Digitizer Offset, double, 8 bytes, *
+                        fprintf('WARNING: writing Waveform Packet descriptor EVLR\n');
                         
                     case 2111 % OGC Math Transform WKT Record (optional)
                         
                         string = horzcat(s.extended_variable_length_records(j).value, zeros(1, s.extended_variable_length_records(j).record_length_after_header)); % zero padding
                         fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
+                        fprintf('WARNING: writing OGC Math Transform WKT Record (optional) EVLR\n');
                         
                     case 2112 % OGC Coordinate System WKT Record (optional)
                         
                         string = horzcat(s.extended_variable_length_records(j).value, zeros(1, s.extended_variable_length_records(j).record_length_after_header)); % zero padding
                         fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                        disp('2112')
-                        
+                        fprintf('WARNING: writing OGC Coordinate System WKT Record (optional) EVLR\n');
+        
                     case 34735 % GeoKeyDirectoryTag Record (mandatory)
                         
                         s.extended_variable_length_records(j).value.w_key_directory_version = 1; % wKeyDirectoryVersion, unsigned short, wKeyDirectoryVersion = 1 Always
@@ -2344,34 +2374,41 @@ if ~isempty(arg.Results.filepath)
                             
                         end
                         
+                        fprintf('WARNING: writing GeoKeyDirectoryTag Record (mandatory) EVLR\n');
+                        
                     case 34736 % GeoDoubleParamsTag Record (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
+                        fprintf('WARNING: writing GeoDoubleParamsTag Record (optional) EVLR\n');
                         
                     case 34737 % GeoAsciiParamsTag Record (optional)
                         
                         string = horzcat(s.extended_variable_length_records(j).value, zeros(1, s.extended_variable_length_records(j).record_length_after_header)); % zero padding
                         fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
+                        fprintf('WARNING: writing GeoAsciiParamsTag Record (optional) EVLR\n');
                         
+                    case 5000 % Custom uint8 field (optional)
                         
-                    case 60001 % custom 1
+                        fwrite(fid, s.extended_variable_length_records(j).value, 'uint8', 0, MACHINE_FORMAT);
+                        fprintf('WARNING: writing Custom uint8 field (optional) EVLR\n');
+                        
+                    case 5001 % Custom uint16 field (optional)
+                        
+                        fwrite(fid, s.extended_variable_length_records(j).value, 'uint16', 0, MACHINE_FORMAT);
+                        fprintf('WARNING: writing Custom uint16 field (optional) EVLR\n');
+                        
+                    case 5002 % Custom uint32 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint32', 0, MACHINE_FORMAT);
-                        %disp('30001 ok')
-                        %s.extended_variable_length_records(j).value(1)
-                        
-                    case 60002 % custom 2
-                        
-                        fwrite(fid, s.extended_variable_length_records(j).value, 'uint32', 0, MACHINE_FORMAT);
-                        %disp('30002 ok')
-                        %s.extended_variable_length_records(j).value(2)
+                        fprintf('WARNING: writing Custom uint32 field (optional) EVLR\n');
                         
                         % You may add custom records here
                         
                     otherwise % Other
                         
                         fwrite(fid, typecast(s.extended_variable_length_records(j).value, 'uint8'), 'uint8', 0, MACHINE_FORMAT);
-
+                        disp('other')
+                        
                 end
                 
                 byte_offset = byte_offset + 60 + s.extended_variable_length_records(j).record_length_after_header;
@@ -2380,7 +2417,7 @@ if ~isempty(arg.Results.filepath)
             
         end
         
-    end
+    %end
     
     %% close file
     
@@ -2389,7 +2426,8 @@ if ~isempty(arg.Results.filepath)
     if arg.Results.verbose
         
         tElapsed = toc; % stop timer
-        fprintf('done!\n');
+        
+        fprintf('File successfully written to "%s"...\n', arg.Results.filepath);
         fprintf('%u point records written in %s\n', r.header(phb_skeys.n_point_records).value, datestr(tElapsed/(24*3600), 'HH:MM:SS.FFF'));
         
     end
