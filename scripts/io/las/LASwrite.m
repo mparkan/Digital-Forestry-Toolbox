@@ -42,7 +42,7 @@ function varargout = LASwrite(s, filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 19, 2016
+% Last revision: June 20, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -2387,17 +2387,17 @@ if ~isempty(arg.Results.filepath)
                         fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing GeoAsciiParamsTag Record (optional) EVLR\n');
                         
-                    case 5000 % Custom uint8 field (optional)
+                    case {5005, 5006} % Custom uint8 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint8', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom uint8 field (optional) EVLR\n');
                         
-                    case 5001 % Custom uint16 field (optional)
+                    case {5001, 5002, 5003, 5004, 5007} % Custom uint16 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint16', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom uint16 field (optional) EVLR\n');
                         
-                    case 5002 % Custom uint32 field (optional)
+                    case {5000, 5008, 5009} % Custom uint32 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint32', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom uint32 field (optional) EVLR\n');
