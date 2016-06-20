@@ -42,7 +42,7 @@ function s = LASread(filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 19, 2016
+% Last revision: June 20, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -2265,15 +2265,15 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                         
                     end
                     
-                case 5000
+                case {5005, 5006} % Custom uint8 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT);
                     
-                case 5001
+                case {5001, 5002, 5003, 5004, 5007} % Custom uint16 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 2, 'uint16', 0, MACHINE_FORMAT);
                     
-                case 5002
+                case {5000, 5008, 5009} % Custom uint32 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 4, 'uint32', 0, MACHINE_FORMAT);
                     
