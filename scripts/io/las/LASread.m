@@ -2265,17 +2265,22 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                         
                     end
                     
-                case {5005, 5006} % Custom uint8 field (optional)
+                case {5028, 5029} % Custom uint8 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT);
                     
-                case {5001, 5002, 5003, 5004, 5007} % Custom uint16 field (optional)
+                case {5010, 5025, 5026, 5027} % Custom uint16 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 2, 'uint16', 0, MACHINE_FORMAT);
                     
-                case {5000, 5008, 5009} % Custom uint32 field (optional)
+                case {5000, 5040, 5041, 5042} % Custom uint32 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 4, 'uint32', 0, MACHINE_FORMAT);
+                    
+                case {5001, 5002, 5003} % Custom double field (optional)
+                    
+                    r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 8, 'double', 0, MACHINE_FORMAT);
+                    
                     
                     % You may add custom records here
                     
