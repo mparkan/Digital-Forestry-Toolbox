@@ -2263,12 +2263,7 @@ if ~isempty(arg.Results.filepath)
     fprintf('done!\n');
     
     %% write extended variable length records to file
-    
-%    if las_version >= 14
-        
-        %flag_evlr = (r.header(phb_skeys.number_of_evlr).value > 0);
-        %flag_evlr = isfield(s, 'extended_variable_length_records');
-        
+
         if flag_evlr
             
             byte_offset = ftell(fid); %r.header(phb_skeys.offset_to_evlr).value;
@@ -2374,40 +2369,45 @@ if ~isempty(arg.Results.filepath)
                             
                         end
                         
-                        fprintf('WARNING: writing GeoKeyDirectoryTag Record (mandatory) EVLR\n');
+                        fprintf('WARNING: writing GeoKeyDirectoryTag Record to EVLR\n');
                         
                     case 34736 % GeoDoubleParamsTag Record (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing GeoDoubleParamsTag Record (optional) EVLR\n');
+                        fprintf('WARNING: writing GeoDoubleParamsTag Record to EVLR\n');
                         
                     case 34737 % GeoAsciiParamsTag Record (optional)
                         
                         string = horzcat(s.extended_variable_length_records(j).value, zeros(1, s.extended_variable_length_records(j).record_length_after_header)); % zero padding
                         fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing GeoAsciiParamsTag Record (optional) EVLR\n');
+                        fprintf('WARNING: writing GeoAsciiParamsTag Record to EVLR\n');
                         
-                    case {5005, 5006} % Custom uint8 field (optional)
+                    case {5028, 5029} % Custom uint8 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint8', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Custom uint8 field (optional) EVLR\n');
+                        fprintf('WARNING: writing Custom uint8 field to EVLR\n');
                         
-                    case {5001, 5002, 5003, 5004, 5007} % Custom uint16 field (optional)
+                    case {5010, 5025, 5026, 5027} % Custom uint16 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint16', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Custom uint16 field (optional) EVLR\n');
+                        fprintf('WARNING: writing Custom uint16 field to EVLR\n');
                         
-                    case {5000, 5008, 5009} % Custom uint32 field (optional)
+                    case {5000, 5040, 5041, 5042} % Custom uint32 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint32', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Custom uint32 field (optional) EVLR\n');
+                        fprintf('WARNING: writing Custom uint32 field to EVLR\n');
+                    
+                    case {5001, 5002, 5003} % Custom double field (optional)
+                            
+                        fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
+                        fprintf('WARNING: writing Custom double field to EVLR\n');
                         
                         % You may add custom records here
                         
                     otherwise % Other
                         
                         fwrite(fid, typecast(s.extended_variable_length_records(j).value, 'uint8'), 'uint8', 0, MACHINE_FORMAT);
-                        disp('other')
+                        fprintf('WARNING: writing Custom uint8 field to EVLR\n');
                         
                 end
                 
@@ -2416,8 +2416,7 @@ if ~isempty(arg.Results.filepath)
             end
             
         end
-        
-    %end
+
     
     %% close file
     
