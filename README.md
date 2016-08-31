@@ -4,6 +4,9 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
 
 # Table of contents
 
++ [License](#license)
++ [Setup](#setup)
++ [Getting started](#getting-started)
 + [Scripts](#scripts)
   - [Input/Output](#scripts-1)
   - [Basic](#scripts-2)
@@ -16,10 +19,14 @@ The Digital Forestry Toolbox is collection of tools and tutorials for Matlab des
   - [Airborne Laser Scanning - Rasters](#data-2)
   - [National Forest Inventories](#data-3)
 
-## License
+## License <a id="license"></a>
 
 * Unless otherwise stated in the file, the code below is licensed under [GNU GPL V3](http://www.gnu.org/licenses/licenses.en.html#GPL GNU GPL).
 * The airborne laser scanning datasets are a courtesy of the States of [Solothurn](http://www.sogis1.so.ch/map/lidar) and [Zürich](http://www.geolion.zh.ch/geodatensatz/show?gdsid=343) (Switzerland). 
+
+## Setup <a id="setup"></a>
+
+## Getting started <a id="getting-started"></a>
 
 ## Scripts <a id="scripts"></a>
 
