@@ -7,7 +7,7 @@ body {
   font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color: #606c71; }
+  color: #606c71; } /* #8eafa6 */
 
 a {
   color: #1e6bb8;
@@ -18,9 +18,9 @@ a {
 .btn {
   display: inline-block;
   margin-bottom: 1rem;
-  color: rgba(255, 255, 255, 0.7);
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 1);
+  background-color: rgba(0, 0, 0, 0.6);
+  border-color: rgba(155, 155, 155, 0.3);
   border-style: solid;
   border-width: 1px;
   border-radius: 0.3rem;
@@ -29,10 +29,10 @@ a {
     margin-left: 1rem; }
 
 .btn:hover {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 204, 102, 255); /* rgba(255, 255, 255, 0.8); */
   text-decoration: none;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3); }
+  background-color: ; rgba(0, 0, 0, 0.55); /* rgba(255, 255, 255, 0.2); */
+    border-color: rgba(255, 204, 102, 255); } /* rgba(255, 255, 255, 0.3); } */
 
 @media screen and (min-width: 64em) {
   .btn {
@@ -54,10 +54,13 @@ a {
       margin-left: 0; } }
 
 .page-header {
-  color: #fff;
+  color: rgba(255, 204, 102, 255); /* #ffc34d; */
+  text-shadow: rgba(0, 0, 0, 1) 0px 0px 35px;
   text-align: center;
-  background-color: #159957;
-  background-image: linear-gradient(120deg, #155799, #159957); }
+  background-image: url(header.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center; }/* linear-gradient(120deg, #155799, #159957); background-color: #159957;} */
 
 @media screen and (min-width: 64em) {
   .page-header {
@@ -88,13 +91,15 @@ a {
     font-size: 1.75rem; } }
 
 .project-tagline {
+  color: #FFFFFF;
+  text-shadow: rgba(0, 0, 0, 1) 0px 0px 40px;
   margin-bottom: 2rem;
   font-weight: normal;
-  opacity: 0.7; }
+  opacity: 1; }
 
 @media screen and (min-width: 64em) {
   .project-tagline {
-    font-size: 1.25rem; } }
+    font-size: 1.6rem; } }
 
 @media screen and (min-width: 42em) and (max-width: 64em) {
   .project-tagline {
@@ -112,7 +117,7 @@ a {
   margin-top: 2rem;
   margin-bottom: 1rem;
   font-weight: normal;
-  color: #159957; }
+  color: #8eafa6; } /* #159957 */
 .main-content p {
   margin-bottom: 1em; }
 .main-content code {
