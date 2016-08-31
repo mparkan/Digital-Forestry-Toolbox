@@ -1,29 +1,59 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
-    <meta charset="UTF-8">
-    <title>Digital-forestry-toolbox by mparkan</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
-  </head>
-  <body>
-    <section class="page-header">
-      <h1 class="project-name">Digital-forestry-toolbox</h1>
-      <h2 class="project-tagline">A collection of digital forestry tools for Matlab</h2>
-      <a href="https://github.com/mparkan/Digital-Forestry-Toolbox" class="btn">View on GitHub</a>
-      <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master" class="btn">Download .zip</a>
-      <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master" class="btn">Download .tar.gz</a>
-    </section>
+    <head>
+        <meta charset="UTF-8">
+        <title>Digital-forestry-toolbox by mparkan</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    </head>
+    <body>
+        <section class="page-header">
+            <h1 class="project-name">Digital-Forestry-Toolbox</h1>
+            <h2 class="project-tagline">A collection of digital forestry tools for Matlab</h2>
+            <a href="https://github.com/mparkan/Digital-Forestry-Toolbox" class="btn">View on GitHub</a>
+            <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master" class="btn">Download .zip</a>
+            <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master" class="btn">Download .tar.gz</a>
+        </section>
 
-    <section class="main-content">
-      <h1>
-<a id="digital-forestry-toolbox" class="anchor" href="#digital-forestry-toolbox" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Digital-Forestry-Toolbox</h1>
+        <section class="main-content">
+            <h1>
+                <a id="about" class="anchor" href="#about" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>About</h1>
 
-<p>The Digital Forestry Toolbox is collection of tools and tutorials for Matlab designed to help process datasets (e.g. remote sensing and field surveys) related to forests.</p>
+            <p>The Digital Forestry Toolbox is collection of tools and tutorials for Matlab designed to help process data (e.g. remote sensing and field surveys) related to forests.</p>
 
+            <h3>
+                <a id="setup" class="anchor" href="#setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setup</h3>
+
+            <ol>
+                <li>Download and decompress the Zip or Tar archive</li>
+                <li>Open any of the functions in Matlab and read the examples in the header</li>
+            </ol>
+
+            <h3>
+                <a id="getting-started" class="anchor" href="getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting started</h3>
+
+            <p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+
+            <h3>
+                <a id="License" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h3>
+
+            <ul>
+                <li>Unless otherwise stated in the file, the code below is licensed under GNU GPL V3.</li>
+                <li>The airborne laser scanning datasets are a courtesy of the States of Solothurn and Zürich (Switzerland).</li>
+            </ul>
+
+            <h3>
+                <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+
+            <p> The Digital Forestry Toolbox was developed by Matthew Parkan (GIS Research Laboratory, EPFL) with support from the Swiss Forestry and Wood Research Fund (project 2013.18)</p>
+
+
+
+
+            <!--
 <h2>
 <a id="image" class="anchor" href="#image" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>image</h2>
 
@@ -56,321 +86,323 @@
 
 <hr>
 
-<h1>
-<a id="table-of-contents" class="anchor" href="#table-of-contents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Table of contents</h1>
+-->
 
-<ul>
-<li>
-<a href="#scripts">Scripts</a>
+            <h1>
+                <a id="table-of-contents" class="anchor" href="#table-of-contents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Table of contents</h1>
 
-<ul>
-<li><a href="#scripts-1">Input/Output</a></li>
-<li><a href="#scripts-2">Basic</a></li>
-<li><a href="#scripts-3">Grids</a></li>
-<li><a href="#scripts-4">Laser metrics</a></li>
-<li><a href="#scripts-5">Tree metrics</a></li>
-<li><a href="#scripts-6">Canopy metrics</a></li>
-</ul>
-</li>
-<li>
-<a href="#data">Data</a>
+            <ul>
+                <li>
+                    <a href="#scripts">Scripts</a>
 
-<ul>
-<li><a href="#data-1">Airborne Laser Scanning - 3D point clouds</a></li>
-<li><a href="#data-2">Airborne Laser Scanning - Rasters</a></li>
-<li><a href="#data-3">National Forest Inventories</a></li>
-</ul>
-</li>
-</ul>
+                    <ul>
+                        <li><a href="#scripts-1">Input/Output</a></li>
+                        <li><a href="#scripts-2">Basic</a></li>
+                        <li><a href="#scripts-3">Grids</a></li>
+                        <li><a href="#scripts-4">Laser metrics</a></li>
+                        <li><a href="#scripts-5">Tree metrics</a></li>
+                        <li><a href="#scripts-6">Canopy metrics</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#data">Data</a>
 
-<h2>
-<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+                    <ul>
+                        <li><a href="#data-1">Airborne Laser Scanning - 3D point clouds</a></li>
+                        <li><a href="#data-2">Airborne Laser Scanning - Rasters</a></li>
+                        <li><a href="#data-3">National Forest Inventories</a></li>
+                    </ul>
+                </li>
+            </ul>
 
-<ul>
-<li>Unless otherwise stated in the file, the code below is licensed under <a href="http://www.gnu.org/licenses/licenses.en.html#GPL%20GNU%20GPL">GNU GPL V3</a>.</li>
-<li>The airborne laser scanning datasets are a courtesy of the States of <a href="http://www.sogis1.so.ch/map/lidar">Solothurn</a> and <a href="http://www.geolion.zh.ch/geodatensatz/show?gdsid=343">Zürich</a> (Switzerland). </li>
-</ul>
+            <h2>
+                <a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
 
-<h2>
-<a id="scripts-" class="anchor" href="#scripts-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Scripts <a id="scripts"></a>
-</h2>
+            <ul>
+                <li>Unless otherwise stated in the file, the code below is licensed under <a href="http://www.gnu.org/licenses/licenses.en.html#GPL%20GNU%20GPL">GNU GPL V3</a>.</li>
+                <li>The airborne laser scanning datasets are a courtesy of the States of <a href="http://www.sogis1.so.ch/map/lidar">Solothurn</a> and <a href="http://www.geolion.zh.ch/geodatensatz/show?gdsid=343">Zürich</a> (Switzerland). </li>
+            </ul>
 
-<h4>
-<a id="inputoutput-" class="anchor" href="#inputoutput-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Input/Output <a id="scripts-1"></a>
-</h4>
+            <h2>
+                <a id="scripts-" class="anchor" href="#scripts-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Scripts <a id="scripts"></a>
+            </h2>
 
-<table>
-<thead>
-<tr>
-<th>Function</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="scripts/io/las/LASread.m"><em>LASread.m</em></a></td>
-<td>Read 3D point cloud from ASPRS LAS (1.0-1.4) file (.las)</td>
-</tr>
-<tr>
-<td><a href="scripts/io/las/LASwrite.m"><em>LASwrite.m</em></a></td>
-<td>Write 3D point cloud to ASPRS LAS (1.0-1.4) file (.las)</td>
-</tr>
-<tr>
-<td><a href="scripts/io/envi/HDRread.m"><em>HDRread.m</em></a></td>
-<td>Read ENVI header file (.hdr)</td>
-</tr>
-<tr>
-<td><a href="scripts/io/sbet/SBETread.m"><em>SBETread.m</em></a></td>
-<td>Read Applanix SBET trajectory file (.sbet)</td>
-</tr>
-<tr>
-<td><a href="scripts/io/trj/TRJread.m"><em>TRJread.m</em></a></td>
-<td>Read Terrascan TRJ trajectory file (.trj)</td>
-</tr>
-</tbody>
-</table>
+            <h4>
+                <a id="inputoutput-" class="anchor" href="#inputoutput-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Input/Output <a id="scripts-1"></a>
+            </h4>
 
-<h4>
-<a id="basic-" class="anchor" href="#basic-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Basic <a id="scripts-2"></a>
-</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Function</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="scripts/io/las/LASread.m"><em>LASread.m</em></a></td>
+                        <td>Read 3D point cloud from ASPRS LAS (1.0-1.4) file (.las)</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/io/las/LASwrite.m"><em>LASwrite.m</em></a></td>
+                        <td>Write 3D point cloud to ASPRS LAS (1.0-1.4) file (.las)</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/io/envi/HDRread.m"><em>HDRread.m</em></a></td>
+                        <td>Read ENVI header file (.hdr)</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/io/sbet/SBETread.m"><em>SBETread.m</em></a></td>
+                        <td>Read Applanix SBET trajectory file (.sbet)</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/io/trj/TRJread.m"><em>TRJread.m</em></a></td>
+                        <td>Read Terrascan TRJ trajectory file (.trj)</td>
+                    </tr>
+                </tbody>
+            </table>
 
-<table>
-<thead>
-<tr>
-<th>Function</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="scripts/basic/LASclip.m"><em>LASclip.m</em></a></td>
-<td>Clip 3D point cloud (LAS file) with a polygon</td>
-</tr>
-<tr>
-<td><a href="scripts/basic/LASmerge.m"><em>LASmerge.m</em></a></td>
-<td>Merge 3D point clouds (LAS files)</td>
-</tr>
-<tr>
-<td><a href="scripts/basic/LASextent.m"><em>LASextent.m</em></a></td>
-<td>Extract spatial extent of 3D point clouds (LAS files) and write result to ESRI shapefile (.shp)</td>
-</tr>
-<tr>
-<td><a href="scripts/basic/crossSection.m"><em>crossSection.m</em></a></td>
-<td>Extract a 2D cross-section from a 3D point cloud</td>
-</tr>
-</tbody>
-</table>
+            <h4>
+                <a id="basic-" class="anchor" href="#basic-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Basic <a id="scripts-2"></a>
+            </h4>
 
-<h4>
-<a id="grids-" class="anchor" href="#grids-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Grids <a id="scripts-3"></a>
-</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Function</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="scripts/basic/LASclip.m"><em>LASclip.m</em></a></td>
+                        <td>Clip 3D point cloud (LAS file) with a polygon</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/basic/LASmerge.m"><em>LASmerge.m</em></a></td>
+                        <td>Merge 3D point clouds (LAS files)</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/basic/LASextent.m"><em>LASextent.m</em></a></td>
+                        <td>Extract spatial extent of 3D point clouds (LAS files) and write result to ESRI shapefile (.shp)</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/basic/crossSection.m"><em>crossSection.m</em></a></td>
+                        <td>Extract a 2D cross-section from a 3D point cloud</td>
+                    </tr>
+                </tbody>
+            </table>
 
-<table>
-<thead>
-<tr>
-<th>Function</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="scripts/grids/rasterize.m"><em>rasterize.m</em></a></td>
-<td>Convert a 3D point cloud to a 2D/3D raster</td>
-</tr>
-<tr>
-<td><a href="scripts/grids/elevationModels.m"><em>elevationModels.m</em></a></td>
-<td>Compute elevation models (i.e. terrain, surface, height) from a 3D classified point cloud</td>
-</tr>
-</tbody>
-</table>
+            <h4>
+                <a id="grids-" class="anchor" href="#grids-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Grids <a id="scripts-3"></a>
+            </h4>
 
-<h4>
-<a id="laser-metrics-" class="anchor" href="#laser-metrics-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Laser metrics <a id="scripts-4"></a>
-</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Function</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="scripts/grids/rasterize.m"><em>rasterize.m</em></a></td>
+                        <td>Convert a 3D point cloud to a 2D/3D raster</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/grids/elevationModels.m"><em>elevationModels.m</em></a></td>
+                        <td>Compute elevation models (i.e. terrain, surface, height) from a 3D classified point cloud</td>
+                    </tr>
+                </tbody>
+            </table>
 
-<table>
-<thead>
-<tr>
-<th>Function</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="scripts/laser%20metrics/laserEchoRatio.m"><em>laserEchoRatio.m</em></a></td>
-<td>Computes the echo ratio of a 3D point cloud</td>
-</tr>
-<tr>
-<td><a href="scripts/laser%20metrics/laserPulses.m"><em>laserPulses.m</em></a></td>
-<td>Determines the pulse number associated with the individual returns (sorted by acquisition GPS time)</td>
-</tr>
-<tr>
-<td><a href="scripts/laser%20metrics/laserTimeFormat.m"><em>laserTimeFormat.m</em></a></td>
-<td>Convert GPS week time to GPS satellite time, GPS adjusted time or UTC time</td>
-</tr>
-<tr>
-<td><a href="scripts/laser%20metrics/laserIntensityCorrection.m"><em>laserIntensityCorrection.m</em></a></td>
-<td>Corrects return intensity for the sensor to target range</td>
-</tr>
-</tbody>
-</table>
+            <h4>
+                <a id="laser-metrics-" class="anchor" href="#laser-metrics-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Laser metrics <a id="scripts-4"></a>
+            </h4>
 
-<h4>
-<a id="tree-metrics-" class="anchor" href="#tree-metrics-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Tree metrics <a id="scripts-5"></a>
-</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Function</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="scripts/laser%20metrics/laserEchoRatio.m"><em>laserEchoRatio.m</em></a></td>
+                        <td>Computes the echo ratio of a 3D point cloud</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/laser%20metrics/laserPulses.m"><em>laserPulses.m</em></a></td>
+                        <td>Determines the pulse number associated with the individual returns (sorted by acquisition GPS time)</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/laser%20metrics/laserTimeFormat.m"><em>laserTimeFormat.m</em></a></td>
+                        <td>Convert GPS week time to GPS satellite time, GPS adjusted time or UTC time</td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/laser%20metrics/laserIntensityCorrection.m"><em>laserIntensityCorrection.m</em></a></td>
+                        <td>Corrects return intensity for the sensor to target range</td>
+                    </tr>
+                </tbody>
+            </table>
 
-<table>
-<thead>
-<tr>
-<th>Function</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="scripts/tree%20metrics/treeRegionGrowing.m"><em>treeRegionGrowing.m</em></a></td>
-<td>Extract individual tree crowns from a 3D point cloud using a modified version of the top down region growing algorithm described in <a href="http://kellylab.berkeley.edu/storage/papers/2012-Li-etal-PERS.pdf">Li et al. (2012)</a>
-</td>
-</tr>
-<tr>
-<td><a href="scripts/tree%20metrics/treeWatershed.m"><em>treeWatershed.m</em></a></td>
-<td>Extract individual tree crowns from a raster Canopy Height Model (CHM) the using marker-controlled watershed segmentation described in <a href="http://link.springer.com/article/10.1007/s10310-007-0041-9">Kwak et al. (2007)</a>
-</td>
-</tr>
-<tr>
-<td><a href="scripts/tree%20metrics/treePeaks.m"><em>treePeaks.m</em></a></td>
-<td>Find local maxima (peaks) coordinates in a raster Canopy Height Model (CHM)</td>
-</tr>
-</tbody>
-</table>
+            <h4>
+                <a id="tree-metrics-" class="anchor" href="#tree-metrics-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Tree metrics <a id="scripts-5"></a>
+            </h4>
 
-<h4>
-<a id="canopy-metrics-" class="anchor" href="#canopy-metrics-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Canopy metrics <a id="scripts-6"></a>
-</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Function</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="scripts/tree%20metrics/treeRegionGrowing.m"><em>treeRegionGrowing.m</em></a></td>
+                        <td>Extract individual tree crowns from a 3D point cloud using a modified version of the top down region growing algorithm described in <a href="http://kellylab.berkeley.edu/storage/papers/2012-Li-etal-PERS.pdf">Li et al. (2012)</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/tree%20metrics/treeWatershed.m"><em>treeWatershed.m</em></a></td>
+                        <td>Extract individual tree crowns from a raster Canopy Height Model (CHM) the using marker-controlled watershed segmentation described in <a href="http://link.springer.com/article/10.1007/s10310-007-0041-9">Kwak et al. (2007)</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><a href="scripts/tree%20metrics/treePeaks.m"><em>treePeaks.m</em></a></td>
+                        <td>Find local maxima (peaks) coordinates in a raster Canopy Height Model (CHM)</td>
+                    </tr>
+                </tbody>
+            </table>
 
-<table>
-<thead>
-<tr>
-<th>Function</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="scripts/canopy%20metrics/canopyCover.m"><em>canopyCover.m</em></a></td>
-<td>Computes a canopy crown cover map using either a convolution window or the Delaunay triangulation method described in <a href="http://www.mdpi.com/2072-4292/4/3/762/htm">Eysn et al. (2012)</a>
-</td>
-</tr>
-</tbody>
-</table>
+            <h4>
+                <a id="canopy-metrics-" class="anchor" href="#canopy-metrics-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Canopy metrics <a id="scripts-6"></a>
+            </h4>
 
-<h2>
-<a id="data-" class="anchor" href="#data-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Data <a id="data"></a>
-</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Function</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="scripts/canopy%20metrics/canopyCover.m"><em>canopyCover.m</em></a></td>
+                        <td>Computes a canopy crown cover map using either a convolution window or the Delaunay triangulation method described in <a href="http://www.mdpi.com/2072-4292/4/3/762/htm">Eysn et al. (2012)</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
-<h4>
-<a id="airborne-laser-scanning---3d-point-clouds-" class="anchor" href="#airborne-laser-scanning---3d-point-clouds-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Airborne Laser Scanning - 3D point clouds <a id="data-1"></a>
-</h4>
+            <h2>
+                <a id="data-" class="anchor" href="#data-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Data <a id="data"></a>
+            </h2>
 
-<table>
-<thead>
-<tr>
-<th>File</th>
-<th>Land cover</th>
-<th>Location</th>
-<th>Sensor</th>
-<th>Date</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="http://maps.zh.ch/download/hoehen/2014/lidar/6995_2710.laz"><em>6995_2710.laz</em> (external link)</a></td>
-<td>Mixed forest</td>
-<td>Zürich, Switzerland (47.58384 N, 8.76594 E, ~380 m ASL), <a href="https://map.geo.admin.ch/?topic=ech&amp;lang=fr&amp;bgLayer=ch.swisstopo.swissimage&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bafu.wrz-wildruhezonen_portal,ch.swisstopo.swisstlm3d-wanderwege&amp;layers_visibility=false,false,false,false&amp;layers_timestamp=18641231,,,&amp;X=271212&amp;Y=699817&amp;zoom=10&amp;crosshair=marker">see map</a>
-</td>
-<td>Trimble AX60</td>
-<td>March 10-13, 2014</td>
-</tr>
-<tr>
-<td><a href="http://maps.zh.ch/download/hoehen/2014/lidar/6850_2475.laz"><em>6850_2475.laz</em> (external link)</a></td>
-<td>Urban, mixed forest</td>
-<td>Zürich, Switzerland (47.37460 N, 8.56824 E, ~550 m ASL), <a href="https://map.geo.admin.ch/?topic=ech&amp;lang=fr&amp;bgLayer=ch.swisstopo.swissimage&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bafu.wrz-wildruhezonen_portal,ch.swisstopo.swisstlm3d-wanderwege&amp;layers_visibility=false,false,false,false&amp;layers_timestamp=18641231,,,&amp;X=247761&amp;Y=685308&amp;zoom=9&amp;crosshair=marker">see map</a>
-</td>
-<td>Trimble AX60</td>
-<td>April 2, 2014</td>
-</tr>
-<tr>
-<td><a href="data/measurements/vector/als/zh_2014_coniferous.laz"><em>zh_2014_coniferous.laz</em></a></td>
-<td>Coniferous forest</td>
-<td>Zürich, Switzerland (47.58378 N, 8.76275 E, ~380 m ASL), <a href="https://map.geo.admin.ch/?topic=ech&amp;lang=fr&amp;bgLayer=ch.swisstopo.swissimage&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&amp;layers_visibility=false,false,false,false&amp;layers_timestamp=18641231,,,&amp;X=271187&amp;Y=699615&amp;zoom=11&amp;crosshair=marker">see map</a>
-</td>
-<td>Trimble AX60</td>
-<td>March 10-13, 2014</td>
-</tr>
-<tr>
-<td><a href="data/measurements/vector/als/so_2014_woodland_pasture.laz"><em>so_2014_woodland_pasture.laz</em></a></td>
-<td>Woodland Pasture</td>
-<td>Solothurn, Switzerland (47.25952 N, 7.46979 E, ~830 m ASL), <a href="https://map.geo.admin.ch/?topic=ech&amp;lang=fr&amp;bgLayer=ch.swisstopo.swissimage&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&amp;layers_visibility=false,false,false,false&amp;layers_timestamp=18641231,,,&amp;X=234291&amp;Y=602359&amp;zoom=11&amp;crosshair=marker">see map</a>
-</td>
-<td>Trimble AX60</td>
-<td>April 7, 2014</td>
-</tr>
-</tbody>
-</table>
+            <h4>
+                <a id="airborne-laser-scanning---3d-point-clouds-" class="anchor" href="#airborne-laser-scanning---3d-point-clouds-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Airborne Laser Scanning - 3D point clouds <a id="data-1"></a>
+            </h4>
 
-<h4>
-<a id="airborne-laser-scanning---rasters-" class="anchor" href="#airborne-laser-scanning---rasters-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Airborne Laser Scanning - Rasters <a id="data-2"></a>
-</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Land cover</th>
+                        <th>Location</th>
+                        <th>Sensor</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="http://maps.zh.ch/download/hoehen/2014/lidar/6995_2710.laz"><em>6995_2710.laz</em> (external link)</a></td>
+                        <td>Mixed forest</td>
+                        <td>Zürich, Switzerland (47.58384 N, 8.76594 E, ~380 m ASL), <a href="https://map.geo.admin.ch/?topic=ech&amp;lang=fr&amp;bgLayer=ch.swisstopo.swissimage&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bafu.wrz-wildruhezonen_portal,ch.swisstopo.swisstlm3d-wanderwege&amp;layers_visibility=false,false,false,false&amp;layers_timestamp=18641231,,,&amp;X=271212&amp;Y=699817&amp;zoom=10&amp;crosshair=marker">see map</a>
+                        </td>
+                        <td>Trimble AX60</td>
+                        <td>March 10-13, 2014</td>
+                    </tr>
+                    <tr>
+                        <td><a href="http://maps.zh.ch/download/hoehen/2014/lidar/6850_2475.laz"><em>6850_2475.laz</em> (external link)</a></td>
+                        <td>Urban, mixed forest</td>
+                        <td>Zürich, Switzerland (47.37460 N, 8.56824 E, ~550 m ASL), <a href="https://map.geo.admin.ch/?topic=ech&amp;lang=fr&amp;bgLayer=ch.swisstopo.swissimage&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bafu.wrz-wildruhezonen_portal,ch.swisstopo.swisstlm3d-wanderwege&amp;layers_visibility=false,false,false,false&amp;layers_timestamp=18641231,,,&amp;X=247761&amp;Y=685308&amp;zoom=9&amp;crosshair=marker">see map</a>
+                        </td>
+                        <td>Trimble AX60</td>
+                        <td>April 2, 2014</td>
+                    </tr>
+                    <tr>
+                        <td><a href="data/measurements/vector/als/zh_2014_coniferous.laz"><em>zh_2014_coniferous.laz</em></a></td>
+                        <td>Coniferous forest</td>
+                        <td>Zürich, Switzerland (47.58378 N, 8.76275 E, ~380 m ASL), <a href="https://map.geo.admin.ch/?topic=ech&amp;lang=fr&amp;bgLayer=ch.swisstopo.swissimage&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&amp;layers_visibility=false,false,false,false&amp;layers_timestamp=18641231,,,&amp;X=271187&amp;Y=699615&amp;zoom=11&amp;crosshair=marker">see map</a>
+                        </td>
+                        <td>Trimble AX60</td>
+                        <td>March 10-13, 2014</td>
+                    </tr>
+                    <tr>
+                        <td><a href="data/measurements/vector/als/so_2014_woodland_pasture.laz"><em>so_2014_woodland_pasture.laz</em></a></td>
+                        <td>Woodland Pasture</td>
+                        <td>Solothurn, Switzerland (47.25952 N, 7.46979 E, ~830 m ASL), <a href="https://map.geo.admin.ch/?topic=ech&amp;lang=fr&amp;bgLayer=ch.swisstopo.swissimage&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&amp;layers_visibility=false,false,false,false&amp;layers_timestamp=18641231,,,&amp;X=234291&amp;Y=602359&amp;zoom=11&amp;crosshair=marker">see map</a>
+                        </td>
+                        <td>Trimble AX60</td>
+                        <td>April 7, 2014</td>
+                    </tr>
+                </tbody>
+            </table>
 
-<table>
-<thead>
-<tr>
-<th>File</th>
-<th>Land cover</th>
-<th>Location</th>
-<th>Sensor</th>
-<th>Date</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="data/measurements/raster/chm/so_2014_woodland_pasture.tif"><em>so_2014_woodland_pasture.tif</em></a></td>
-<td>Woodland Pasture</td>
-<td>Solothurn, Switzerland (47.25952 N, 7.46979 E, ~830 m ASL), <a href="https://map.geo.admin.ch/?topic=ech&amp;lang=fr&amp;bgLayer=ch.swisstopo.swissimage&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&amp;layers_visibility=false,false,false,false&amp;layers_timestamp=18641231,,,&amp;X=234291&amp;Y=602359&amp;zoom=11&amp;crosshair=marker">see map</a>
-</td>
-<td>Trimble AX60</td>
-<td>April 7, 2014</td>
-</tr>
-</tbody>
-</table>
+            <h4>
+                <a id="airborne-laser-scanning---rasters-" class="anchor" href="#airborne-laser-scanning---rasters-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Airborne Laser Scanning - Rasters <a id="data-2"></a>
+            </h4>
 
-<h4>
-<a id="national-forest-inventories-" class="anchor" href="#national-forest-inventories-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>National Forest Inventories <a id="data-3"></a>
-</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Land cover</th>
+                        <th>Location</th>
+                        <th>Sensor</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="data/measurements/raster/chm/so_2014_woodland_pasture.tif"><em>so_2014_woodland_pasture.tif</em></a></td>
+                        <td>Woodland Pasture</td>
+                        <td>Solothurn, Switzerland (47.25952 N, 7.46979 E, ~830 m ASL), <a href="https://map.geo.admin.ch/?topic=ech&amp;lang=fr&amp;bgLayer=ch.swisstopo.swissimage&amp;layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&amp;layers_visibility=false,false,false,false&amp;layers_timestamp=18641231,,,&amp;X=234291&amp;Y=602359&amp;zoom=11&amp;crosshair=marker">see map</a>
+                        </td>
+                        <td>Trimble AX60</td>
+                        <td>April 7, 2014</td>
+                    </tr>
+                </tbody>
+            </table>
 
-<table>
-<thead>
-<tr>
-<th>File</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="/data/reference/tabular/nfi/swiss_nfi_flora.xlsx"><em>swiss_nfi_flora.xlsx</em></a></td>
-<td>Swiss National Forest Inventory (NFI), tree species Latin/vernacular (English, French, German, Italian) names and codes</td>
-</tr>
-</tbody>
-</table>
+            <h4>
+                <a id="national-forest-inventories-" class="anchor" href="#national-forest-inventories-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>National Forest Inventories <a id="data-3"></a>
+            </h4>
 
-      <footer class="site-footer">
-        <span class="site-footer-owner"><a href="https://github.com/mparkan/Digital-Forestry-Toolbox">Digital-forestry-toolbox</a> is maintained by <a href="https://github.com/mparkan">mparkan</a>.</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="/data/reference/tabular/nfi/swiss_nfi_flora.xlsx"><em>swiss_nfi_flora.xlsx</em></a></td>
+                        <td>Swiss National Forest Inventory (NFI), tree species Latin/vernacular (English, French, German, Italian) names and codes</td>
+                    </tr>
+                </tbody>
+            </table>
 
-        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
-      </footer>
+            <footer class="site-footer">
+                <span class="site-footer-owner"><a href="https://github.com/mparkan/Digital-Forestry-Toolbox">Digital-forestry-toolbox</a> is maintained by <a href="https://github.com/mparkan">mparkan</a>.</span>
 
-    </section>
+                <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+            </footer>
 
-  
-  </body>
+        </section>
+
+
+    </body>
 </html>
