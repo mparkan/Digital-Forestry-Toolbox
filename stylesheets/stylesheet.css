@@ -57,7 +57,7 @@ a {
   color: rgba(255, 204, 102, 255); /* #ffc34d; */
   text-shadow: rgba(0, 0, 0, 1) 0px 0px 35px;
   text-align: center;
-  background-image: url(header.png);
+  background-image: url(header.jpg);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center; }/* linear-gradient(120deg, #155799, #159957); background-color: #159957;} */
