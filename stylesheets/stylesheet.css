@@ -117,7 +117,7 @@ a {
   margin-top: 2rem;
   margin-bottom: 1rem;
   font-weight: normal;
-  color: #8eafa6; } /* #159957 */
+    color: rgba(91, 117, 109, 255); } /* #8eafa6; } */ /* #159957 */
 .main-content p {
   margin-bottom: 1em; }
 .main-content code {

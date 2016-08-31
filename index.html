@@ -23,7 +23,7 @@
                 <a id="about" class="anchor" href="#about" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>About
             </h2>
 
-            <p>The Digital Forestry Toolbox (DFT) is collection of tools and tutorials for Matlab designed to help process and analyze data (e.g. remote sensing and field surveys) related to forests.</p>
+            <p>The Digital Forestry Toolbox (DFT) is collection of tools and tutorials for Matlab designed to help process and analyze remote sensing data related to forests.</p>
 
             <h2>
                 <a id="setup" class="anchor" href="#setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setup
@@ -41,11 +41,21 @@
                 <a id="getting-started" class="anchor" href="getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting started
             </h2>
 
+
             <h3>
                 <a id="getting-started-1" class="anchor" href="getting-started-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Reading a LAS file
             </h3>
 
+            <p> Use <code>LASread()</code> to import the contents of a LAS (1.0-1.4) file into a structure:</p>
+            <p><code>pc = LASread('zh_2014_coniferous.las');</code></p>
 
+            <p> You can then access any of the standard LAS format blocks, e.g.:</p>
+            <ol>
+                <li><code>pc.header</code></li>
+                <li><code>pc.variable_length_records</code></li>
+                <li><code>pc.record</code></li>
+                <li><code>pc.extended_variable_length_records</code></li>
+            </ol>
             <h3>
                 <a id="getting-started-2" class="anchor" href="getting-started-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Diplaying a 3D point cloud
             </h3>
