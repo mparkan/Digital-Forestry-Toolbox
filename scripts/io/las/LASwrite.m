@@ -2387,12 +2387,12 @@ if ~isempty(arg.Results.filepath)
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint8', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom uint8 field to EVLR\n');
                         
-                    case {5010, 5025, 5026, 5027} % Custom uint16 field (optional)
+                    case {5010, 5011, 5012, 5025, 5026, 5027, 5040, 5041} % Custom uint16 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint16', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom uint16 field to EVLR\n');
                         
-                    case {5000, 5040, 5041, 5042} % Custom uint32 field (optional)
+                    case {5000, 5042} % Custom uint32 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint32', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom uint32 field to EVLR\n');
