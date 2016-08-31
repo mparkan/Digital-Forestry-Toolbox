@@ -63,7 +63,7 @@
             <p> In order to display all classes except noise points (class 7), we start by creating a logical indexing variable:</p>
             <p><code>idxl_noise = ismember(pc.record.classification, 7);</code></p>
 
-            <p> We then use <code>scatter3()</code> to plot the point cloud colored by return intensity:</p>
+            <p> We then use <code>scatter3()</code> to plot non-noise points colored by return intensity:</p>
 
 <pre><code>figure
 scatter3(pc.record.x(~idxl_noise), ...
