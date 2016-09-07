@@ -1,9 +1,9 @@
 function [models, refmat] = elevationModels(xyz, classification, varargin)
 % ELEVATIONMODELS - computes a Digital Terrain Model (DTM), a Digital Surface Model
-% (DSM) and a Digital Height Model (DHM) from the 3D classified points defined by XYZ and CLASSIFICATION.
+% (DSM), a Digital Height Model (DHM) and a boolean mask from the 3D classified points defined by XYZ and CLASSIFICATION.
 %
 % [MODELS, REFMAT] = ELEVATIONMODELS(XYZ, CLASSIFICATION, ...) returns a structure containing 
-% elevation model values (MODELS.TERRAIN.VALUES, MODELS.SURFACE.VALUES and MODELS.HEIGHT.VALUES), their respective interpolant 
+% elevation model values (MODELS.TERRAIN.VALUES, MODELS.SURFACE.VALUES, MODELS.HEIGHT.VALUES, MODELS.MASK), their respective interpolant 
 % functions (MODELS.TERRAIN.INTERPOLANT) and optionally point density maps (MODELS.TERRAIN.POINT_DENSITY, MODELS.SURFACE.POINT_DENSITY) 
 % from the classified 3D point cloud defined by XYZ and CLASSIFICATION.
 %
@@ -42,7 +42,7 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %    fig (optional, default: true) - boolean value, switch to plot figures
 %
 % Outputs:
-%    models - structure, terrain, surface and height models with their respective
+%    models - structure, terrain, surface, height models, boolean mask (no points) with their respective
 %    interpolant functions and optionally point density maps
 %
 %    refmat - 3x2 numeric matrix, spatial referencing matrix, such that xy_map = [row, col, ones(nrows,1)] * refmat
@@ -83,7 +83,7 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 26, 2016
+% Last revision: September 7, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -138,6 +138,12 @@ end
 
 [grid_x, grid_y] = meshgrid(xv, yv);
 [nrows, ncols] = size(grid_x);
+
+
+%% compute boolean mask
+
+[~, ~, mask] = rasterize(xyz, xv, yv, [], xyz(:,3), @any, false);
+models.mask = flipud(mask);
 
 
 %% compute Terrain Model (DTM)
@@ -196,8 +202,9 @@ if any(ismember(arg.Results.outputModels, {'dtm', 'dsm', 'dhm'}));
         if arg.Results.fig
             
             figure
-            imagesc(models.terrain.values)
+            gh11 = imagesc(models.terrain.values);
             colormap(gray)
+            set(gh11, 'AlphaData', models.mask)
             title('Terrain Model')
             axis equal tight
             colorbar
@@ -214,7 +221,8 @@ if any(ismember(arg.Results.outputModels, {'dtm', 'dsm', 'dhm'}));
             if arg.Results.fig
                 
                 figure
-                imagesc(models.terrain.point_density)
+                gh12 = imagesc(models.terrain.point_density);
+                set(gh12, 'AlphaData', models.mask)
                 title('TerrainModel - Point density')
                 axis equal tight
                 colorbar
@@ -274,7 +282,8 @@ if any(ismember(arg.Results.outputModels, {'dsm', 'dhm'}));
     if arg.Results.fig
         
         figure
-        imagesc(models.surface.values)
+        gh21 = imagesc(models.surface.values);
+        set(gh21, 'AlphaData', models.mask)
         colormap(gray)
         title('Surface Model')
         axis equal tight
@@ -291,7 +300,8 @@ if any(ismember(arg.Results.outputModels, {'dsm', 'dhm'}));
         if arg.Results.fig
             
             figure
-            imagesc(models.surface.point_density)
+            gh22 = imagesc(models.surface.point_density);
+            set(gh22, 'AlphaData', models.mask)
             title('Surface Model - Point density')
             axis equal tight
             colorbar
@@ -325,7 +335,8 @@ if any(ismember(arg.Results.outputModels, 'dhm'));
     if arg.Results.fig
         
         figure
-        imagesc(models.height.values)
+        gh31 = imagesc(models.height.values);
+        set(gh31, 'AlphaData', models.mask)
         colormap(gray)
         title('Height Model')
         axis equal tight
