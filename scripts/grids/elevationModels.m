@@ -1,10 +1,11 @@
 function [models, refmat] = elevationModels(xyz, classification, varargin)
 % ELEVATIONMODELS - computes a Digital Terrain Model (DTM), a Digital Surface Model
-% (DSM), a Digital Height Model (DHM) and a boolean mask from the 3D classified points defined by XYZ and CLASSIFICATION.
+% (DSM), a Digital Height Model (DHM) and point density maps from the 3D classified points defined by XYZ and CLASSIFICATION.
 %
 % [MODELS, REFMAT] = ELEVATIONMODELS(XYZ, CLASSIFICATION, ...) returns a structure containing 
-% elevation model values (MODELS.TERRAIN.VALUES, MODELS.SURFACE.VALUES, MODELS.HEIGHT.VALUES, MODELS.MASK), their respective interpolant 
-% functions (MODELS.TERRAIN.INTERPOLANT) and optionally point density maps (MODELS.TERRAIN.POINT_DENSITY, MODELS.SURFACE.POINT_DENSITY) 
+% elevation model values (MODELS.TERRAIN.VALUES, MODELS.SURFACE.VALUES, MODELS.HEIGHT.VALUES), the terrain interpolant 
+% function (MODELS.TERRAIN.INTERPOLANT), a boolean mask with missing data areas (MODELS.MASK) and 
+% point density maps (MODELS.DENSITY.OVERALL, MODELS.DENSITY.TERRAIN, MODELS.DENSITY.SURFACE) 
 % from the classified 3D point cloud defined by XYZ and CLASSIFICATION.
 %
 % Syntax:  [models, refmat] = elevationModels(xyz, classification, ...)
@@ -27,23 +28,22 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %
 %    classSurface (optional, default: [4, 5, 6]) - numeric vector, point classes used to represent the surface
 %
-%    maxFillArea (optional, default: inf) - numeric value, maximum contiguous missing data area that will
+%    maxFillArea (optional, default: inf) - numeric value, maximum contiguous missing data areas that will
 %    be interpolated. Missing data areas larger than this value will be filled with NaN.
 %
 %    smoothingFilter (optional, default: []) - numeric matrix, two-dimensional smoothing
 %    filter, e.g. fspecial('gaussian', [4 4], 1)
 %
-%    outputModels (optional, default: {'dtm','dsm','dhm'}) - cell array of strings, output models i.e {'dtm','dsm','dhm'}
-%
-%    outputDensity (optional, default: true) - boolean value, flag indicating if point density maps are computed
+%    outputModels (optional, default: {'terrain', 'surface', 'height', 'density'}) - cell array of strings, output models i.e {'terrain', 'surface', 'height', 'density'}
 %
 %    verbose (optional, default: true) - boolean value, verbosiy switch
 %
 %    fig (optional, default: true) - boolean value, switch to plot figures
 %
 % Outputs:
-%    models - structure, terrain, surface, height models, boolean mask (no points) with their respective
-%    interpolant functions and optionally point density maps
+%    models - structure, boolean mask (missing data areas), terrain,
+%    surface, height and point density models, interpolant function for the
+%    terrain model
 %
 %    refmat - 3x2 numeric matrix, spatial referencing matrix, such that xy_map = [row, col, ones(nrows,1)] * refmat
 %
@@ -54,14 +54,14 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %    z = pc.record.z;
 %    classification = pc.record.classification;
 %
-%    [models, refmat] = elevationModels([x, y, z], classification, ...
+%    [models, refmat] = elevationModels([x, y, z], ...
+%     classification, ...
 %     'classTerrain', [2], ...
 %     'classSurface', [18], ...
 %     'cellResolution', 1, ...
 %     'maxFillArea', inf, ...
 %     'smoothingFilter', [], ...
-%     'outputModels', {'dtm','dsm','dhm'}, ...
-%     'outputDensity', true, ...
+%     'outputModels', {'terrain', 'surface', 'height', 'density'}, ...
 %     'fig', true, ...
 %     'verbose', true);
 %
@@ -83,7 +83,7 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: September 7, 2016
+% Last revision: September 8, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -94,19 +94,18 @@ arg = inputParser;
 
 addRequired(arg, 'xyz', @(x) (size(x,2) == 3) && isnumeric(x));
 addRequired(arg, 'classification', @(x) (size(x,2) == 1) && isnumeric(x));
-addParamValue(arg, 'classTerrain', [2, 3, 9], @isnumeric);
-addParamValue(arg, 'classSurface', [4, 5, 6], @isnumeric);
-addParamValue(arg, 'cellResolution', 1, @(x) isnumeric(x) & (numel(x) == 1));
-addParamValue(arg, 'xv', [], @isnumeric);
-addParamValue(arg, 'yv', [], @isnumeric);
-addParamValue(arg, 'maxFillArea', inf, @(x) isnumeric(x) & (numel(x) == 1));
-addParamValue(arg, 'smoothingFilter', [], @isnumeric); % fspecial('gaussian', [6, 6], 1)
-addParamValue(arg, 'outputModels', {'dtm', 'dsm', 'dhm'}, @(x) iscell(x) & any(ismember(x, {'dtm', 'dsm', 'dhm'})));
-addParamValue(arg, 'outputDensity', false, @(x) islogical(x) & (numel(x) == 1));
-addParamValue(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
-addParamValue(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'classTerrain', [2, 3, 9], @isnumeric);
+addParameter(arg, 'classSurface', [4, 5, 6], @isnumeric);
+addParameter(arg, 'cellResolution', 1, @(x) isnumeric(x) & (numel(x) == 1));
+addParameter(arg, 'xv', [], @isnumeric);
+addParameter(arg, 'yv', [], @isnumeric);
+addParameter(arg, 'maxFillArea', inf, @(x) isnumeric(x) & (numel(x) == 1));
+addParameter(arg, 'smoothingFilter', [], @isnumeric);
+addParameter(arg, 'outputModels', {'terrain', 'surface', 'height', 'density'}, @(x) iscell(x) & any(ismember(x, {'terrain', 'surface', 'height', 'density'})));
+addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
-parse(arg, xyz, classification, varargin{:}); % classTerrain, classSurface
+parse(arg, xyz, classification, varargin{:});
 
 
 %% create regular grid
@@ -137,7 +136,6 @@ else
 end
 
 [grid_x, grid_y] = meshgrid(xv, yv);
-[nrows, ncols] = size(grid_x);
 
 
 %% compute boolean mask
@@ -146,9 +144,54 @@ end
 models.mask = flipud(mask);
 
 
+%% compute overall point density
+
+if any(ismember(arg.Results.outputModels, {'density'}));
+    
+    if arg.Results.verbose
+        
+        fprintf('computing overall (all classes) point density...');
+        
+    end
+    
+    [~, ~, density_overall] = rasterize(xyz, xv, yv, [], xyz(:,3), @numel, 0);
+    models.density.overall = flipud(density_overall);
+    
+    if arg.Results.verbose
+        
+        fprintf('done!\n');
+        
+    end
+    
+    % print overall (all classes) density statistics
+    if arg.Results.verbose
+        
+        % compute point density statistics
+        fprintf('median point density (all classes): %u\n', median(models.density.overall(models.mask)));
+        fprintf('mean point density (all classes): %.1f\n', mean(models.density.overall(models.mask)));
+        fprintf('max point density (all classes): %u\n', max(models.density.overall(models.mask)));
+        fprintf('standard deviation point density (all classes): %.1f\n', std(models.density.overall(models.mask)));
+        
+    end
+    
+    % plot overall point density
+    if arg.Results.fig
+        
+        figure
+        gh01 = imagesc(models.density.overall);
+        set(gh01, 'AlphaData', models.mask)
+        title('Overall (all classes) point density')
+        axis equal tight
+        colorbar
+        
+    end
+    
+end
+
+
 %% compute Terrain Model (DTM)
 
-if any(ismember(arg.Results.outputModels, {'dtm', 'dsm', 'dhm'}));
+if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}));
     
     idxl_terrain = ismember(classification, arg.Results.classTerrain);
     
@@ -163,7 +206,7 @@ if any(ismember(arg.Results.outputModels, {'dtm', 'dsm', 'dhm'}));
         xyz_terrain = xyz(idxl_terrain, :);
         
         % rasterize
-        [idxl_in, dtm_cr, dtm] = rasterize(xyz_terrain(:,1:3), xv, yv, [], xyz_terrain(:,3), @min, NaN);
+        [idxl_in, ~, dtm] = rasterize(xyz_terrain(:,1:3), xv, yv, [], xyz_terrain(:,3), @min, NaN);
         
         % interpolate missing areas
         idxl_dtm_missing = isnan(dtm);
@@ -212,18 +255,18 @@ if any(ismember(arg.Results.outputModels, {'dtm', 'dsm', 'dhm'}));
         end
         
         % compute terrain model point density
-        if arg.Results.outputDensity
+        if any(ismember(arg.Results.outputModels, {'density'}));
             
-            %[nrows, ncols] = size(dtm);
-            models.terrain.point_density = accumarray([dtm_cr(:,2), dtm_cr(:,1)], xyz_terrain(idxl_in,1), [nrows, ncols], @numel, 0);
+            [~, ~, density_terrain] = rasterize(xyz_terrain(idxl_in,:), xv, yv, [], xyz_terrain(idxl_in,3), @numel, 0);
+            models.density.terrain = flipud(density_terrain);
             
             % display terrain model point density
             if arg.Results.fig
                 
                 figure
-                gh12 = imagesc(models.terrain.point_density);
+                gh12 = imagesc(models.density.terrain);
                 set(gh12, 'AlphaData', models.mask)
-                title('TerrainModel - Point density')
+                title('Terrain Model - Point density')
                 axis equal tight
                 colorbar
                 
@@ -248,7 +291,7 @@ end
 
 %% compute Surface Model (DSM)
 
-if any(ismember(arg.Results.outputModels, {'dsm', 'dhm'}));
+if any(ismember(arg.Results.outputModels, {'surface', 'height'}));
     
     if arg.Results.verbose
         
@@ -259,7 +302,7 @@ if any(ismember(arg.Results.outputModels, {'dsm', 'dhm'}));
     xyz_surface = xyz(ismember(classification, [arg.Results.classTerrain, arg.Results.classSurface]), :);
     
     % rasterize
-    [idxl_in, dsm_cr, dsm] = rasterize(xyz_surface, xv, yv, [], xyz_surface(:,3), @max, NaN);
+    [idxl_in, ~, dsm] = rasterize(xyz_surface, xv, yv, [], xyz_surface(:,3), @max, NaN);
     dsm = flipud(dsm); % flip verticaly
     idxl_dsm_missing = isnan(dsm);
 
@@ -292,15 +335,16 @@ if any(ismember(arg.Results.outputModels, {'dsm', 'dhm'}));
     end
     
     % compute surface model point density
-    if arg.Results.outputDensity
+    if any(ismember(arg.Results.outputModels, {'density'}));
         
-        models.surface.point_density = accumarray([dsm_cr(:,2), dsm_cr(:,1)], xyz_surface(idxl_in,1), [nrows, ncols], @numel, 0); 
+        [~, ~, density_surface] = rasterize(xyz_surface(idxl_in,:), xv, yv, [], xyz_surface(idxl_in,3), @numel, 0);
+        models.density.surface = flipud(density_surface);
         
         % display surface model point density
         if arg.Results.fig
             
             figure
-            gh22 = imagesc(models.surface.point_density);
+            gh22 = imagesc(models.density.surface);
             set(gh22, 'AlphaData', models.mask)
             title('Surface Model - Point density')
             axis equal tight
@@ -321,7 +365,7 @@ end
 
 %% compute Height Model (DHM)
 
-if any(ismember(arg.Results.outputModels, 'dhm'));
+if any(ismember(arg.Results.outputModels, 'height'));
     
     if arg.Results.verbose
         
@@ -356,4 +400,3 @@ end
 %% create spatial referencing matrix
 
 refmat = [0, -dy; dx, 0; grid_x(1,1) - dx/2, grid_y(end,1) + dy/2];
-%refmat = makerefmat(grid_x(1,1) + dx/2, grid_y(end,1) - dy/2, dx, -dy)
