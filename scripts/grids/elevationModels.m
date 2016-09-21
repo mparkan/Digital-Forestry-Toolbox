@@ -83,7 +83,7 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: September 8, 2016
+% Last revision: September 21, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -306,6 +306,9 @@ if any(ismember(arg.Results.outputModels, {'surface', 'height'}));
     dsm = flipud(dsm); % flip verticaly
     idxl_dsm_missing = isnan(dsm);
 
+    % interpolate missing areas with terrain model values
+    dsm(idxl_dsm_missing) = dtm(idxl_dsm_missing);
+    
     if ~isempty(arg.Results.smoothingFilter)
         
         dsm = imfilter(dsm, arg.Results.smoothingFilter, 'replicate', 'same');
@@ -315,10 +318,7 @@ if any(ismember(arg.Results.outputModels, {'surface', 'height'}));
         fprintf('\nWarning: no smoothing filter was applied to surface model\n');
         
     end
-    
-    % interpolate missing areas with terrain model values
-    dsm(idxl_dsm_missing) = dtm(idxl_dsm_missing);
-    
+        
     models.surface.values = dsm;
     
     % display surface model
