@@ -16,7 +16,7 @@ function s = LASmerge(inputFilePaths, varargin)
 % Example:
 %    inputPath = {'E:\data\1143424.las', 'E:\data\1143425.las'} ;
 %    outputFilepath = 'E:\data\merged.las';
-%    s = LASmerge(inputPath, outputFilepath, true);
+%    s = LASmerge(inputPath, outputFilepath, 'verbose', true);
 %
 % Other m-files required: LASread.m, LASwrite.m
 % Subfunctions: none
@@ -29,7 +29,7 @@ function s = LASmerge(inputFilePaths, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: February 20, 2016
+% Last revision: November 11, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -40,7 +40,7 @@ arg = inputParser;
 
 addRequired(arg, 'inputFilePaths', @(x) iscell(x) && length(x) >= 1); % && length(x) >= 2 && length(unique(cellfun(@class, x, 'UniformOutput', false))) == 1
 addOptional(arg, 'outputFilePath', [], @(x) ischar(x) || isempty(x));
-addParamValue(arg, 'verbose', false, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', false, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, inputFilePaths, varargin{:});
 
