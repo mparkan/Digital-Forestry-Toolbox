@@ -34,7 +34,7 @@ function extent = LASextent(points, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 13, 2016
+% Last revision: December 12, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -70,9 +70,9 @@ switch class(points)
         
     case 'char'
         
-        if ~strcmpi(points(end), '\')
+        if ~strcmpi(points(end), filesep)
             
-           points = [points, '\'];
+           points = [points, filesep];
             
         end
             
@@ -110,7 +110,7 @@ reverse_str = '';
 
 for j = 1:n_tiles
     
-    extent(j).filepath = [filelist(j).path, '\', filelist(j).name, filelist(j).ext]; % [points, filelist(idx_read(j)).name];
+    extent(j).filepath = [filelist(j).path, filesep, filelist(j).name, filelist(j).ext]; % [points, filelist(idx_read(j)).name];
     pc = LASread(extent(j).filepath, true, false);
     
     extent(j).name = filelist(j).name; % filelist(idx_read(j)).basename;

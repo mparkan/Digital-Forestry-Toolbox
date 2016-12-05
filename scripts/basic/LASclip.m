@@ -34,7 +34,7 @@ function s = LASclip(points, clipper, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: February 20, 2016
+% Last revision: December 12, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -182,11 +182,11 @@ if ~isempty(arg.Results.outputFilepath) && length(xc) >= 1
     % adjust output file name
     if exist(outputFilepath, 'file')
         
-        outputFilepath =  [pathstr, '\', name, '_v2.las'];
+        outputFilepath =  [pathstr, filesep, name, '_v2.las'];
         
     else
         
-        outputFilepath =  [pathstr, '\', name, '.las'];
+        outputFilepath =  [pathstr, filesep, name, '.las'];
         
     end
     
