@@ -42,7 +42,7 @@ function s = LASread(filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: June 20, 2016
+% Last revision: December 15, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -2164,6 +2164,8 @@ if ~arg.Results.headerOnly && (las_version >= 14)
             r.extended_variable_length_records(j).record_length_after_header = fread(fid, 1, 'uint64', 0, MACHINE_FORMAT); % Record Length After Header, unsigned long long, 8 bytes, *
             r.extended_variable_length_records(j).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % Description, char[32], 32 bytes
             
+            % r.extended_variable_length_records(j).record_id
+            
             % read any defined extended variable length records
             switch r.extended_variable_length_records(j).record_id
                 
@@ -2227,7 +2229,7 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                     
                 case 2112 % OGC Coordinate System WKT Record (optional)
                     
-                    r.extended_variable_length_records(j).record_length_after_header
+                    % r.extended_variable_length_records(j).record_length_after_header
                     r.extended_variable_length_records(j).value = regexp(fread(fid, r.extended_variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
                     
                 case 34735 % GeoKeyDirectoryTag Record (mandatory)
@@ -2265,11 +2267,11 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                         
                     end
                     
-                case {5028, 5029} % Custom uint8 field (optional)
+                case {5004, 5011, 5012, 5013, 5028, 5029} % Custom uint8 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT);
                     
-                case {5010, 5011, 5012, 5025, 5026, 5027, 5040, 5041} % Custom uint16 field (optional)
+                case {5025, 5026, 5027, 5040, 5041} % Custom uint16 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 2, 'uint16', 0, MACHINE_FORMAT);
                     
@@ -2280,10 +2282,13 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                 case {5001, 5002, 5003} % Custom double field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 8, 'double', 0, MACHINE_FORMAT);
+
+                case {5010} % Custom char(12) field (optional)
+                
+                    r.extended_variable_length_records(j).value = cellstr(cast(reshape(fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT), [], 12), 'char'));
                     
-                    
-                    % You may add custom records here
-                    
+               % You may add custom records here
+           
                 otherwise % Other
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT);

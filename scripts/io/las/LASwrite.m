@@ -42,7 +42,7 @@ function varargout = LASwrite(s, filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: June 20, 2016
+% Last revision: December 15, 2016
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -2382,17 +2382,17 @@ if ~isempty(arg.Results.filepath)
                         fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing GeoAsciiParamsTag Record to EVLR\n');
                         
-                    case {5028, 5029} % Custom uint8 field (optional)
+                    case {5004, 5011, 5012, 5013, 5028, 5029} % Custom uint8 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint8', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom uint8 field to EVLR\n');
                         
-                    case {5010, 5011, 5012, 5025, 5026, 5027, 5040, 5041} % Custom uint16 field (optional)
+                    case {5025, 5026, 5027, 5040, 5041} % Custom uint16 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint16', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom uint16 field to EVLR\n');
                         
-                    case {5000, 5042} % Custom uint32 field (optional)
+                    case {5000} % Custom uint32 field (optional)
                         
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint32', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom uint32 field to EVLR\n');
@@ -2402,7 +2402,14 @@ if ~isempty(arg.Results.filepath)
                         fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom double field to EVLR\n');
                         
+                    case {5010} % Custom char(12) field (optional)
+                
+                        char12 = char(cellfun(@(x) horzcat(x, zeros(1, 12-length(x))), s.extended_variable_length_records(j).value, 'UniformOutput', false));
+                        fwrite(fid, char12, 'char', 0, MACHINE_FORMAT);
+                        fprintf('WARNING: writing Custom char(12) field to EVLR\n');
+                        
                         % You may add custom records here
+                        
                         
                     otherwise % Other
                         
