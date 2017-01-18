@@ -61,7 +61,7 @@ addRequired(arg, 'gps_week_number', @isnumeric);
 % addRequired(arg, 'flightline_id', @isnumeric);
 % addRequired(arg, 'gps_week_number', @(x) (size(x,2) == 1) && isnumeric(x));
 % addRequired(arg, 'flightline_id', @(x) (size(x,2) == 1) && isnumeric(x));
-addOptional(arg, 'format', 'satellite', @(x) ismember(x, {'satellite', 'adjusted', 'utc'}));
+addOptional(arg, 'format', 'adjusted', @(x) ismember(x, {'satellite', 'adjusted', 'utc'}));
 
 parse(arg, gps_week_time, gps_week_number, format);
 
