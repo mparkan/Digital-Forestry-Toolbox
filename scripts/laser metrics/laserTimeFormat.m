@@ -11,7 +11,7 @@ function t = laserTimeFormat(gps_week_number, gps_week_time, format)
 % Syntax:  time = laserTimeFormat(gps_week_number, gps_week_time, flightline_id, ...)
 %
 % Inputs:
-%    gps_week_number - Nx1 numeric vector, GPS week number for each unique flight line identifier
+%    gps_week_number - Nx1 numeric vector, GPS week number for each target point
 %
 %    gps_week_time - Nx1 numeric vector, GPS week time for each target point
 %
