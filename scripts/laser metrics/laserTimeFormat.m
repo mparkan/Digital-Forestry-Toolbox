@@ -8,7 +8,7 @@ function t = laserTimeFormat(gps_week_number, gps_week_time, format)
 % NOAA, Continuously Operating Reference Station (CORS) - GPS calendar, http://www.ngs.noaa.gov/CORS/Gpscal.shtml
 % QPS, UTC to GPS Time Correction, https://confluence.qps.nl/display/KBE/UTC+to+GPS+Time+Correction
 %
-% Syntax:  time = laserTimeFormat(gps_week_number, gps_week_time, flightline_id, ...)
+% Syntax:  t = laserTimeFormat(gps_week_number, gps_week_time, format, ...)
 %
 % Inputs:
 %    gps_week_number - Nx1 numeric vector, GPS week number for each target point
@@ -19,7 +19,7 @@ function t = laserTimeFormat(gps_week_number, gps_week_time, format)
 %    'utc', indicating the output time format 
 %
 % Outputs:
-%    t - Nx1 float vector
+%    t - Nx1 numeric vector, GPS standard, GPS adjusted or UTC time for each target point
 %
 % Example:
 %    pc = LASread(pointcloud.las);
@@ -58,9 +58,6 @@ arg = inputParser;
 
 addRequired(arg, 'gps_week_time', @isnumeric);
 addRequired(arg, 'gps_week_number', @isnumeric);
-% addRequired(arg, 'flightline_id', @isnumeric);
-% addRequired(arg, 'gps_week_number', @(x) (size(x,2) == 1) && isnumeric(x));
-% addRequired(arg, 'flightline_id', @(x) (size(x,2) == 1) && isnumeric(x));
 addOptional(arg, 'format', 'adjusted', @(x) ismember(x, {'satellite', 'adjusted', 'utc'}));
 
 parse(arg, gps_week_time, gps_week_number, format);
@@ -91,4 +88,3 @@ switch format
         t = gps2utc(gps_sat_time, 'verbose', true);
         
 end
-
