@@ -12,10 +12,10 @@ function intensity_corr = laserIntensityCorrection(intensity_target, xyzt_target
 % [1] A. G. Kashani, M. J. Olsen, C. E. Parrish, et N. Wilson, A Review of LIDAR Radiometric Processing: 
 % From Ad Hoc Intensity Correction to Rigorous Radiometric Calibration, 
 % Sensors, vol. 15, n°11, p. 28099-28128, nov. 2015.
-%
+% 
 % [2] M. Starek, B. Luzum, R. Kumar, K.C Slatton, Normalizing LIDAR Intensities, GEM Center
 % Report No. Rep_2006-12-001, University of Florida, Gainesville, FL, USA, 2006.
-%
+% 
 % [3] I. Korpela, H. O. Ørka, J. Hyyppä, V. Heikkinen, et T. Tokola, 
 % Range and AGC normalization in airborne discrete-return LiDAR intensity data for forest canopies, 
 % ISPRS Journal of Photogrammetry and Remote Sensing, vol. 65, n°4, p. 369?379, jul. 2010.
@@ -34,7 +34,7 @@ function intensity_corr = laserIntensityCorrection(intensity_target, xyzt_target
 %    t of the sensor trajectory. The time format must be the same as for the target points.  
 %    (preferablly GPS satellite time or adjusted GPS time).  
 %    
-%    referenceRange (optional, default: 1000) - numeric value, reference
+%    referenceRange (optional, default: median sensor-target range) - numeric value, reference
 %    range of the theoretical correction model
 %    
 %    exponent (optional, default: 2) - numeric value, exponent of the
@@ -67,13 +67,13 @@ function intensity_corr = laserIntensityCorrection(intensity_target, xyzt_target
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016a
+% Compatibility: tested on Matlab R2016b
 %
 % See also: laserTimeFormat.m, TRJread.m, SBETread.m, LASread.m
 %
-% Author: Matthew Parkan, EPFL - GIS Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: May 20, 2016
+% Author: Matthew Parkan, EPFL - GIS Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: January 19, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -84,18 +84,12 @@ arg = inputParser;
 addRequired(arg, 'intensity_target', @isnumeric);
 addRequired(arg, 'xyzt_target', @isnumeric);
 addRequired(arg, 'xyzt_sensor', @isnumeric);
-addParamValue(arg, 'referenceRange', 1000, @(x) isnumeric(x) && (numel(x) == 1));
-addParamValue(arg, 'exponent', 2, @(x) isnumeric(x) && (numel(x) == 1));
-addParamValue(arg, 'fig', false, @(x) islogical(x) && (numel(x) == 1));
-addParamValue(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'referenceRange', [], @(x) isnumeric(x) && (numel(x) == 1));
+addParameter(arg, 'exponent', 2, @(x) isnumeric(x) && (numel(x) == 1));
+addParameter(arg, 'fig', false, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, intensity_target, xyzt_target, xyzt_sensor, varargin{:});
-
-
-%% sort points by time
-
-% [t_target, idxn_sort_target] = sort(points_xyzt(:,4));
-% [t_sensor, idxn_sort_sensor] = sort(sensor_xyzt(:,4));
 
 
 %% interpolate trajectories
@@ -114,13 +108,12 @@ zi_sensor = interp1(xyzt_sensor(:,4), xyzt_sensor(:,3), xyzt_target(:,4), 'splin
 if arg.Results.fig
     
     figure
-    plot3(xi_sensor, yi_sensor, zi_sensor, ...
-        'Color', [1 0 0], ...
-        'Marker', '.', ...
-        'MarkerSize', 2, ...
-        'MarkerFaceColor', [1 0 0], ...
-        'MarkerEdgeColor', [1 0 0], ...
-        'LineStyle', 'none');
+    scatter3(xi_sensor, ...
+        yi_sensor, ...
+        zi_sensor, ...
+        6, ...
+        [0, 0, 0], ...
+        'Marker', '.');
     axis equal tight vis3d
     title('Interpolated sensor trajectory')
     xlabel('x')
@@ -165,7 +158,19 @@ if arg.Results.verbose
     
 end
 
-intensity_corr = double(intensity_target) .* (d.^arg.Results.exponent / arg.Results.referenceRange^arg.Results.exponent); 
+intensity_target = double(intensity_target);
+
+if isempty(arg.Results.referenceRange)
+    
+    referenceRange = median(d);
+    
+else
+    
+    referenceRange = arg.Results.referenceRange;
+    
+end
+
+intensity_corr = intensity_target .* (d.^arg.Results.exponent / referenceRange^arg.Results.exponent); 
 
 if arg.Results.verbose
     
