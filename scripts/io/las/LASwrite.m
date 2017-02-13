@@ -42,7 +42,7 @@ function varargout = LASwrite(s, filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: December 15, 2016
+% Last revision: February 10, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -2397,7 +2397,7 @@ if ~isempty(arg.Results.filepath)
                         fwrite(fid, s.extended_variable_length_records(j).value, 'uint32', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom uint32 field to EVLR\n');
                     
-                    case {5001, 5002, 5003} % Custom double field (optional)
+                    case {5001, 5002, 5003, 5050} % Custom double field (optional)
                             
                         fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
                         fprintf('WARNING: writing Custom double field to EVLR\n');

@@ -34,7 +34,7 @@ function intensity_corr = laserIntensityCorrection(intensity_target, xyzt_target
 %    t of the sensor trajectory. The time format must be the same as for the target points.  
 %    (preferablly GPS satellite time or adjusted GPS time).  
 %    
-%    referenceRange (optional, default: median sensor-target range) - numeric value, reference
+%    referenceRange (optional, default: minimum sensor-target range) - numeric value, reference
 %    range of the theoretical correction model
 %    
 %    exponent (optional, default: 2) - numeric value, exponent of the
@@ -105,23 +105,6 @@ xi_sensor = interp1(xyzt_sensor(:,4), xyzt_sensor(:,1), xyzt_target(:,4), 'splin
 yi_sensor = interp1(xyzt_sensor(:,4), xyzt_sensor(:,2), xyzt_target(:,4), 'spline');
 zi_sensor = interp1(xyzt_sensor(:,4), xyzt_sensor(:,3), xyzt_target(:,4), 'spline');
 
-if arg.Results.fig
-    
-    figure
-    scatter3(xi_sensor, ...
-        yi_sensor, ...
-        zi_sensor, ...
-        6, ...
-        [0, 0, 0], ...
-        'Marker', '.');
-    axis equal tight vis3d
-    title('Interpolated sensor trajectory')
-    xlabel('x')
-    ylabel('y')
-    zlabel('z')
-    
-end
-
 if arg.Results.verbose
     
     fprintf('done!\n');
@@ -162,7 +145,8 @@ intensity_target = double(intensity_target);
 
 if isempty(arg.Results.referenceRange)
     
-    referenceRange = median(d);
+    %referenceRange = median(d);
+    referenceRange = min(d);
     
 else
     
@@ -176,5 +160,25 @@ if arg.Results.verbose
     
     fprintf('done!\n');
     toc
+    
+end
+
+
+%% plot figures
+
+if arg.Results.fig
+    
+    figure
+    scatter3(xi_sensor, ...
+        yi_sensor, ...
+        zi_sensor, ...
+        6, ...
+        [0, 0, 0], ...
+        'Marker', '.');
+    axis equal tight vis3d
+    title('Interpolated sensor trajectory')
+    xlabel('x')
+    ylabel('y')
+    zlabel('z')
     
 end
