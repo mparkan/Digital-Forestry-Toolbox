@@ -9,7 +9,11 @@ function extent = LASextent(points, varargin)
 % Inputs:
 %    points - The path to the folder containing the LAS files
 %
-%    outputFilepath (optional) - The path to the output shapefile
+%    outputFilepath (optional, default: []) - The path to the output shapefile
+%
+%    method (optional, default: 'bbox') - The type of extent ('header': use values in header, 
+%    'bbox': compute rectangular bounding box, 'concavehull', computes the concave hull, 
+%    'convexhull', computes the convex hull 
 %
 %    verbose (optional, default: false) - boolean value, verbosiy switch
 %
@@ -19,23 +23,28 @@ function extent = LASextent(points, varargin)
 %    extent - A structure containing the extent coordinates of each LAS file
 %
 % Example:
-%    points = '..\data\measurements\vector\als\';
-%    outputFilepath = '..\data\measurements\vector\extents\als_extents.shp';
-%    extent = LASextent(points, outputFilepath, 'fig', true, 'verbose', false);
+%    points = '..\data\measurements\vector\als\zh_6995_2710_coniferous.las';
+%    outputFilepath = '..\data\measurements\vector\extents\zh_6995_2710_coniferous.shp';
+%    extent = LASextent(points, ...
+%         outputFilepath, ...
+%         'method', 'concavehull', ...
+%         'fig', true, ...
+%         'verbose', false);
 %
-% Other m-files required: LASread.m, LASwrite.m
+% Other m-files required: LASread.m, LASwrite.m, subsample.m, gps2utc.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016a
-%
-% See also: LASCLIP, LASMERGE
-%
+% Compatibility: tested on Matlab R2016b
+% 
+% See also: LASCLIP, LASMERGE, LASTILE
+% 
 % This code is part of the Matlab Digital Forestry Toolbox
 %
-% Author: Matthew Parkan, EPFL - GIS Research Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: December 12, 2016
-% Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: March 13, 2017
+% Acknowledgments: This work was supported by the Swiss Forestry and Wood
+% Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
 
@@ -43,19 +52,27 @@ function extent = LASextent(points, varargin)
 
 arg = inputParser;
 
-addRequired(arg, 'points', @(x) iscell(x) || (ischar(x) && isdir(x)));
+addRequired(arg, 'points', @(x) iscell(x) || ischar(x));
 addOptional(arg, 'outputFilepath', [], @(x) ischar(x) || isempty(x));
-addParamValue(arg, 'fig', false, @(x) islogical(x) && (numel(x) == 1));
-addParamValue(arg, 'verbose', false, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'method', 'bbox', @(x) ismember(x, {'header', 'bbox', 'concavehull', 'convexhull'}));
+% addParameter(arg, 'resolution', 1, @(x) isnumeric(x) && (numel(x) == 1) && (x >= 0));
+addParameter(arg, 'fig', false, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', false, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, points, varargin{:});
 
 
 %% list LAS input files
 
+if arg.Results.verbose
+   
+    fprintf('creating file list...');
+    
+end
+    
 switch class(points)
     
-    case 'cell'
+    case 'cell' % input is a collection of LAS file
         
         filelist = struct;
         
@@ -68,96 +85,221 @@ switch class(points)
             
         end
         
-    case 'char'
+    case 'char' % input is a single LAS file
         
-        if ~strcmpi(points(end), filesep)
+        if isdir(points)
             
-           points = [points, filesep];
+            if ~strcmpi(points(end), filesep)
+                
+                points = [points, filesep];
+                
+            end
+        
+            filelist = dir([points, '*.las']);
+            for j = 1:length(filelist)
+                
+                [pathstr, name, ext] = fileparts([points, filelist(j).name]);
+                
+                filelist(j).path = pathstr;
+                filelist(j).name = name;
+                filelist(j).ext = ext;
+                
+            end
+            
+        else
+            
+            [pathstr, name, ext] = fileparts(points);
+            filelist(1).path = pathstr;
+            filelist(1).name = name;
+            filelist(1).ext = ext;
             
         end
-            
-        filelist = dir([points, '*.las']);
         
-        for j = 1:length(filelist)
-            
-            [pathstr, name, ext] = fileparts([points, filelist(j).name]);
-            
-            filelist(j).path = pathstr;
-            filelist(j).name = name;
-            filelist(j).ext = ext;
-            
-        end
-        
-end
-
-
-%% check file extension
-
-% idx_ext = strcmpi('.las', {filelist.ext})'; % index of LAS format files
-% idx_file = ~[filelist.isdir]'; % index of non-directories
-% idx_size = [filelist.bytes]' > 0; % index of non-empty files
-% 
-%idx_read = find(idx_ext & idx_file & idx_size);
-% 
-%n_tiles = length(idx_read);
-
-
-%% read LAS header
-
-n_tiles = length(filelist);
-extent = struct;
-reverse_str = '';
-
-for j = 1:n_tiles
-    
-    extent(j).filepath = [filelist(j).path, filesep, filelist(j).name, filelist(j).ext]; % [points, filelist(idx_read(j)).name];
-    pc = LASread(extent(j).filepath, true, false);
-    
-    extent(j).name = filelist(j).name; % filelist(idx_read(j)).basename;
-    extent(j).xmin = pc.header.min_x;
-    extent(j).xmax = pc.header.max_x;
-    extent(j).ymin = pc.header.min_y;
-    extent(j).ymax = pc.header.max_y;
-    extent(j).xpoly = [extent(j).xmin, extent(j).xmax, extent(j).xmax, extent(j).xmin, extent(j).xmin];
-    extent(j).ypoly = [extent(j).ymax, extent(j).ymax, extent(j).ymin, extent(j).ymin, extent(j).ymax];
-    
-    if arg.Results.verbose
-        
-        msg = sprintf('processed %d/%d', j, n_tiles);
-        fprintf([reverse_str, msg]);
-        reverse_str = repmat(sprintf('\b'), 1, length(msg));
-        
-    end
-    
 end
 
 if arg.Results.verbose
     
-    fprintf('\n');
+    fprintf('done!\n');
     
 end
-
-
-%% plot extents
-
-if arg.Results.fig
     
-    figure
+
+%% compute metadata
+
+n_files = length(filelist);
+extent = table();
+warning('off');
+
+for j = 1:n_files
     
-    for j = 1:n_tiles
+    extent.FILEPATH{j,1} = [filelist(j).path, filesep, filelist(j).name, filelist(j).ext];
+    extent.FILENAME{j,1} = filelist(j).name;
+    
+    % read LAS file
+    switch arg.Results.method
         
-        plot([extent(j).xmin, extent(j).xmax, extent(j).xmax, extent(j).xmin, extent(j).xmin], ...
-            [extent(j).ymax, extent(j).ymax, extent(j).ymin, extent(j).ymin, extent(j).ymax], 'r-')
-        hold on
+        case 'header'
+            
+            pc = LASread(extent.FILEPATH{j,1}, true, false);
+            
+            % read extrema
+            extent.XMIN(j,1) = pc.header.min_x;
+            extent.XMAX(j,1) = pc.header.max_x;
+            extent.YMIN(j,1) = pc.header.min_y;
+            extent.YMAX(j,1) = pc.header.max_y;
+            extent.ZMIN(j,1) = pc.header.min_z;
+            extent.ZMAX(j,1) = pc.header.max_z;
+            
+        otherwise
+            
+            if arg.Results.verbose
+                
+                fprintf('reading file %u/%u...', j, n_files);
+                
+            end
+    
+            pc = LASread(extent.FILEPATH{j,1}, false, false);
+            
+            if arg.Results.verbose
+                
+                fprintf('done!\n');
+                
+            end
+            
+            
+            if arg.Results.verbose
+                
+                fprintf('extracting metadata of file %u/%u...', j, n_files);
+                
+            end
+            
+            % compute extrema
+            extent.XMIN(j,1) = min(pc.record.x);
+            extent.XMAX(j,1) = max(pc.record.x);
+            extent.YMIN(j,1) = min(pc.record.y);
+            extent.YMAX(j,1) = max(pc.record.y);
+            extent.ZMIN(j,1) = min(pc.record.z);
+            extent.ZMAX(j,1) = max(pc.record.z);
+            
+            % compute point density (per unit area)
+            [~, idxn_unit] = subsample([pc.record.x, pc.record.y], ...
+                'method', 'grid', ...
+                'resolution', 1, ...
+                'fig', false, ...
+                'verbose', false);
+            
+            extent.PDENSITY(j,1) = median(accumarray(idxn_unit, idxn_unit, [], @numel));
+            
+            % compute date metadata (if GPS time is in satellite format)
+            if pc.header.global_encoding_gps_time_type == 1
+                
+                utc_time = gps2utc(pc.record.gps_time + 10^9, ...
+                    'verbose', false);
+                
+                [Y,M,D,~,~,~] = datevec(utc_time);
+                
+                unique_date = sort(unique(datenum(Y,M,D)));
+                start_date = min(unique_date);
+                end_date = max(unique_date);
+                
+                % number of surveys
+                extent.NSURVEYS(j,1) = length(unique_date);
+                
+                [extent.YSTART(j,1), extent.MSTART(j,1), extent.DSTART(j,1),~,~,~] = datevec(start_date);
+                [extent.YEND(j,1), extent.MEND(j,1), extent.DEND(j,1),~,~,~] = datevec(end_date);
+                
+                extent.DATES{j,1} = strjoin(cellstr(datestr(unique_date, 'yyyy/mm/dd')), ',');
+
+            end
+            
+            % subsample point cloud
+            xrange = extent.XMAX(j) - extent.XMIN(j);
+            yrange = extent.YMAX(j) - extent.YMIN(j);
+            max_range = max([xrange, yrange]);
+            resolution = min(3, max_range / 100);
+            
+            [xy_s, idxn_cell] = subsample([pc.record.x, pc.record.y], ...
+                'method', 'grid', ...
+                'resolution', resolution, ...
+                'fig', false, ...
+                'verbose', false);
+            
+            if arg.Results.verbose
+                
+                fprintf('done!\n');
+                
+            end
+
+    end
+    
+    if arg.Results.verbose
+        
+        fprintf('computing spatial extent of file %u/%u...', j, n_files);
+        
+    end
+            
+    % compute spatial extent
+    switch arg.Results.method
+        
+        case 'header'
+            
+            extent.X{j,1} = [extent.XMIN(j), extent.XMAX(j), extent.XMAX(j), extent.XMIN(j), extent.XMIN(j)];
+            extent.Y{j,1} = [extent.YMAX(j), extent.YMAX(j), extent.YMIN(j), extent.YMIN(j), extent.YMAX(j)];
+        
+        case 'bbox'
+            
+            extent.X{j,1} = [extent.XMIN(j), extent.XMAX(j), extent.XMAX(j), extent.XMIN(j), extent.XMIN(j)];
+            extent.Y{j,1} = [extent.YMAX(j), extent.YMAX(j), extent.YMIN(j), extent.YMIN(j), extent.YMAX(j)];
+        
+        case 'concavehull'
+            
+            % compute single region low resolution alpha hull
+            shp = alphaShape(xy_s(:,1), xy_s(:,2), 10);
+            ac = criticalAlpha(shp, 'one-region');
+            shp_lr = alphaShape(xy_s(:,1), xy_s(:,2), ac);
+            
+            % find border points (near the alpha boundary)
+            [~, d] = nearestNeighbor(shp_lr, xy_s);
+            idxl_border_s = (d < resolution);
+            idxl_inner_s = (d >= resolution);
+
+            idxn_border = ismember(idxn_cell, find(idxl_border_s));
+            
+            % compute single region high resolution alpha hull
+            x_hr = [xy_s(idxl_inner_s,1); pc.record.x(idxn_border)];
+            y_hr = [xy_s(idxl_inner_s,2); pc.record.y(idxn_border)];
+            
+            shp_hr = alphaShape(x_hr, ...
+                y_hr, ...
+                ac, ...
+                'HoleThreshold', shp.area);
+
+            idxn_boundary = shp_hr.boundaryFacets;
+
+            extent.X{j,1} = shp_hr.Points(idxn_boundary,1);
+            extent.Y{j,1} = shp_hr.Points(idxn_boundary,2);
+
+        case 'convexhull'
+            
+            idxn_boundary = convhull(pc.record.x, pc.record.y);
+
+            extent.X{j,1} = pc.record.x(idxn_boundary);
+            extent.Y{j,1} = pc.record.y(idxn_boundary);
+            
+    end
+    
+    if arg.Results.verbose
+        
+        fprintf('done!\n');
         
     end
     
-    axis equal tight
-    title('Extents')
-    xlabel('x')
-    ylabel('y')
-    
 end
+
+pause(0.1);
+
+
+%% compute metadata fields
 
 
 %% export to shapefile
@@ -166,24 +308,40 @@ if ~isempty(arg.Results.outputFilepath)
     
     if arg.Results.verbose
         
-        fprintf('writing extent to "%s"...', arg.Results.outputFilepath);
+        fprintf('\nwriting result to "%s"...', arg.Results.outputFilepath);
         
     end
     
-    geom(1:n_tiles,:) = {'Polygon'};
-    S = struct('Geometry', geom,...
-        'ID', num2cell(1:n_tiles)',...
-        'NAME', {extent.name}',...
-        'FILE', {extent.filepath}',...
-        'X', {extent.xpoly}',...
-        'Y', {extent.ypoly}');
-    
-    shapewrite(S, arg.Results.outputFilepath);
-    
+    extent.Geometry = repmat({'Polygon'}, height(extent), 1);
+    shapewrite(table2struct(extent), arg.Results.outputFilepath);
+
     if arg.Results.verbose
         
         fprintf('done!\n');
         
     end
+    
+end
+
+
+%% plot figures
+
+if arg.Results.fig
+    
+    figure
+    
+    for j = 1:n_files
+        
+        plot(extent.X{j,1}, ...
+            extent.Y{j,1}, ...
+            'r-')
+        hold on
+        
+    end
+    
+    axis equal tight
+    title('Extents')
+    xlabel('x')
+    ylabel('y')
     
 end
