@@ -1,15 +1,20 @@
-function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
+function [label, varargout] = treeRegionGrowing(xyz, classification, varargin)
+% function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
+% [label, metrics, colorIndex, colorMap] = treeRegionGrowing(xyz, classification, varargin)
 % TREEREGIONGROWING - Attempts to extract individual tree crowns from a 3D point cloud
 % using a modified version of the top down region growing method described in Li et al. (2012) [1]
 % [POINT, TREE] = TREEREGIONGROWING(XYZ, CLASSIFICATION, ...) segments individual tree
-% crowns from the 3D point cloud XYZ with classification labels CLASSIFICATION
+% crowns from the 3D point cloud XYZ with classification CLASSIFICATION
 % and returns tables POINT and TREE containing tree data and metrics at point and tree scale respectively.
 %
 % [1] Li, Wenkai, Qinghua Guo, Marek K. Jakubowski, and Maggi Kelly,
 % "A New Method for Segmenting Individual Trees from the Lidar Point Cloud",
 % Photogrammetric Engineering and Remote Sensing 78, no. 1 (2012): 75–84.
 %
-% Syntax:  [point, trees] = treeRegionGrowing(xyz, classification, ...)
+% Syntax:  
+%    label = treeRegionGrowing(xyz, classification, ...)
+%    [label, metrics] = treeRegionGrowing(xyz, classification, ...)
+%    [label, metrics, cindex, cmap] = treeRegionGrowing(xyz, classification, ...)
 %
 % Inputs:
 %    xyz - Nx3 numeric matrix, 3D point cloud x,y,z coordinates
@@ -19,7 +24,7 @@ function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
 %    classTerrain (optional, default: 2) - numeric vector, terrain class
 %    number(s)
 %
-%    classHighVegetation (optional, default: [4, 5, 12]) - numeric vector,
+%    classVegetation (optional, default: [4, 5, 12]) - numeric vector,
 %    high vegetation class number(s)
 %
 %    coordinateResolution (optional, default: 0.5) - numeric value, spatial resolution used to rasterize 
@@ -50,9 +55,14 @@ function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
 %    fig (optional, default: true) - boolean value, switch to plot figures
 %
 % Outputs:
-%    point - Nx2 table, metrics and color index for each of the N input 3D points
+%    label - Nx1 integer vector, indicidual tree crown label for each point
+%    (unlabelled point have label = 0)
 %
-%    tree - Mx3 table, data, metrics and color index for each of the M tree crowns
+%    metrics - table, individual tree crown metrics
+%
+%    cindex - Nx1 integer vector, distinct color index
+%
+%    cmap - Kx3 numeric matrix, colormap
 %
 % Example:
 %
@@ -60,10 +70,10 @@ function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
 % xyz = [pc.record.x, pc.record.y, pc.record.z];
 % classification = pc.record.classification;
 %
-% [point, tree] = treeRegionGrowing([x y z], ...
+% [label, metrics, cindex, cmap] = treeRegionGrowing([x y z], ...
 % classification, ...
 % 'classTerrain', [2], ...
-% 'classHighVegetation', [4,5,12], ...
+% 'classVegetation', [4,5,12], ...
 % 'coordinateResolution', 0.5, ...
 % 'normalizeElevation', true, ...
 % 'peakSearchRadius', 1.5, ...
@@ -74,18 +84,18 @@ function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
 % 'verbose', true, ...
 % 'fig', true);
 %
-% Other m-files required: pcsel.m
+% Other m-files required: clusterColor.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016a
+% Compatibility: tested on Matlab R2016b
 %
 % See also: treeGeodesicVote.m
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
-% Author: Matthew Parkan, EPFL - GIS Research Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: May 26, 2016
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: March 14, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -94,7 +104,6 @@ function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
 %% setup constants
 
 OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system is Matlab or GNU Octave
-N_COLORS = 7;
 
 
 %% check argument validity
@@ -103,19 +112,26 @@ arg = inputParser;
 
 addRequired(arg, 'xyz', @(x) (size(x,2) == 3) && isnumeric(x));
 addRequired(arg, 'classification', @(x) (size(x,2) == 1) && (size(x,1) == size(xyz,1)) && isnumeric(x));
-addParamValue(arg, 'classTerrain', 2, @(x) isnumeric(x));
-addParamValue(arg, 'classHighVegetation', [4 5], @(x) isnumeric(x));
-addParamValue(arg, 'normalizeElevation', true, @(x) islogical(x) && (numel(x) == 1));
-addParamValue(arg, 'coordinateResolution', 0.5, @(x) isnumeric(x) && (numel(x) == 1));
-addParamValue(arg, 'peakSearchRadius', 1.5, @(x) isnumeric(x) && (numel(x) == 1));
-addParamValue(arg, 'minPeakSpacing', [0 1.5; 15 3], @(x) isnumeric(x) && (size(x,2) == 2));
-addParamValue(arg, 'minSampleSize', 20, @(x) isnumeric(x) && (numel(x) == 1));
-addParamValue(arg, 'minSamplingRadius', 6, @(x) isnumeric(x) && (numel(x) == 1));
-addParamValue(arg, 'maxSamplingRadius', 16, @(x) isnumeric(x) && (numel(x) == 1));
-addParamValue(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
-addParamValue(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'classTerrain', 2, @(x) isnumeric(x));
+addParameter(arg, 'classVegetation', [4 5], @(x) isnumeric(x));
+addParameter(arg, 'normalizeElevation', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'subsampling', 'grid', @(x) ismember(x, {'geomedian', 'mean', 'grid', 'none'}));
+addParameter(arg, 'coordinateResolution', 0.4, @(x) isnumeric(x) && (numel(x) == 1));
+addParameter(arg, 'peakSearchRadius', 1.5, @(x) isnumeric(x) && (numel(x) == 1));
+addParameter(arg, 'minPeakSpacing', [0 1.5; 15 3], @(x) isnumeric(x) && (size(x,2) == 2));
+addParameter(arg, 'minSampleSize', 20, @(x) isnumeric(x) && (numel(x) == 1));
+addParameter(arg, 'minSamplingRadius', 6, @(x) isnumeric(x) && (numel(x) == 1));
+addParameter(arg, 'maxSamplingRadius', 16, @(x) isnumeric(x) && (numel(x) == 1));
+addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, xyz, classification, varargin{:});
+
+% check output argument format
+nargoutchk(1, 4);
+
+
+%% reformat input arguments
 
 minPeakSpacing = arg.Results.minPeakSpacing;
 minSampleSize = arg.Results.minSampleSize;
@@ -135,23 +151,23 @@ z_min = min(xyz(:,3));
 z_max = max(xyz(:,3));
 
 
-%% extract relvant point classes
+%% extract relevant point classes
 
 idxl_classTerrain = ismember(classification, arg.Results.classTerrain);
-idxl_classHighVegetation = ismember(classification, arg.Results.classHighVegetation);
+idxl_classVegetation = ismember(classification, arg.Results.classVegetation);
 
-xyz_veg = xyz(idxl_classHighVegetation,:);
+xyz_veg = xyz(idxl_classVegetation,:);
 xyz_terr = xyz(idxl_classTerrain,:);
 
 
-%% adjust coordinate resolution
+%% subsample point cloud
 
 if arg.Results.coordinateResolution > 0
     
     if arg.Results.verbose
         
         tic
-        fprintf('setting coordinate resolution to %2.2f...', arg.Results.coordinateResolution);
+        fprintf('subsampling point cloud...');
         
     end
     
@@ -204,8 +220,16 @@ if arg.Results.verbose
     
 end
 
-interpolant = scatteredInterpolant(xyz_terr(:,1), xyz_terr(:,2), xyz_terr(:,3), 'linear', 'nearest');
 
+xyz_voxel_terr = unique(round(xyz_terr / arg.Results.coordinateResolution) * arg.Results.coordinateResolution, 'rows');
+
+tic
+interpolant = scatteredInterpolant(xyz_voxel_terr(:,1), ...
+    xyz_voxel_terr(:,2), ...
+    xyz_voxel_terr(:,3), ...
+    'linear', ...
+    'nearest');
+toc
 
 if arg.Results.verbose
     
@@ -263,6 +287,8 @@ minPeakSpacing(:,2) = minPeakSpacing(:,2).^2;
 idxl_labelled = false(n_points,1);
 id_tree = -ones(n_points,1);
 id_tree_current = 1;
+
+% minPeakSpacing -> histcount
 
 reverse_str = '';
 
@@ -379,126 +405,107 @@ toc
 
 %% create label vector
 
-labels = zeros(size(xyz,1), 1, 'uint32');
+label = zeros(size(xyz,1), 1, 'uint32');
 
 if arg.Results.coordinateResolution > 0
     
     label_voxels = id_tree(ix_unsort);
-    labels(idxl_classHighVegetation) = uint32(label_voxels(idxn_cr_unique));
+    label(idxl_classVegetation) = uint32(label_voxels(idxn_cr_unique));
     
 else
 
-    labels = uint32(id_tree(ix_unsort));
+    label = uint32(id_tree(ix_unsort));
     
 end
 
 
 %% compute tree metrics
 
-if arg.Results.verbose
+if nargout >= 2
     
-    tic
-    fprintf('computing tree metrics...');
-    
-end
-
-n_trees = max(labels);
-
-data = table();
-metrics = table();
-warning off
-
-for j = 1:n_trees
-    
-    %idxl_tree = find(labels == j);
-    
-    % point data
-    data.idxn_nodes(j,1) = {find(labels == j)};
-    data.nodes(j,1) = {xyz(data.idxn_nodes{j,1}, :)};
-    [z_max, idxn_top] = max(data.nodes{j}(:,3));
-    z_min = interpolant(data.nodes{j}(idxn_top, 1), data.nodes{j}(idxn_top, 2));
-    data.root(j,1) = {[data.nodes{j}(idxn_top, 1:2), z_min]};
+    if arg.Results.verbose
         
-    % point metrics
-    metrics.label(j,1) = j; % label
-    metrics.n_nodes(j,1) = length(data.idxn_nodes{j,1}); % number of nodes
-    metrics.centroid(j,1) = {mean(data.nodes{j}(:,1:3),1)}; % centroid
-    metrics.height_vertical(j,1) = z_max - z_min; % vertical height
-    metrics.height_oblique(j,1) = norm(data.root{j,1} - data.nodes{j,1}(idxn_top,:)); % oblique height
-
-end
-
-if arg.Results.verbose
+        tic
+        fprintf('computing tree metrics...');
+        
+    end
     
-    fprintf('done!\n');
-    toc
+    n_trees = max(label);
+    
+    data = table();
+    metrics = table();
+    warning off
+    
+    for j = 1:n_trees
+        
+        % point data
+        data.idxn_nodes(j,1) = {find(label == j)};
+        data.nodes(j,1) = {xyz(data.idxn_nodes{j,1}, :)};
+        
+        [z_max, idxn_top] = max(data.nodes{j}(:,3));
+        z_min = interpolant(data.nodes{j}(idxn_top, 1), data.nodes{j}(idxn_top, 2));
+        data.root(j,1) = {[data.nodes{j}(idxn_top, 1:2), z_min]};
+        
+        % label
+        metrics.Label(j,1) = j;
+        
+        % root x,y,z
+        metrics.X(j,1) = data.root{j,1}(1);
+        metrics.Y(j,1) = data.root{j,1}(2);
+        metrics.Z(j,1) = data.root{j,1}(3);
+        
+        % total height (oblique height)
+        metrics.TotalHeight(j,1) = norm(data.root{j,1} - data.nodes{j,1}(idxn_top,:));
+        
+        % total projected area
+        shp = alphaShape(data.nodes{j,1}(:,1:2), min(max([2, 0.1*metrics.TotalHeight(j,1)]), 3));
+        metrics.Area(j,1) = round(area(shp),1);
+        
+        % total volume
+        shp = alphaShape(data.nodes{j,1}, min(max([2, 0.1*metrics.TotalHeight(j,1)]), 3));
+        metrics.Volume(j,1) = round(volume(shp),1);
+        
+    end
+    
+    varargout{1} = metrics;
+    
+    if arg.Results.verbose
+        
+        fprintf('done!\n');
+        toc
+        
+    end
     
 end
 
 
 %% assign a color to each tree
 
-if arg.Results.verbose
+if nargout > 2
     
-    tic
-    fprintf('assigning colors...');
+    if arg.Results.verbose
+        
+        tic
+        fprintf('assigning colors...');
+        
+    end
     
-end
-
-% assign distinctive colors to adjacent trees
-[idxn_color, ~] = pcsel(reshape(cell2mat(metrics.centroid), 3, [])', N_COLORS); % generate distinctive colors in each neighbourhood
-idxn_color = uint8(idxn_color');
-
-% merge data, metrics and color index tables into tree table
-tree = table(data, metrics, idxn_color, 'VariableNames', {'data', 'metrics', 'color_index'});
-
-if arg.Results.verbose
+    [varargout{2}, ~, varargout{3}] = clusterColor(xyz, label, ...
+        'buffer', 3, ...
+        'adjacency', '2d', ...
+        'colormap', 'cmap12', ...
+        'unlabelledColor', [0.1, 0.1, 0.1], ...
+        'fig', arg.Results.fig, ...
+        'verbose', false);
     
-    fprintf('done!\n');
-    toc
-    
-end
-
-
-%% map tree metrics to points
-
-% sort points by label
-[~, idxn_label_sort] = sort(labels);
-idxn_unsorted = 1:length(labels);
-idxn_label_unsort(idxn_label_sort) = idxn_unsorted;
-
-% point color index
-idxn_color_tree = uint8([0; idxn_color]);
-
-idxn_color_point = cell2mat(arrayfun(@(j, n) repmat(idxn_color_tree(j,:), n, 1), ...
-    (1:size(idxn_color_tree,1))', ..., ...
-    accumarray(labels+1, labels, [], @numel), ...
-    'UniformOutput', false));
-
-idxn_color_point = idxn_color_point(idxn_label_unsort);
-
-point = table(labels, idxn_color_point, ...
-    'VariableNames',{'labels', 'color_index'});
-
-
-%% plot segments
-
-if arg.Results.fig
-
-    idxl_labelled = (point.labels ~= 0);
-    colors = hsv(N_COLORS);
-
-    figure
-    scatter3(xyz(idxl_labelled,1), xyz(idxl_labelled,2), xyz(idxl_labelled,3), 11, ...
-        colors(point.color_index(idxl_labelled),:), ...
-        'Marker', '.');
-    
-    axis equal tight vis3d
-    xlabel('x')
-    ylabel('y')
-    zlabel('z')
-    title('Individual tree crowns')
+    if arg.Results.verbose
+        
+        fprintf('done!\n');
+        toc
+        
+    end
     
 end
+
 
 end

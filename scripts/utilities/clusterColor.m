@@ -47,7 +47,7 @@ function [color, varargout] = clusterColor(X, label, varargin)
 %
 % Example:
 %
-%    [color, rgb] = clusterColor([x y z], ...
+%    [color, rgb, cmap] = clusterColor([x y z], ...
 %                label, ...
 %                'adjacency', '3d', ...   
 %                'buffer', 3, ...
@@ -107,11 +107,24 @@ idxl_labelled = (label ~= 0);
 X = X(idxl_labelled,:);
 label = label(idxl_labelled);
 
+% no labelled points
 if ~any(idxl_labelled)
     
     fprintf('Warning: no labelled points.\n');
-    color = zeros(size(X,1), 1, 'uint8');
-    rgb = arg.Results.unlabelledColor(color+1,:);
+    color = ones(size(X,1), 1, 'uint8');
+    
+    switch nargout
+        
+        case 2
+            
+            varargout{1} = arg.Results.unlabelledColor(color,:);
+            
+        case 3
+            
+            varargout{1} = arg.Results.unlabelledColor(color,:);
+            varargout{2} = arg.Results.unlabelledColor;
+            
+    end
     
     return
     
@@ -122,11 +135,11 @@ switch arg.Results.adjacency
     
     case '2d'
         
-        [X_r, ~, idxn_cell] = unique(round(X(:,1:2) / arg.Results.buffer) * arg.Results.buffer, 'rows');
+        [~, ~, idxn_cell] = unique(round(X(:,1:2) / arg.Results.buffer) * arg.Results.buffer, 'rows');
         
     case '3d'
         
-        [X_r, ~, idxn_cell] = unique(round(X / arg.Results.buffer) * arg.Results.buffer, 'rows');
+        [~, ~, idxn_cell] = unique(round(X / arg.Results.buffer) * arg.Results.buffer, 'rows');
         
 end
 
@@ -143,12 +156,25 @@ cliques = Y(idxl_adj);
 % find all possible node pairs (combinations)
 pairs = cell2mat(cellfun(@(x1) nchoosek(x1,2), cliques, 'UniformOutput', false));
 
+% no adjacent clusters
 if isempty(pairs)
     
     fprintf('Warning: no adjacent clusters, assigning same color to all\n')
-    color = uint8(idxl_labelled);
+    color = uint8(idxl_labelled + 1);
     cmap = [arg.Results.unlabelledColor; 0.8235, 0.4196, 0.4039];
-    rgb = cmap(color+1,:);
+    
+    switch nargout
+        
+        case 2
+            
+            varargout{1} = cmap(color,:);
+            
+        case 3
+            
+            varargout{1} = cmap(color,:);
+            varargout{2} = cmap;
+            
+    end
     
     return
     
@@ -305,8 +331,7 @@ switch arg.Results.colormap
             106,61,154;
             255,255,153;
             177,89,40] ./ 255;
-        
-        color_cluster(color_cluster > 12) = mod(color_cluster(color_cluster > 12), 12);
+
         color(color > 12) = mod(color(color > 12), 12);
         
     case 'cmap25' % 25 distinct colors - source: http://tools.medialab.sciences-po.fr/iwanthue/
@@ -337,7 +362,6 @@ switch arg.Results.colormap
             192,144,181;
             117,49,107] ./ 255;
         
-        color_cluster(color_cluster > 25) = mod(color_cluster(color_cluster > 25), 25);
         color(color > 25) = mod(color(color > 25), 25);
         
 end
@@ -357,12 +381,6 @@ if any(~idxl_labelled)
 end
 
 rgb = cmap(color, :);
-
-
-% rgb_cluster = cmap(color_cluster, :);
-% 
-% rgb = repmat(arg.Results.unlabelledColor, N, 1);
-% rgb(idxl_labelled,:) = cmap(color(idxl_labelled), :);
 
 if arg.Results.verbose
     
