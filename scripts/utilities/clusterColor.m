@@ -1,4 +1,4 @@
-function [color, rgb] = clusterColor(X, label, varargin)
+function [color, varargout] = clusterColor(X, label, varargin)
 % CLUSTERCOLOR - assigns distinct colors to adjacent 3D point clusters (topological graph colouring)
 % using the largest degree first heuristic described in [1] and [2].
 % [COLOR, RGB] = CLUSTERCOLOR(X, LABEL, ...) assigns a distinct color index (COLOR) and RGB triplet (RGB) to each
@@ -12,7 +12,10 @@ function [color, rgb] = clusterColor(X, label, varargin)
 % cartography", Pennsylvania State University, http://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
 % [4] Jacomy Mathieu, "I want hue - Colors for data scientists", Sciences-Po Medialab, http://tools.medialab.sciences-po.fr/iwanthue/
 %
-% Syntax:  [color, rgb] = clusterColor(X, label, ...)
+% Syntax:  
+%    color = clusterColor(X, label, ...)
+%    [color, rgb] = clusterColor(X, label, ...)
+%    [color, rgb, cmap] = clusterColor(X, label, ...)
 %
 % Inputs:
 %    X - Nx2 or Nx3 numeric matrix, 2D or 3D point coordinates [x y] or [x y z]
@@ -37,8 +40,10 @@ function [color, rgb] = clusterColor(X, label, varargin)
 % Outputs:
 %    color - Nx1 integer vector, distinct color index
 %
-%    rgb - Mx3 numeric matrix, RGB triplets associated with the 3D points,
+%    rgb - Mx3 numeric matrix, RGB triplets associated with each 3D point,
 %    unlabelled points are in black by default [0,0,0]
+%
+%    cmap - Kx3 numeric matrix, colormap
 %
 % Example:
 %
@@ -62,7 +67,7 @@ function [color, rgb] = clusterColor(X, label, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 24, 2017
+% Last revision: March 14, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -84,48 +89,48 @@ addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 parse(arg, X, label, varargin{:});
 
 % check point and label size consistency
-
 if size(X,1) ~= size(label,1)
     
     error('X and label arrays do not have consistent dimensions.');
     
 end
 
+% check number of output arguments
+nargoutchk(1, 3);
+
 
 %% compute adjacency
 
 % select labelled points only
+N = size(X,1);
 idxl_labelled = (label ~= 0);
 X = X(idxl_labelled,:);
 label = label(idxl_labelled);
-
 
 if ~any(idxl_labelled)
     
     fprintf('Warning: no labelled points.\n');
     color = zeros(size(X,1), 1, 'uint8');
     rgb = arg.Results.unlabelledColor(color+1,:);
+    
     return
     
 end
 
 % voxelize
-
-
 switch arg.Results.adjacency
     
     case '2d'
         
         [X_r, ~, idxn_cell] = unique(round(X(:,1:2) / arg.Results.buffer) * arg.Results.buffer, 'rows');
         
-    case '3d' % & size(X,2) == 3
+    case '3d'
         
-        [X_r, ~, idxn_cell] = unique(round(X(:,1:3) / arg.Results.buffer) * arg.Results.buffer, 'rows');
+        [X_r, ~, idxn_cell] = unique(round(X / arg.Results.buffer) * arg.Results.buffer, 'rows');
         
 end
 
 % find unique labels in each voxel
-% [G,ID] = findgroups(A)
 Y = splitapply(@(x1){unique(x1)}, label, idxn_cell);
 
 % number of adjacent nodes in each voxel
@@ -144,6 +149,7 @@ if isempty(pairs)
     color = uint8(idxl_labelled);
     cmap = [arg.Results.unlabelledColor; 0.8235, 0.4196, 0.4039];
     rgb = cmap(color+1,:);
+    
     return
     
 else
@@ -259,7 +265,7 @@ end
 color_cluster = zeros(nnz(idxl_labelled), 1, 'uint8');
 color_cluster(idxl_sample_lab) = G.Nodes.Color(locb_sample(idxl_sample_lab));
 
-color = zeros(length(idxl_labelled), 1, 'uint8');
+color = zeros(N, 1, 'uint8');
 color(idxl_labelled) = color_cluster;
 
 if arg.Results.verbose
@@ -298,7 +304,7 @@ switch arg.Results.colormap
             202,178,214;
             106,61,154;
             255,255,153;
-            177,89,40; 0,0,0] ./ 255;
+            177,89,40] ./ 255;
         
         color_cluster(color_cluster > 12) = mod(color_cluster(color_cluster > 12), 12);
         color(color > 12) = mod(color(color > 12), 12);
@@ -342,10 +348,21 @@ if m > size(cmap,1)
    
 end
 
-rgb_cluster = cmap(color_cluster, :);
+% append neutral (unlabelled) color to colormap
+if any(~idxl_labelled)
+    
+    cmap = [arg.Results.unlabelledColor; cmap];
+    color = color + 1;
+    
+end
 
-rgb = repmat(arg.Results.unlabelledColor, length(idxl_labelled), 1);
-rgb(idxl_labelled,:) = cmap(color(idxl_labelled), :);
+rgb = cmap(color, :);
+
+
+% rgb_cluster = cmap(color_cluster, :);
+% 
+% rgb = repmat(arg.Results.unlabelledColor, N, 1);
+% rgb(idxl_labelled,:) = cmap(color(idxl_labelled), :);
 
 if arg.Results.verbose
     
@@ -355,11 +372,24 @@ if arg.Results.verbose
 end
 
 
+%% assign optional output arguments
+
+switch nargout
+    
+    case 2
+        
+        varargout{1} = rgb;
+        
+    case 3
+        
+        varargout{2} = cmap;
+        
+end
+
 %% plot figures
 
 if arg.Results.fig
-    
-    % plot clusters
+
     switch size(X,2)
         
         case 2
@@ -368,7 +398,7 @@ if arg.Results.fig
             scatter(X(:,1), ...
                 X(:,2), ...
                 6, ...
-                rgb_cluster, ...
+                rgb(idxl_labelled,:), ...
                 'Marker', '.')
             axis equal tight vis3d
             title('2D point coloring')
@@ -383,9 +413,10 @@ if arg.Results.fig
                 X(:,2), ...
                 X(:,3), ...
                 6, ...
-                rgb_cluster, ...
+                rgb(idxl_labelled,:), ...
                 'Marker', '.')
             axis equal tight vis3d
+            axis off
             title('3D point coloring')
             xlabel('x')
             ylabel('y')
