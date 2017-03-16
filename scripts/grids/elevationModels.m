@@ -75,15 +75,15 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 % Other m-files required: rasterize.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016a
+% Compatibility: tested on Matlab R2016b
 %
 % See also: rasterize.m
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
-% Author: Matthew Parkan, EPFL - GIS Research Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: September 21, 2016
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: March 16, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -146,7 +146,7 @@ models.mask = flipud(mask);
 
 %% compute overall point density
 
-if any(ismember(arg.Results.outputModels, {'density'}));
+if any(ismember(arg.Results.outputModels, {'density'}))
     
     if arg.Results.verbose
         
@@ -191,7 +191,7 @@ end
 
 %% compute Terrain Model (DTM)
 
-if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}));
+if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}))
     
     idxl_terrain = ismember(classification, arg.Results.classTerrain);
     
@@ -216,7 +216,9 @@ if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}));
         
         idxn_nan = cell2mat(dtm_connected_components.PixelIdxList(dtm_component_areas > arg.Results.maxFillArea)');
         
-        interpolant_dtm = scatteredInterpolant(grid_x(idxl_dtm_valid), grid_y(idxl_dtm_valid), dtm(idxl_dtm_valid), ...
+        interpolant_dtm = scatteredInterpolant(grid_x(idxl_dtm_valid), ...
+            grid_y(idxl_dtm_valid), ...
+            dtm(idxl_dtm_valid), ...
             'linear', 'nearest');
         dtm = interpolant_dtm(grid_x, grid_y);
         
@@ -255,7 +257,7 @@ if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}));
         end
         
         % compute terrain model point density
-        if any(ismember(arg.Results.outputModels, {'density'}));
+        if any(ismember(arg.Results.outputModels, {'density'}))
             
             [~, ~, density_terrain] = rasterize(xyz_terrain(idxl_in,:), xv, yv, [], xyz_terrain(idxl_in,3), @numel, 0);
             models.density.terrain = flipud(density_terrain);
@@ -291,7 +293,7 @@ end
 
 %% compute Surface Model (DSM)
 
-if any(ismember(arg.Results.outputModels, {'surface', 'height'}));
+if any(ismember(arg.Results.outputModels, {'surface', 'height'}))
     
     if arg.Results.verbose
         
@@ -335,7 +337,7 @@ if any(ismember(arg.Results.outputModels, {'surface', 'height'}));
     end
     
     % compute surface model point density
-    if any(ismember(arg.Results.outputModels, {'density'}));
+    if any(ismember(arg.Results.outputModels, {'density'}))
         
         [~, ~, density_surface] = rasterize(xyz_surface(idxl_in,:), xv, yv, [], xyz_surface(idxl_in,3), @numel, 0);
         models.density.surface = flipud(density_surface);
@@ -365,7 +367,7 @@ end
 
 %% compute Height Model (DHM)
 
-if any(ismember(arg.Results.outputModels, 'height'));
+if any(ismember(arg.Results.outputModels, 'height'))
     
     if arg.Results.verbose
         
@@ -374,6 +376,7 @@ if any(ismember(arg.Results.outputModels, 'height'));
     end
     
     models.height.values = models.surface.values - models.terrain.values;
+    models.height.values(models.height.values < 0) = 0;
     
     % display height model
     if arg.Results.fig
