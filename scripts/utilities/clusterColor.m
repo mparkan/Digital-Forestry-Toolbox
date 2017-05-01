@@ -67,7 +67,7 @@ function [color, varargout] = clusterColor(X, label, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 14, 2017
+% Last revision: May 1, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -99,13 +99,18 @@ end
 nargoutchk(1, 3);
 
 
-%% compute adjacency
+%% reassign label values
 
 % select labelled points only
 N = size(X,1);
 idxl_labelled = (label ~= 0);
 X = X(idxl_labelled,:);
 label = label(idxl_labelled);
+
+[label, id_label] = findgroups(label);
+
+
+%% compute adjacency
 
 % no labelled points
 if ~any(idxl_labelled)
@@ -281,7 +286,7 @@ end
 
 if arg.Results.verbose
     
-    fprintf('assigning color index to 3D points...');
+    fprintf('assigning color index to points...');
     tic
     
 end
@@ -306,7 +311,7 @@ end
 
 if arg.Results.verbose
     
-    fprintf('assigning RGB colors to 3D points...');
+    fprintf('assigning RGB colors to points...');
     tic
     
 end
@@ -400,6 +405,7 @@ switch nargout
         
     case 3
         
+        varargout{1} = rgb;
         varargout{2} = cmap;
         
 end
@@ -430,7 +436,7 @@ if arg.Results.fig
             scatter3(X(:,1), ...
                 X(:,2), ...
                 X(:,3), ...
-                6, ...
+                26, ...
                 rgb(idxl_labelled,:), ...
                 'Marker', '.')
             axis equal tight vis3d
