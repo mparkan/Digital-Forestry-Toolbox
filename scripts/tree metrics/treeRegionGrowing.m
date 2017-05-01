@@ -1,11 +1,10 @@
-function [label, varargout] = treeRegionGrowing(xyz, classification, varargin)
-% function [point, tree] = treeRegionGrowing(xyz, classification, varargin)
-% [label, metrics, colorIndex, colorMap] = treeRegionGrowing(xyz, classification, varargin)
+function label = treeRegionGrowing(xyz, classification, varargin)
+% label = treeRegionGrowing(xyz, classification, varargin)
 % TREEREGIONGROWING - Attempts to extract individual tree crowns from a 3D point cloud
 % using a modified version of the top down region growing method described in Li et al. (2012) [1]
-% [POINT, TREE] = TREEREGIONGROWING(XYZ, CLASSIFICATION, ...) segments individual tree
-% crowns from the 3D point cloud XYZ with classification CLASSIFICATION
-% and returns tables POINT and TREE containing tree data and metrics at point and tree scale respectively.
+% LABEL = TREEREGIONGROWING(XYZ, CLASSIFICATION, ...) segments individual tree
+% crowns from the 3D point cloud XYZ with classification CLASSIFICATION and returns the
+% vector LABEL containing the point labels.
 %
 % [1] Li, Wenkai, Qinghua Guo, Marek K. Jakubowski, and Maggi Kelly,
 % "A New Method for Segmenting Individual Trees from the Lidar Point Cloud",
@@ -13,8 +12,6 @@ function [label, varargout] = treeRegionGrowing(xyz, classification, varargin)
 %
 % Syntax:  
 %    label = treeRegionGrowing(xyz, classification, ...)
-%    [label, metrics] = treeRegionGrowing(xyz, classification, ...)
-%    [label, metrics, cindex, cmap] = treeRegionGrowing(xyz, classification, ...)
 %
 % Inputs:
 %    xyz - Nx3 numeric matrix, 3D point cloud x,y,z coordinates
@@ -52,17 +49,9 @@ function [label, varargout] = treeRegionGrowing(xyz, classification, varargin)
 %
 %    verbose (optional, default: true) - boolean value, verbosiy switch
 %
-%    fig (optional, default: true) - boolean value, switch to plot figures
-%
 % Outputs:
 %    label - Nx1 integer vector, indicidual tree crown label for each point
 %    (unlabelled point have label = 0)
-%
-%    metrics - table, individual tree crown metrics
-%
-%    cindex - Nx1 integer vector, distinct color index
-%
-%    cmap - Kx3 numeric matrix, colormap
 %
 % Example:
 %
@@ -70,7 +59,7 @@ function [label, varargout] = treeRegionGrowing(xyz, classification, varargin)
 % xyz = [pc.record.x, pc.record.y, pc.record.z];
 % classification = pc.record.classification;
 %
-% [label, metrics, cindex, cmap] = treeRegionGrowing([x y z], ...
+% label = treeRegionGrowing([x y z], ...
 % classification, ...
 % 'classTerrain', [2], ...
 % 'classVegetation', [4,5,12], ...
@@ -81,21 +70,20 @@ function [label, varargout] = treeRegionGrowing(xyz, classification, varargin)
 % 'minSampleSize', 20, ...
 % 'minSamplingRadius', 5, ...
 % 'maxSamplingRadius', 18, ...
-% 'verbose', true, ...
-% 'fig', true);
+% 'verbose', true);
 %
-% Other m-files required: clusterColor.m
+% Other m-files required:
 % Subfunctions: none
 % MAT-files required: none
 % Compatibility: tested on Matlab R2016b
 %
-% See also: treeGeodesicVote.m
+% See also:
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 14, 2017
+% Last revision: May 1, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -122,13 +110,9 @@ addParameter(arg, 'minPeakSpacing', [0 1.5; 15 3], @(x) isnumeric(x) && (size(x,
 addParameter(arg, 'minSampleSize', 20, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'minSamplingRadius', 6, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'maxSamplingRadius', 16, @(x) isnumeric(x) && (numel(x) == 1));
-addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, xyz, classification, varargin{:});
-
-% check output argument format
-nargoutchk(1, 4);
 
 
 %% reformat input arguments
@@ -288,8 +272,6 @@ idxl_labelled = false(n_points,1);
 id_tree = -ones(n_points,1);
 id_tree_current = 1;
 
-% minPeakSpacing -> histcount
-
 reverse_str = '';
 
 while ~all(idxl_labelled)
@@ -416,96 +398,4 @@ else
 
     label = uint32(id_tree(ix_unsort));
     
-end
-
-
-%% compute tree metrics
-
-if nargout >= 2
-    
-    if arg.Results.verbose
-        
-        tic
-        fprintf('computing tree metrics...');
-        
-    end
-    
-    n_trees = max(label);
-    
-    data = table();
-    metrics = table();
-    warning off
-    
-    for j = 1:n_trees
-        
-        % point data
-        data.idxn_nodes(j,1) = {find(label == j)};
-        data.nodes(j,1) = {xyz(data.idxn_nodes{j,1}, :)};
-        
-        [z_max, idxn_top] = max(data.nodes{j}(:,3));
-        z_min = interpolant(data.nodes{j}(idxn_top, 1), data.nodes{j}(idxn_top, 2));
-        data.root(j,1) = {[data.nodes{j}(idxn_top, 1:2), z_min]};
-        
-        % label
-        metrics.Label(j,1) = j;
-        
-        % root x,y,z
-        metrics.X(j,1) = data.root{j,1}(1);
-        metrics.Y(j,1) = data.root{j,1}(2);
-        metrics.Z(j,1) = data.root{j,1}(3);
-        
-        % total height (oblique height)
-        metrics.TotalHeight(j,1) = norm(data.root{j,1} - data.nodes{j,1}(idxn_top,:));
-        
-        % total projected area
-        shp = alphaShape(data.nodes{j,1}(:,1:2), min(max([2, 0.1*metrics.TotalHeight(j,1)]), 3));
-        metrics.Area(j,1) = round(area(shp),1);
-        
-        % total volume
-        shp = alphaShape(data.nodes{j,1}, min(max([2, 0.1*metrics.TotalHeight(j,1)]), 3));
-        metrics.Volume(j,1) = round(volume(shp),1);
-        
-    end
-    
-    varargout{1} = metrics;
-    
-    if arg.Results.verbose
-        
-        fprintf('done!\n');
-        toc
-        
-    end
-    
-end
-
-
-%% assign a color to each tree
-
-if nargout > 2
-    
-    if arg.Results.verbose
-        
-        tic
-        fprintf('assigning colors...');
-        
-    end
-    
-    [varargout{2}, ~, varargout{3}] = clusterColor(xyz, label, ...
-        'buffer', 3, ...
-        'adjacency', '2d', ...
-        'colormap', 'cmap12', ...
-        'unlabelledColor', [0.1, 0.1, 0.1], ...
-        'fig', arg.Results.fig, ...
-        'verbose', false);
-    
-    if arg.Results.verbose
-        
-        fprintf('done!\n');
-        toc
-        
-    end
-    
-end
-
-
 end
