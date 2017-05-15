@@ -17,31 +17,26 @@ function s = LASclip(points, clipper, varargin)
 %    verbose (optional, default: false) - boolean value, verbosiy switch
 %
 % Example:
-%    points = '..\data\measurements\vector\als\6995_2710.las';
-%    outputFilepath = '..\data\measurements\vector\als\zh_6995_2710_subset.las';
-%    xv = [699673; 699729; 699500; 699503];
-%    yv = [271341; 271036; 271042; 271346];
+%    points = 'E:\data\1143424.las';
+%    outputFilepath = 'E:\data\1143424_clipped.las';
+%    xv = [549042.0; 549295.0; 549295.0; 549042.0];
+%    yv = [210236.5; 210236.5; 210032.5; 210032.5];
 %    s = LASclip(points, [xv, yv], outputFilepath, 'verbose', true);
 %
 % Other m-files required: LASread.m, LASwrite.m, LASmerge.m, LASextent.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016a
+% Compatibility: tested on Matlab R2016b
 %
 % See also: LASMERGE
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
-% Author: Matthew Parkan, EPFL - GIS Research Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: December 12, 2016
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: May 15, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
-
-
-%% setup constants
-
-OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system is Matlab or GNU Octave
 
 
 %% check argument validity
@@ -51,12 +46,18 @@ arg = inputParser;
 addRequired(arg, 'points', @(x) ischar(x) || isstruct(x) || iscell(x)); % tf = isdir('A') % if exist(Name, 'file') == 2
 addRequired(arg, 'clipper', @(x) (isnumeric(x) && (size(x,2) == 2)) || ischar(x));
 addOptional(arg, 'outputFilepath', [], @(x) ischar(x) || isempty(x));
-addParamValue(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, points, clipper, varargin{:});
 
 
 %% check clipper is a shapefile or an array of coordinates
+
+if arg.Results.verbose
+    
+     fprintf('reading clipper...');
+    
+end
 
 switch class(arg.Results.clipper)
     
@@ -79,8 +80,20 @@ switch class(arg.Results.clipper)
         
 end
 
+if arg.Results.verbose
+    
+    fprintf('done!\n');
+    
+end
+
 
 %% check clip polygon coordinates
+
+if arg.Results.verbose
+    
+     fprintf('checking clipper coordinates...');
+    
+end
 
 if size(xc, 2) ~= 1
     
@@ -102,6 +115,12 @@ if xc(1) ~= xc(end) || yc(1) ~= yc(end)
     
 end
 
+if arg.Results.verbose
+    
+    fprintf('done!\n');
+    
+end
+
 
 %% check input point format
 
@@ -113,15 +132,16 @@ switch class(arg.Results.points)
             
             % get intersections between clipper and tile extents
             fileIntersections = getFileIntersections(arg.Results.points, xc, yc);
-            n_intersections = length(fileIntersections);
+            n_intersections = height(fileIntersections);
             
             if n_intersections >= 1
                 
                 parts = cell(n_intersections,1);
+                
                 for j = 1:n_intersections
                     
                     % read LAS files
-                    s = LASread(fileIntersections(j).filepath, false, false);
+                    s = LASread(fileIntersections.FILEPATH{j}, false, false);
                     
                     % clip parts
                     parts{j,1} = clip(s);
@@ -129,7 +149,8 @@ switch class(arg.Results.points)
                 end
                 
                 % merge parts
-                r = LASmerge(parts, [], 'verbose', arg.Results.verbose);
+                r = LASmerge(parts, [], ...
+                    'verbose', arg.Results.verbose);
                 
             end
             
@@ -144,15 +165,16 @@ switch class(arg.Results.points)
         
         % get intersections between clipper and tile extents
         fileIntersections = getFileIntersections(arg.Results.points, xc, yc);
-        n_intersections = length(fileIntersections);
+        n_intersections = height(fileIntersections);
         
         if n_intersections >= 1
             
             parts = cell(n_intersections,1);
+            
             for j = 1:n_intersections
                 
                 % read LAS files
-                s = LASread(fileIntersections(j).filepath, false, false);
+                s = LASread(fileIntersections.FILEPATH{j}, false, false);
                 
                 % clip parts
                 parts{j,1} = clip(s);
@@ -177,16 +199,16 @@ end
 if ~isempty(arg.Results.outputFilepath) && length(xc) >= 1
     
     outputFilepath = arg.Results.outputFilepath;
-    [pathstr, name, ext] = fileparts(outputFilepath);
+    [pathstr, name, ~] = fileparts(outputFilepath);
     
     % adjust output file name
     if exist(outputFilepath, 'file')
         
-        outputFilepath =  [pathstr, filesep, name, '_v2.las'];
+        outputFilepath =  [pathstr, '\', name, '_', datestr(now, 'ddmmyy_HHMM'), '.las'];
         
     else
         
-        outputFilepath =  [pathstr, filesep, name, '.las'];
+        outputFilepath =  [pathstr, '\', name, '.las'];
         
     end
     
@@ -202,22 +224,38 @@ end
 
 
 %% get extent of tiles from LAS files
+
     function fileExtents = getFileIntersections(in, xc, yc)
         
+        if arg.Results.verbose
+            
+            fprintf('computing clipper and file intersection...');
+            
+        end
+
         % get extents of all LAS files in specified input directory
-        extent = LASextent(in, [], 'fig', false, 'verbose', false); % , 'fig', true, 'verbose', false
+        extent = LASextent(in, ...
+            [], ...
+            'method', 'header', ...
+            'fig', false, ...
+            'verbose', false);
         
-        n_tiles = length(extent);
+        n_tiles = height(extent);
         idxl_intersections = false(n_tiles,1);
         
         % check if clipper intersects LAS file extents
         for k = 1:n_tiles
             
-            [xi, yi] = polybool('intersection', xc, yc, extent(k).xpoly, extent(k).ypoly);
-            extent(k).x_intersection = xi;
-            extent(k).y_intersection = yi;
+            [xi, yi] = polybool('intersection', ...
+                xc, ...
+                yc, ...
+                extent.X{k}, ...
+                extent.Y{k});
             
-            if ~isempty(extent(k).x_intersection)
+            extent.XI{k} = xi;
+            extent.YI{k} = yi;
+            
+            if ~isempty(xi)
                 
                 idxl_intersections(k,1) = true;
                 
@@ -225,12 +263,19 @@ end
             
         end
         
-        fileExtents = extent(idxl_intersections);
+        fileExtents = extent(idxl_intersections,:);
+        
+        if arg.Results.verbose
+            
+            fprintf('done!\n');
+            
+        end
         
     end
 
 
 %% clip point cloud
+
     function r = clip(s)
         
         % find points in polygon
