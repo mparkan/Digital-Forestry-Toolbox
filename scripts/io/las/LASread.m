@@ -40,8 +40,8 @@ function s = LASread(filepath, varargin)
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
-% Author: Matthew Parkan, EPFL - GIS Research Laboratory
-% Website: http://lasig.epfl.ch/
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
 % Last revision: February 10, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -925,8 +925,8 @@ r.record(k).byte_length = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = true;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -942,8 +942,8 @@ r.record(k).byte_length = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = true;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -959,8 +959,8 @@ r.record(k).byte_length = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = true;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -976,8 +976,8 @@ r.record(k).byte_length = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = false;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -993,8 +993,8 @@ r.record(k).byte_length = [3/8, 3/8, 3/8, 3/8, 3/8, 3/8, 4/8, 4/8, 4/8, 4/8, 4/8
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1010,8 +1010,8 @@ r.record(k).byte_length = [3/8, 3/8, 3/8, 3/8, 3/8, 3/8, 4/8, 4/8, 4/8, 4/8, 4/8
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1027,8 +1027,8 @@ r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8];
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1044,8 +1044,8 @@ r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8];
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1061,8 +1061,8 @@ r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8];
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1078,8 +1078,8 @@ r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8];
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1095,8 +1095,8 @@ r.record(k).byte_length = [2/8, 2/8, 2/8, 2/8, 2/8];
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1112,8 +1112,8 @@ r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1129,8 +1129,8 @@ r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1146,8 +1146,8 @@ r.record(k).byte_length = [5/8, 5/8, 5/8, 5/8, 5/8, 5/8];
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1163,8 +1163,8 @@ r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8];
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1180,8 +1180,8 @@ r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8];
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1197,8 +1197,8 @@ r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8];
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1214,8 +1214,8 @@ r.record(k).byte_length = [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1231,8 +1231,8 @@ r.record(k).byte_length = [1, 1, 1, 1, 1];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1248,8 +1248,8 @@ r.record(k).byte_length = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = false;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1265,8 +1265,8 @@ r.record(k).byte_length = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1282,8 +1282,8 @@ r.record(k).byte_length = [8, 8, 8, 8, 8, 8, 8, 8, 8];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1299,8 +1299,8 @@ r.record(k).byte_length = [2, 2, 2, 2, 2, 2];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1316,8 +1316,8 @@ r.record(k).byte_length = [2, 2, 2, 2, 2, 2];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1333,8 +1333,8 @@ r.record(k).byte_length = [2, 2, 2, 2, 2, 2];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1350,8 +1350,8 @@ r.record(k).byte_length = [2, 2];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1367,8 +1367,8 @@ r.record(k).byte_length = [1, 1, 1, 1];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1384,8 +1384,8 @@ r.record(k).byte_length = [8, 8, 8, 8];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1401,8 +1401,8 @@ r.record(k).byte_length = [4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1418,8 +1418,8 @@ r.record(k).byte_length = [4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1435,8 +1435,8 @@ r.record(k).byte_length = [4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1452,8 +1452,8 @@ r.record(k).byte_length = [4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
@@ -1469,10 +1469,9 @@ r.record(k).byte_length = [4, 4, 4, 4];
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
-r.record(k).scale = [];
-r.record(k).offset = [];
+r.record(k).scale = 1;
+r.record(k).offset = 0;
 r.record(k).value = [];
-
 
 %% extra bytes format definition
 
@@ -1884,7 +1883,7 @@ if flag_vlr
                     r.variable_length_records(j).value(k).offset = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
                     
-                    % append extra bytes to the point data record
+                    % append extra bytes specification to the point data record template
                     ind_data_type = r.variable_length_records(j).value(k).data_type + 1;
                     
                     ind_record = ind_record + 1;
@@ -1892,17 +1891,19 @@ if flag_vlr
                     
                     r.record(ind_record).full_name = r.variable_length_records(j).value(k).name;
                     r.record(ind_record).short_name = lower(strrep(strtrim(regexprep(r.variable_length_records(j).value(k).name,'[^a-zA-Z0-9_\s]','')), ' ', '_'));
+                    % r.record(ind_record).version_compatibility = r.record(ind_record - 1).version_compatibility;
                     r.record(ind_record).format_compatibility = r.record(ind_record - 1).format_compatibility;
                     r.record(ind_record).bit_position = r.record(ind_last_record - 1).bit_position + (r.record(ind_last_record - 1).byte_length * 8);
                     r.record(ind_record).byte_position =  r.record(ind_record).bit_position ./ 8;
                     r.record(ind_record).type = {r.extra_bytes(ind_data_type).type};
                     r.record(ind_record).storage_type = {r.extra_bytes(ind_data_type).type}; %{'double'};
                     r.record(ind_record).byte_length = r.extra_bytes(ind_data_type).n_values * r.extra_bytes(ind_data_type).byte_length;
+                    r.record(ind_record).flag_extra_field = true;
                     r.record(ind_record).flag_bit_field = false;
                     r.record(ind_record).flag_mandatory = false;
                     r.record(ind_record).flag_transform = true;
                     r.record(ind_record).value = [];
-                    
+
                     if r.variable_length_records(j).value(k).options.scale_bit
                         
                         r.record(ind_record).scale = r.variable_length_records(j).value(k).scale(1);
@@ -2055,7 +2056,6 @@ if ~arg.Results.headerOnly && r.header(phb_skeys.n_point_records).value > 0
             
         else
             
-            % initialize byte array
             bytes = zeros(r.header(phb_skeys.n_point_records).value, r.record(j).byte_length, r.record(j).type{:});
             
             % add columns to byte array (one column per byte)
@@ -2063,20 +2063,35 @@ if ~arg.Results.headerOnly && r.header(phb_skeys.n_point_records).value > 0
 
                 bytes(:,k) = bitshift(cast(blob(ind_start: step : ind_end), r.record(j).type{:}), nbitshift);
                 ind_start = ind_start + 1; % increment byte address
-                nbitshift = nbitshift + 8;  % increment bit shift
+                
+                if ~strcmp(r.record(j).short_name, 'uuid') % r.record(j).byte_length ~= 16
+                    
+                    nbitshift = nbitshift + 8;  % increment bit shift
+                    
+                end
                 
             end
             
             % merge byte array columns
-            byte_a = bytes(:,1);
-            if r.record(j).byte_length > 1
+            switch r.record(j).short_name
                 
-                for k = 1:r.record(j).byte_length-1
+                case 'uuid'
                     
-                    byte_a = bitor(byte_a, bytes(:,k+1));
+                    byte_a = bytes;
                     
-                end
-                
+                otherwise
+                    
+                    byte_a = bytes(:,1);
+                    if r.record(j).byte_length > 1
+                        
+                        for k = 1:r.record(j).byte_length-1
+                            
+                            byte_a = bitor(byte_a, bytes(:,k+1));
+                            
+                        end
+                        
+                    end
+                    
             end
      
             % adjust format
@@ -2104,6 +2119,28 @@ if ~arg.Results.headerOnly && r.header(phb_skeys.n_point_records).value > 0
     
     clear byte byte_a
     
+    
+    % reformat UUID % TEST
+    if ismember('uuid', fieldnames(pdr_skeys))
+        
+        [uuid_num_ref, ~, ic] = unique(r.record(pdr_skeys.uuid).value, 'rows');
+        
+        uuid_str_ref = cell(size(uuid_num_ref,1),1);
+        
+        for j = 1:size(uuid_num_ref,1)
+            
+            uuid_str_ref{j,1} = lower(sprintf('%s', dec2hex(uuid_num_ref(j,:))'));
+            
+        end
+        
+        idxl_void = all(bsxfun(@eq, uuid_num_ref, 0),2);
+        uuid_str_ref(idxl_void) = {repmat('0', 1, 32)};
+        
+        r.record(pdr_skeys.uuid).value = uuid_str_ref(ic);
+        
+    end
+
+
     % apply scale and offset when necessary
     r.record(pdr_skeys.x).scale = r.header(phb_skeys.x_scale_factor).value;
     r.record(pdr_skeys.x).offset = r.header(phb_skeys.x_offset).value;
@@ -2113,8 +2150,8 @@ if ~arg.Results.headerOnly && r.header(phb_skeys.n_point_records).value > 0
     r.record(pdr_skeys.z).offset = r.header(phb_skeys.z_offset).value;
     
     for j = 1:length(r.record)
-        
-        if r.record(j).flag_transform
+
+        if any([r.record(j).scale ~= 1,  r.record(j).offset ~= 0])
 
             r.record(j).value = double(r.record(j).value) * r.record(j).scale + r.record(j).offset;
             
@@ -2163,8 +2200,6 @@ if ~arg.Results.headerOnly && (las_version >= 14)
             r.extended_variable_length_records(j).record_id = fread(fid, 1, 'uint16', 0, MACHINE_FORMAT); % Record ID, unsigned short, 2 bytes, *
             r.extended_variable_length_records(j).record_length_after_header = fread(fid, 1, 'uint64', 0, MACHINE_FORMAT); % Record Length After Header, unsigned long long, 8 bytes, *
             r.extended_variable_length_records(j).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % Description, char[32], 32 bytes
-            
-            % r.extended_variable_length_records(j).record_id
             
             % read any defined extended variable length records
             switch r.extended_variable_length_records(j).record_id
@@ -2271,13 +2306,17 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT);
                     
-                case {5025, 5026, 5027, 5040, 5041} % Custom uint16 field (optional)
+                case {5025, 5026, 5027} % Custom uint16 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 2, 'uint16', 0, MACHINE_FORMAT);
                     
-                case {5000} % Custom uint32 field (optional)
+                case 5000 % Custom char(32) field (optional) % TEST
                     
-                    r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 4, 'uint32', 0, MACHINE_FORMAT);
+                    r.extended_variable_length_records(j).value = cellstr(cast(reshape(fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT), [], 32), 'char'));
+                    
+                case {5040, 5041} % Custom single field (optional)
+                    
+                    r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 4, 'single', 0, MACHINE_FORMAT);
                     
                 case {5001, 5002, 5003, 5050} % Custom double field (optional)
                     
