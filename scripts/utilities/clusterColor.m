@@ -1,4 +1,4 @@
-function [color, varargout] = clusterColor(X, label, varargin)
+function varargout = clusterColor(X, label, varargin)
 % CLUSTERCOLOR - assigns distinct colors to adjacent 3D point clusters (topological graph colouring)
 % using the largest degree first heuristic described in [1] and [2].
 % [COLOR, RGB] = CLUSTERCOLOR(X, LABEL, ...) assigns a distinct color index (COLOR) and RGB triplet (RGB) to each
@@ -13,6 +13,7 @@ function [color, varargout] = clusterColor(X, label, varargin)
 % [4] Jacomy Mathieu, "I want hue - Colors for data scientists", Sciences-Po Medialab, http://tools.medialab.sciences-po.fr/iwanthue/
 %
 % Syntax:  
+%    clusterColor(X, label, ...)
 %    color = clusterColor(X, label, ...)
 %    [color, rgb] = clusterColor(X, label, ...)
 %    [color, rgb, cmap] = clusterColor(X, label, ...)
@@ -67,7 +68,7 @@ function [color, varargout] = clusterColor(X, label, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: May 1, 2017
+% Last revision: August 21, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -96,7 +97,7 @@ if size(X,1) ~= size(label,1)
 end
 
 % check number of output arguments
-nargoutchk(1, 3);
+nargoutchk(0, 3);
 
 
 %% reassign label values
@@ -120,14 +121,20 @@ if ~any(idxl_labelled)
     
     switch nargout
         
+        case 1
+            
+            varargout{1} = color;
+        
         case 2
             
-            varargout{1} = arg.Results.unlabelledColor(color,:);
+            varargout{1} = color;
+            varargout{2} = arg.Results.unlabelledColor(color,:);
             
         case 3
             
-            varargout{1} = arg.Results.unlabelledColor(color,:);
-            varargout{2} = arg.Results.unlabelledColor;
+            varargout{1} = color;
+            varargout{2} = arg.Results.unlabelledColor(color,:);
+            varargout{3} = arg.Results.unlabelledColor;
             
     end
     
@@ -170,14 +177,20 @@ if isempty(pairs)
     
     switch nargout
         
+        case 1
+            
+            varargout{1} = color;
+            
         case 2
             
-            varargout{1} = cmap(color,:);
+            varargout{1} = color;
+            varargout{2} = cmap(color,:);
             
         case 3
             
-            varargout{1} = cmap(color,:);
-            varargout{2} = cmap;
+            varargout{1} = color;
+            varargout{2} = cmap(color,:);
+            varargout{3} = cmap;
             
     end
     
@@ -337,7 +350,7 @@ switch arg.Results.colormap
             255,255,153;
             177,89,40] ./ 255;
 
-        color(color > 12) = mod(color(color > 12), 12);
+        color(color > 12) = mod(color(color > 12), 12)+1;
         
     case 'cmap25' % 25 distinct colors - source: http://tools.medialab.sciences-po.fr/iwanthue/
         
@@ -367,7 +380,7 @@ switch arg.Results.colormap
             192,144,181;
             117,49,107] ./ 255;
         
-        color(color > 25) = mod(color(color > 25), 25);
+        color(color >= 25) = mod(color(color >= 25), 25)+1;
         
 end
 
@@ -399,14 +412,20 @@ end
 
 switch nargout
     
+    case 1
+        
+        varargout{1} = color;
+    
     case 2
         
-        varargout{1} = rgb;
+        varargout{1} = color;
+        varargout{2} = rgb;
         
     case 3
         
-        varargout{1} = rgb;
-        varargout{2} = cmap;
+        varargout{1} = color;
+        varargout{2} = rgb;
+        varargout{3} = cmap;
         
 end
 
@@ -440,7 +459,6 @@ if arg.Results.fig
                 rgb(idxl_labelled,:), ...
                 'Marker', '.')
             axis equal tight vis3d
-            axis off
             title('3D point coloring')
             xlabel('x')
             ylabel('y')
