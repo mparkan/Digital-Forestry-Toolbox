@@ -57,7 +57,7 @@ function label = treeWatershed(chm, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 16, 2017
+% Last revision: August 22, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -150,7 +150,7 @@ if arg.Results.fig
     [nrows, ncols] = size(label);
     [xgrid, ygrid] = meshgrid(1:ncols, 1:nrows);
     buffer = min(10, 3*sqrt(median(accumarray(label(:)+1, label(:), [], @numel))));
-    
+
     [color, ~, cmap] = clusterColor([xgrid(:), ygrid(:)], ...
         label(:), ...
         'adjacency', '2d', ...
