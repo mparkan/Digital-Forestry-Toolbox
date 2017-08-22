@@ -1,6 +1,6 @@
 function varargout = rasterize(xyz, xv, yv, varargin)
 % RASTERIZE - creates a 2D or 3D raster from scattered points with coordinates X,Y,Z by binning
-% them in the cells defined by XV, YV and optionaly ZV, applying the FUN
+% them in the cells defined by edges XV, YV and optionaly ZV, applying the FUN
 % function to the VAL values contained in each grid cell. Cells which do not
 % contain any points are filled with the FILL value.
 %
@@ -73,7 +73,7 @@ function varargout = rasterize(xyz, xv, yv, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016a
+% Compatibility: tested on Matlab R2016b
 %
 % See also:
 %
@@ -81,7 +81,7 @@ function varargout = rasterize(xyz, xv, yv, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://lasig.epfl.ch/
-% Last revision: May 26, 2016
+% Last revision: August 22, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -141,7 +141,11 @@ if isempty(arg.Results.zv) % 2D raster
 
         ncols = length(xv)-1;
         nrows = length(yv)-1;
-        varargout{3} = accumarray([ind_row, ind_col], arg.Results.val(idxl_in), [nrows, ncols], arg.Results.fun, arg.Results.fill); % raster
+        varargout{3} = accumarray([ind_row, ind_col], ...
+            arg.Results.val(idxl_in), ...
+            [nrows, ncols], ...
+            arg.Results.fun, ...
+            arg.Results.fill); % raster
         
     end
     
@@ -171,7 +175,11 @@ else % 3D raster
         ncols = length(xv)-1;
         nrows = length(yv)-1;
         nlevs = length(zv)-1;
-        varargout{3} = accumarray([ind_row, ind_col, ind_lev], arg.Results.val(idxl_in), [nrows, ncols, nlevs], arg.Results.fun, arg.Results.fill); % raster
+        varargout{3} = accumarray([ind_row, ind_col, ind_lev], ...
+            arg.Results.val(idxl_in), ...
+            [nrows, ncols, nlevs], ...
+            arg.Results.fun, ...
+            arg.Results.fill); % raster
         
     end
     

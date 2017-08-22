@@ -135,6 +135,7 @@ else
     
 end
 
+% coordinates of cell (pixel) centers
 [grid_x, grid_y] = meshgrid(xv, yv);
 
 
@@ -401,5 +402,24 @@ end
 
 
 %% create spatial referencing matrix
-
+% format long g
 refmat = [0, -dy; dx, 0; grid_x(1,1) - dx/2, grid_y(end,1) + dy/2];
+% refmat = [0, -dy; dx, 0; grid_x(1,1), grid_y(end,1)]
+% makerefmat(grid_x(1,1), grid_y(end,1), dx, -dy)
+
+% dx = 0.5;
+% dy = -0.5;
+% x11 = grid_x(1,1)+dx/2;
+% y11 = grid_y(end,1)+dy/2;
+% row = [0,0.5,1]';
+% col = [0,0.5,1]';
+% R = makerefmat(x11, y11, dx, dy)
+% 
+% xy_map = [x11 + (col-1) * dx, y11 + (row-1) * dy]
+% xy_map = [row, col, ones(size(row))] * R
+% xy_map = [row, col, ones(size(row))] * refmat
+% xy_map = pix2map(R, row, col)
+
+% pix2map(R, -1, -1)
+% grid_x(1,1)
+
