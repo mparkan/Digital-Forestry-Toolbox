@@ -30,10 +30,6 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %
 %    refmat - 3x2 numeric matrix, spatial referencing matrix such that [map_x map_y] = [row col 1] * refmat
 %
-%    adjacencyRange (optional, default: 1.5) - numeric value, minimum
-%    3D distance separating peaks. Peaks separated by a smaller distance
-%    are merged and the new peaks are the centroids of all adjacent peaks.
-%
 %    method (optional, default: 'fixedRadius') - string, peak detection method: 'fixedRadius', 'allometricRadius' or 'hMaxima'.
 %
 %    minPeakHeight (optional, default: 2) - numeric value, minimum tree top height
@@ -51,6 +47,10 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %     @(h) 1.7425 * h.^0.5566; % mixed forests (Chen et al., 2006)
 %     @(h) 1.2 + 0.16 * h; % mixed forests (Pitkänen et al., 2004)
 %
+%    adjacency (optional, default: @(h) min(0.5 + 0.5*log(max(h,1)),4) - anonymous function handle of the form @(h) = ...,
+%    which defines the minimum 3D distance separating peaks. Peaks separated by a smaller distance
+%    are grouped and only the highest peak within each group is retained.
+%
 %    minHeightDifference (optional, default: 0.1) - numeric value, threshold
 %    height difference below which the H-maxima transform suppresses all local maxima (only when method is set to 'hMaxima')
 %
@@ -62,15 +62,16 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %    xyh - Mx3 numeric matrix, map coordinates (x, y) and height values of tree tops
 %
 % Example:
-%    info = geotiffinfo('..\data\measurements\raster\chm\so_2014_woodland_pasture.tif');
-%    [chm, ~] = geotiffread('..\data\measurements\raster\chm\so_2014_woodland_pasture.tif');
 %    
-%    [crh, xyh] = canopyPeaks(chm, ...
-%        info.RefMatrix, ...
-%        'adjacencyRange', 1.5, ...
+%    [chm, refmat, ~] = geotiffread('..\data\measurements\raster\chm\so_2014_woodland_pasture.tif');
+%    
+%    [crh, xyh] = canopyPeaks(double(chm), ...
+%        refmat, ...
 %        'method', 'allometricRadius', ...
 %        'allometry', @(h) 1 + 0.5*log(max(h,1)), ...
-%        'fig', true);
+%        'adjacency' @(h) min(0.5 + 0.5*log(max(h,1)),4), ...
+%        'fig', true, ...
+%        'verbose', true);
 %
 % Other m-files required: none
 % Subfunctions: none
@@ -83,7 +84,7 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 15, 2017
+% Last revision: August 22, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -95,26 +96,35 @@ arg = inputParser;
 addRequired(arg, 'chm', @isnumeric);
 addRequired(arg, 'refmat', @isnumeric);
 addParameter(arg, 'method', 'fixedRadius', @(x) any(validatestring(x, {'fixedRadius', 'allometricRadius', 'hMaxima'})));
-addParameter(arg, 'adjacencyRange', 1.5, @(x) isnumeric(x) && x > 0 && (numel(x) == 1));
 addParameter(arg, 'minPeakHeight', 2, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'windowRadius', 4, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'allometry', @(h) 1 + 0.5*log(max(h,1)), @(x) strfind(func2str(x),'@(h)') == 1);
+addParameter(arg, 'adjacency', @(h) min(0.5 + 0.5*log(max(h,1)),4), @(x) strfind(func2str(x),'@(h)') == 1);
 addParameter(arg, 'minHeightDifference', 0.1, @isnumeric);
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', false, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, chm, refmat, varargin{:});
 
 
 %% find tree tops
 
+if arg.Results.verbose
+   
+    fprintf('detecting peaks...');
+    
+end
+
 gridResolution = abs(refmat(1,2));
+chm(chm < 0) = 0;
+chm = double(chm);
 
 switch arg.Results.method
     
     case 'fixedRadius'
         
         SE = strel('disk', round(arg.Results.windowRadius / gridResolution)).getnhood();
-        SE(ceil(size(SE,1)/2), ceil(size(SE,2)/2)) = 0;
+        SE(ceil(size(SE,1)/2), ceil(size(SE,2)/2)) = 0; % set central convolution window value to zero
         idx_lm = chm > imdilate(chm, SE);
         val_lm = chm(idx_lm);
         [row_lm, col_lm] = ind2sub(size(idx_lm), find(idx_lm));
@@ -151,29 +161,64 @@ switch arg.Results.method
         
 end
 
+% transform image to map coordinates
 % crh = [col_lm, row_lm, val_lm];
 [nrows, ncols] = size(chm);
+xy = [row_lm, col_lm, ones(size(row_lm))] * refmat;
+xyh = [xy, val_lm];
 
-t = [row_lm, col_lm] * refmat(1:2,:);
-x = t(:,1) + refmat(3,1);
-y = t(:,2) + refmat(3,2);
-h = val_lm;
-xyh = [x,y,h];
-
+if arg.Results.verbose
+    
+    fprintf('done!\n');
+    
+end
 
 %% filter tree tops below height threshold
+
+if arg.Results.verbose
+   
+    fprintf('filtering peaks...');
+    
+end
 
 idxl_height_filter = (val_lm >= arg.Results.minPeakHeight);
 
 % crh = crh(idxl_height_filter,:);
 xyh = xyh(idxl_height_filter,:);
 
+% sort peaks by decreasing height
+[~, idxn_sort] = sort(xyh(:,3), 1, 'descend');
+xyh = xyh(idxn_sort,:);
+
+if arg.Results.verbose
+    
+    fprintf('done!\n');
+    
+end
+
 
 %% merge adjacent treetops 
 
+if arg.Results.verbose
+   
+    fprintf('merging peaks...');
+    
+end
+
+r_adj = arg.Results.adjacency(xyh(:,3));
+r_max = max(r_adj);
+
 [idxn_adj, d_adj] = rangesearch(xyh(:,1:3), ...
     xyh(:,1:3), ...
-    arg.Results.adjacencyRange);
+    r_max);
+
+for j = 1:length(idxn_adj)
+    
+    idxl_range = d_adj{j} <= r_adj(j);
+    idxn_adj{j} = idxn_adj{j}(idxl_range);
+    d_adj{j} = d_adj{j}(idxl_range);
+    
+end
 
 n_adj = cellfun(@numel, idxn_adj);
 idxl_pair = (n_adj > 1);
@@ -198,11 +243,12 @@ G = graph(EdgeTable, NodeTable);
 idxn_cluster = conncomp(G, ...
     'OutputForm', 'vector')';
 
-% compute cluster centroids
-xyz_cl(:,1) = accumarray(idxn_cluster, xyh(:,1), [], @mean);
-xyz_cl(:,2) = accumarray(idxn_cluster, xyh(:,2), [], @mean);
-xyz_cl(:,3) = accumarray(idxn_cluster, xyh(:,3), [], @mean);
-
+% compute highest peak in cluster
+idxn_peak = accumarray(idxn_cluster, G.Nodes.ID, [], @(x) x(1));
+xyz_cl = xyh(idxn_peak,:); % xyh_peak
+xyh = xyz_cl;
+    
+% transform map to image coordinates
 rc_cl = [xyz_cl(:,1) - refmat(3,1), xyz_cl(:,2) - refmat(3,2)] / refmat(1:2,:);
 rc_cl = round(rc_cl);
 rc_cl(rc_cl == 0) = 1;
@@ -210,7 +256,12 @@ rc_cl(rc_cl(:,1) > nrows,1) = nrows;
 rc_cl(rc_cl(:,2) > ncols,2) = nrows;
 crh_cl = [rc_cl(:,[2 1]), xyz_cl(:,3)];
 crh = crh_cl;
-xyh = xyz_cl;
+
+if arg.Results.verbose
+    
+    fprintf('done!\n');
+    
+end
 
 
 %% plot individual tree tops
