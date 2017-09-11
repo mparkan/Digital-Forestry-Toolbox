@@ -22,6 +22,10 @@ function label = treeWatershed(chm, varargin)
 %    minHeight (optional, default: 1) - numeric value, minimum canopy height, all values 
 %    below this threshold are set to zero.
 %
+%    mask (optional, default: []) - RxC boolean matrix, any segment that is
+%    not located entirely within the mask is excluded (i.e. label set to
+%    0). By default all segments are included.
+%
 %    verbose (optional, default: true) - boolean value, verbosiy switch
 %
 %    fig (optional, default: true) - boolean value, switch to plot figures
@@ -30,15 +34,15 @@ function label = treeWatershed(chm, varargin)
 %    label - RxC numeric matrix, individual tree crown labels
 %
 % Example:
-%    info = geotiffinfo('..\data\measurements\raster\chm\so_2014_woodland_pasture.tif');
-%    [chm, ~] = geotiffread('..\data\measurements\raster\chm\so_2014_woodland_pasture.tif');
+%    [chm, refmat, ~] = geotiffread('..\data\measurements\raster\chm\so_2014_woodland_pasture.tif');
 %    
-%    [crh, xyh] = canopyPeaks(chm, ...
-%        info.RefMatrix, ...
-%        'adjacencyRange', 1.5, ...
+%    [crh, xyh] = canopyPeaks(double(chm), ...
+%        refmat, ...
 %        'method', 'allometricRadius', ...
 %        'allometry', @(h) 1 + 0.5*log(max(h,1)), ...
-%        'fig', true);
+%        'adjacency' @(h) min(0.5 + 0.5*log(max(h,1)),4), ...
+%        'fig', true, ...
+%        'verbose', true);
 %
 %    label = treeWatershed(chm, ...
 %        'markers', crh, ...
@@ -57,7 +61,7 @@ function label = treeWatershed(chm, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: August 22, 2017
+% Last revision: September 11, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -69,6 +73,7 @@ arg = inputParser;
 addRequired(arg, 'chm', @isnumeric);
 addParameter(arg, 'markers', [], @isnumeric);
 addParameter(arg, 'minHeight', 1, @(x) isnumeric(x) && (numel(x) == 1));
+addParameter(arg, 'mask', [], @(x) islogical(x) && any(x(:)) && all(size(x) == size(chm)));
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
@@ -141,6 +146,15 @@ end
 
 label(~gradient_mask) = 0;
 
+
+%% mask segments near border
+
+if ~isempty(arg.Results.mask)
+    
+    idxl_boundary = ismember(label, label(~arg.Results.mask));
+    label(idxl_boundary) = 0;
+
+end
 
 %% plot results
 
