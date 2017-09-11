@@ -1,4 +1,4 @@
-function trajectory = TRJread(filepath, headerOnly, verbose)
+function trajectory = TRJread(filepath, varargin)
 %TRJREAD - Reads a trajectory file in the Terrascan TRJ format.
 % TRAJECTORY = TRJREAD(FILEPATH, HEADERONLY, VERBOSE) reads the TRJ file specified in FILEPATH
 % into the structure TRAJECTORY.
@@ -26,17 +26,18 @@ function trajectory = TRJread(filepath, headerOnly, verbose)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016a
+% Compatibility: tested on Matlab R2016b
 %
-% See also: SBETread.m
+% See also:
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
-% Author: Matthew Parkan, EPFL - GIS Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: May 13, 2016
-% Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: September 11, 2017
+% Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
+
 
 %% check argument validity
 
@@ -47,10 +48,10 @@ if ~isOctave
     arg = inputParser;
     
     addRequired(arg, 'filepath', @checkFilepath);
-    addRequired(arg, 'headerOnly', @islogical);
-    addRequired(arg, 'verbose', @islogical);
+    addParameter(arg, 'headerOnly', false, @(x) islogical(x) && (numel(x) == 1));
+    addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
     
-    parse(arg, filepath, headerOnly, verbose);
+    parse(arg, filepath, varargin{:});
     
 end
 
@@ -318,7 +319,7 @@ while byte_offset < r.TrajHdr(TrajHdr_skeys.HdrSize).value
         
     end
     
-    if verbose
+    if arg.Results.verbose
         
         fprintf(sprintf('%s: %s\\n', r.TrajHdr(j).full_name, r.TrajHdr(j).print_format), r.TrajHdr(j).value);
         
@@ -463,9 +464,9 @@ r.TrajPos(k).value = [];
 
 %% read trajectory position record
 
-if ~headerOnly
+if ~arg.Results.headerOnly
     
-    if verbose
+    if arg.Results.verbose
         
         fprintf('reading trajectory position record...');
         
@@ -548,7 +549,7 @@ for j = 1:length(r.TrajHdr)
 end
 
 % record block
-if ~headerOnly
+if ~arg.Results.headerOnly
     
     for j = 1:length(r.TrajPos)
         
@@ -558,7 +559,7 @@ if ~headerOnly
     
 end
 
-if verbose
+if arg.Results.verbose
     
     fprintf('done!\n');
     
