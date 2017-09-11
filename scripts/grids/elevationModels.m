@@ -34,6 +34,9 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %    smoothingFilter (optional, default: []) - numeric matrix, two-dimensional smoothing
 %    filter, e.g. fspecial('gaussian', [4 4], 1)
 %
+%    alpha (optional, default: 5) - numeric value, minimum edge length (in map units, not pixel units) used
+%    when computing the alpha shape  that defines the data mask
+%
 %    outputModels (optional, default: {'terrain', 'surface', 'height', 'density'}) - cell array of strings, output models i.e {'terrain', 'surface', 'height', 'density'}
 %
 %    verbose (optional, default: true) - boolean value, verbosiy switch
@@ -41,7 +44,7 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %    fig (optional, default: true) - boolean value, switch to plot figures
 %
 % Outputs:
-%    models - structure, boolean mask (missing data areas), terrain,
+%    models - structure, boolean mask (data boundary), terrain,
 %    surface, height and point density models, interpolant function for the
 %    terrain model
 %
@@ -61,6 +64,7 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %     'cellResolution', 1, ...
 %     'maxFillArea', inf, ...
 %     'smoothingFilter', [], ...
+%     'alpha', 5, ...
 %     'outputModels', {'terrain', 'surface', 'height', 'density'}, ...
 %     'fig', true, ...
 %     'verbose', true);
@@ -83,7 +87,7 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 16, 2017
+% Last revision: September 11, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -101,6 +105,7 @@ addParameter(arg, 'xv', [], @isnumeric);
 addParameter(arg, 'yv', [], @isnumeric);
 addParameter(arg, 'maxFillArea', inf, @(x) isnumeric(x) & (numel(x) == 1));
 addParameter(arg, 'smoothingFilter', [], @isnumeric);
+addParameter(arg, 'alpha', 5, @(x) isnumeric(x) & (numel(x) == 1));
 addParameter(arg, 'outputModels', {'terrain', 'surface', 'height', 'density'}, @(x) iscell(x) & any(ismember(x, {'terrain', 'surface', 'height', 'density'})));
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
@@ -132,6 +137,7 @@ else
     yv = arg.Results.yv;
     dx = abs(xv(1) - xv(2));
     dy = abs(yv(1) - yv(2));
+    arg.Results.cellResolution = abs(xv(2)-xv(1));
     
 end
 
@@ -141,9 +147,43 @@ end
 
 %% compute boolean mask
 
-[~, ~, mask] = rasterize(xyz, xv, yv, [], xyz(:,3), @any, false);
-models.mask = flipud(mask);
+if arg.Results.verbose
+    
+    fprintf('computing mask...');
+    
+end
+    
+% [~, ~, mask] = rasterize(xyz, xv, yv, [], xyz(:,3), @any, false);
+% models.mask = flipud(mask);
 
+[~, ~, mask_hit] = rasterize(xyz, xv, yv, [], xyz(:,3), @any, false);
+% mask_hit = flipud(mask_hit);
+% models.mask = flipud(mask);
+
+alpha = max(arg.Results.alpha, arg.Results.cellResolution+eps);
+
+[row_hit, col_hit] = ind2sub(size(mask_hit), find(mask_hit));
+
+shp = alphaShape(col_hit, row_hit, ...
+    alpha / arg.Results.cellResolution, ...
+    'HoleThreshold', numel(mask_hit));
+
+[grid_col, grid_row] = meshgrid(1:size(mask_hit,1), 1:size(mask_hit,2));
+idxl_mask = inShape(shp, grid_col, grid_row);
+
+models.mask = false(size(mask_hit));
+idxn_mask = sub2ind(size(models.mask), grid_row(idxl_mask) , grid_col(idxl_mask));
+models.mask(idxn_mask) = true;
+models.mask = flipud(models.mask);
+% figure 
+% imshow(mask)
+
+if arg.Results.verbose
+    
+    fprintf('done!\n');
+    
+end
+    
 
 %% compute overall point density
 
