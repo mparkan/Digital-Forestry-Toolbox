@@ -87,7 +87,7 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: September 11, 2017
+% Last revision: October 2, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -117,6 +117,7 @@ parse(arg, xyz, classification, varargin{:});
 
 if isempty(arg.Results.xv) || isempty(arg.Results.yv)
     
+    cellResolution = arg.Results.cellResolution;
     dx = arg.Results.cellResolution;
     dy = arg.Results.cellResolution;
     
@@ -137,7 +138,7 @@ else
     yv = arg.Results.yv;
     dx = abs(xv(1) - xv(2));
     dy = abs(yv(1) - yv(2));
-    arg.Results.cellResolution = abs(xv(2)-xv(1));
+    cellResolution = abs(xv(2)-xv(1));
     
 end
 
@@ -153,30 +154,22 @@ if arg.Results.verbose
     
 end
     
-% [~, ~, mask] = rasterize(xyz, xv, yv, [], xyz(:,3), @any, false);
-% models.mask = flipud(mask);
-
 [~, ~, mask_hit] = rasterize(xyz, xv, yv, [], xyz(:,3), @any, false);
-% mask_hit = flipud(mask_hit);
-% models.mask = flipud(mask);
-
-alpha = max(arg.Results.alpha, arg.Results.cellResolution+eps);
+alpha = max(arg.Results.alpha, cellResolution+eps);
 
 [row_hit, col_hit] = ind2sub(size(mask_hit), find(mask_hit));
 
 shp = alphaShape(col_hit, row_hit, ...
-    alpha / arg.Results.cellResolution, ...
+    alpha / cellResolution, ...
     'HoleThreshold', numel(mask_hit));
 
-[grid_col, grid_row] = meshgrid(1:size(mask_hit,1), 1:size(mask_hit,2));
+[grid_col, grid_row] = meshgrid(1:size(mask_hit,2), 1:size(mask_hit,1));
 idxl_mask = inShape(shp, grid_col, grid_row);
 
 models.mask = false(size(mask_hit));
 idxn_mask = sub2ind(size(models.mask), grid_row(idxl_mask) , grid_col(idxl_mask));
 models.mask(idxn_mask) = true;
 models.mask = flipud(models.mask);
-% figure 
-% imshow(mask)
 
 if arg.Results.verbose
     
