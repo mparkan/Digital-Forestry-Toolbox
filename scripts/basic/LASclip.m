@@ -34,7 +34,7 @@ function s = LASclip(points, clipper, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: May 15, 2017
+% Last revision: October 5, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -204,11 +204,28 @@ if ~isempty(arg.Results.outputFilepath) && length(xc) >= 1
     % adjust output file name
     if exist(outputFilepath, 'file')
         
-        outputFilepath =  [pathstr, '\', name, '_', datestr(now, 'ddmmyy_HHMM'), '.las'];
+        if ~isempty(pathstr)
+            
+            outputFilepath =  [pathstr, filesep, name, '_', datestr(now, 'ddmmyy_HHMM'), '.las'];
+            
+        else
+            
+            outputFilepath =  [name, '_', datestr(now, 'ddmmyy_HHMM'), '.las'];
+            
+        end
+        
         
     else
         
-        outputFilepath =  [pathstr, '\', name, '.las'];
+        if ~isempty(pathstr)
+            
+            outputFilepath =  [pathstr, filesep, name, '.las'];
+            
+        else
+            
+            outputFilepath =  [name, '.las'];
+            
+        end
         
     end
     
