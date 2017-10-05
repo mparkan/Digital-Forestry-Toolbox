@@ -301,13 +301,15 @@ end
         pdr_skeys = fieldnames(s.record);
         
         % initialize point cloud structure
-        r.header = s.header;
+        %r.header = s.header;
+        r = s;
         
         for k = 1:length(pdr_skeys)
             
             r.record.(pdr_skeys{k}) = s.record.(pdr_skeys{k})(idxl_in);
             
         end
+        
         
     end
 
