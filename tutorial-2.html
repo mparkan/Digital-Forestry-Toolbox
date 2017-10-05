@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="UTF-8">
+        <title>DFT - Tutorial 2</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" type="image/png" href="img/favicon_dft.png"/>
+        <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+        <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css'>
+
+        <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+
+        <script type="text/javascript" async
+                src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+        </script>
+
+    </head>
+    <body>
+
+        <section class="page-header tutorial">
+            <h1 class="project-name">Digital-Forestry-Toolbox</h1>
+            <br>
+            <!--<h2 class="project-tagline white">A collection of digital forestry tools for Matlab</h2>-->
+            <a href="index.html" class="btn"><i class="fa fa-home" aria-hidden="true"></i> Back to homepage</a>
+        </section>
+
+        <section class="main-content">
+
+            <h1>Individual tree crown detection using marker controlled watershed segmentation</h1>
+
+
+            <br>
+            <hr>
+            <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
+            <p> In this tutorial, you will learn how to detect individual tree crowns from a raster Canopy Height Model (CHM) using marker controlled watershed segmentation. Before starting, you should:</p>
+
+            <ol>
+                <li>Download and uncompress the Digital Forestry Toolbox (DFT) <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master">Zip</a> or <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master">Tar</a> archive</li>
+                <li>Download the <a href="http://maps.zh.ch/download/hoehen/2014/lidar/26995_12710.laz">26995_12710.laz file</a> from the Zürich 2014 airborne laser scanning campaign archive and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
+                <li>Start Matlab</li>
+                <li>Add the DFT folders to the Matlab search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
+            </ol>
+
+            <hr>
+            <br>
+
+            <h2>
+                <a id="step-1" class="anchor" href="step-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 1</b> - Reading the LAS file
+            </h2>
+
+            <p>We start by importing the XYZ, classification and intensity attributes from the LAS file using <code>LASread()</code>:</p>
+
+            <pre><code>pc = LASread('26995_12710.las');
+xyz = [pc.record.x, pc.record.y, pc.record.z];
+classification = pc.record.classification;
+intensity = pc.record.intensity;</code></pre>
+
+            <p>Note that the point classification uses the following scheme:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2</td>
+                        <td>Terrain</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Low vegetation (< 50 cm)</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Medium vegetation (< 3 m)</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>High vegetation (> 3 m)</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Buildings</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Outliers and incorrect measurements (Noise)</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Bridges (> 3m)</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Strip border points (Overlap)</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>Overhead lines, masts, antennae</td>
+                    </tr>
+                    <tr>
+                        <td>17</td>
+                        <td>Other (vehicles, etc. )</td>
+                    </tr>
+                </tbody>
+            </table>
+
+
+            <h2>
+                <a id="step-2" class="anchor" href="step-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 2</b> - Computing a raster Canopy Height Model (CHM)
+            </h2>
+
+            <p>We now build 0.8 m resolution raster elevation models from the classified 3D point cloud using <code>elevationModels()</code>:</p>
+
+
+            <pre><code>cellResolution = 0.8;
+[models, refmat] = elevationModels(xyz, ...
+    classification, ...
+    'classTerrain', [2], ...
+    'classSurface', [4, 5], ...
+    'cellResolution', cellResolution, ...
+    'maxFillArea', inf, ...
+    'smoothingFilter', fspecial('gaussian', [4, 4], 1), ...
+    'alpha', 5, ...
+    'outputModels', {'terrain', 'surface', 'height'}, ...
+    'fig', true, ...
+    'verbose', true);</code></pre>
+
+            <p>Note that we have only used classes 4 (medium vegetation) and 5 (high vegetation) when computing the surface model (with the <code>'classSurface'</code> parameter). We've also applied a 4x4 pixel Gaussian lowpass filter (with the <code>'smoothingFilter'</code> parameter). The resulting CHM should look like this:</p>
+
+            <figure>
+                <img src="img/tutorial_1_ima_1.png" alt="" style="width:90%;">
+                <figcaption>Figure 1 - Raster canopy height model.</figcaption>
+            </figure>
+
+
+            <h2>
+                <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Tree top detection
+            </h2>
+
+
+            <p>In this step, tree top (local maxima) detection is applied to the CHM using a variable radius convolution window defined by a function of the pixel height value:</p>
+
+            $$\DeclareMathOperator*{\argmax}{argmax}
+            r(h) = 1 + 0.5 \cdot ln(\argmax_h(h,1)) $$
+
+            <p>Local maxima are merged if separated by less than the adjacency distance defined by function:</p>
+
+            $$\DeclareMathOperator*{\argmin}{argmin}
+            d_{adj}(h) = \argmin_h(0.5 + 0.5 \cdot ln(\argmax_h(h,1)) , 4) $$
+
+            <p>These two functions are respectively specified with the <code>'allometry'</code> and <code>'adjacency'</code> parameters in <code>canopyPeaks()</code>:</p>
+
+            <pre><code>[peaks_crh, ~] = canopyPeaks(models.height.values, ...
+    refmat, ...
+    'method', 'allometricRadius', ...
+    'allometry', @(h) 1 + 0.5*log(max(h,1)), ...
+    'adjacency', @(h) min(0.5 + 0.5*log(max(h,1)),4), ...
+    'fig', true, ...
+    'verbose', true);</code></pre>
+
+            The resulting tree top detection should look like this:</p>
+
+        <figure>
+            <img src="img/tutorial_1_ima_2.png" alt="" style="width:90%;">
+            <figcaption>Figure 2 - Tree top detection.</figcaption>
+        </figure>
+
+
+        <h2>
+            <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Marker controlled watershed segmentation
+        </h2>
+
+
+        <p>We first compute a boolean mask to exclude areas located in the 5 meter inner margin of the CHM edge:</p>
+
+        <pre><code>borderMargin = 5;
+
+se = strel('disk', ...
+    ceil(borderMargin/cellResolution), ...
+    6);
+mask = imerode(padarray(models.mask, [1 1], false), se);
+mask = mask(2:end-1,2:end-1);</code></pre>
+
+
+        <p>Using the previously computed CHM, tree top coordinates and boolean mask, we now compute the marker controlled watershed segmentation with <code>treeWatershed()</code>:</p>
+
+        <pre><code>label_2d = treeWatershed(models.height.values, ...
+    'markers', peaks_crh, ...
+    'minHeight', 1, ...
+    'mask', mask, ...
+    'fig', true, ...
+    'verbose', true);</code></pre>
+
+
+        <p>The resulting label matrix should look like this:</p>
+
+
+        <figure>
+            <img src="img/tutorial_1_ima_3.png" alt="" style="width:90%;">
+            <figcaption>Figure 3 - Marker controlled watershed segmentation 2D labels. Note that the segments located on the edge of the CHM have been excluded due to the boolean mask we specified.</figcaption>
+        </figure>
+
+
+        <h2>
+            <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Transferring 2D labels to the 3D point cloud
+        </h2>
+
+        <p>The next step is transferring the 2D labels to the 3D point cloud using nearest neighbour analysis, in order to compute 3D segment metrics:</p>
+
+        <pre><code>% convert image to map coordinates, [x y] = [row col 1] * R
+[nrows, ncols] = size(label_2d);
+[col_grid, row_grid] = meshgrid(1:ncols, 1:nrows);
+xy_grid = [row_grid(:), col_grid(:), ones(numel(label_2d),1)] * refmat;
+
+% index vegetation points
+idxl_veg = ismember(classification, [4,5]);
+
+label_vec = label_2d(:);
+idxl_labelled = (label_vec ~=0);
+label_vec = label_vec(idxl_labelled);
+
+% compute nearest neighbours
+[idxn_knn, d_nn] = knnsearch(xy_grid(idxl_labelled,:), ...
+    xyz(idxl_veg, 1:2), ...
+    'K', 1);
+
+label_veg = label_vec(idxn_knn);
+label_veg(d_nn > cellResolution) = 0;
+label_3d = zeros(size(xyz,1),1);
+label_3d(idxl_veg) = label_veg;
+[label_3d(label_3d ~= 0), ~] = grp2idx(label_3d(label_3d ~= 0));</code></pre>
+
+
+        <p>After determining the 3D labels, we can apply topological coloring (<a href="https://academic.oup.com/comjnl/article-lookup/doi/10.1093/comjnl/10.1.85">Welsh and Powell, 1967</a>) to the point cloud by using <code>clusterColor()</code>:</p>
+
+
+        <pre><code>[color, rgb, cmap] = clusterColor(xyz, ...
+    label_3d, ...
+    'adjacency', '2d', ...
+    'buffer', 10, ...
+    'colormap', 'cmap12', ...
+    'unlabelledColor', [0.1, 0.1, 0.1], ...
+    'fig', true, ...
+    'verbose', true);</code></pre>
+
+        <p>The resulting colored point cloud should look like this:</p>
+
+
+        <figure>
+            <img src="img/tutorial_1_ima_4.png" alt="" style="width:90%;">
+            <figcaption>Figure 4 - Marker controlled watershed segmentation 3D labels. Note that the segments located on the edge of the CHM have been excluded due to the boolean mask.</figcaption>
+        </figure>
+
+
+        <p> You can also plot any individual segment. For example segment n° 42:</p>
+
+        <pre><code>idxl_sample = (label_3d == 42);
+
+figure
+scatter3(xyz(idxl_sample,1), ...
+xyz(idxl_sample,2), ...
+xyz(idxl_sample,3), ...
+8, ...
+intensity(idxl_sample), ...
+'Marker', '.');
+colorbar
+axis equal tight vis3d
+title('Return intensity')
+xlabel('x')
+ylabel('y')
+ylabel('z')
+</code></pre>
+
+        <figure>
+            <img src="img/tutorial_1_ima_5.png" alt="" style="width:90%;">
+            <figcaption>Figure 5 - 3D segment n°42 colored by return intensity.</figcaption>
+        </figure>
+
+
+        <h2>
+            <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Computing segment metrics
+        </h2>
+
+        <p>We now compute descriptive metrics (features) for each segment using <code>treeMetrics()</code>:</p>
+
+            <pre><code>metrics = treeMetrics(label_3d, ...
+    xyz, ...
+    classification, ...
+    intensity, ...
+    zeros(size(classification)), ...
+    zeros(size(classification)), ...
+    'metrics', {'all'}, ...
+    'heightCorrection', false, ...
+    'intensityScaling', true, ...
+    'fig', false, ...
+    'verbose', true);</code></pre>
+
+        <h2>
+            <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Exporting the segment metrics to an ESRI shapefile
+        </h2>
+
+        <p>The following illustrates how to export a subset of the segmentation metrics to an ESRI shapefile:</p>
+
+        <pre><code>T = table;
+T.Geometry = repmat({'Point'}, height(metrics), 1);
+T.UUID = metrics.UUID;
+T.X = round(metrics.X,2);
+T.Y = round(metrics.Y,2);
+T.Z = round(metrics.Z,2);
+T.TOTALHEIGHT = round(metrics.TotalHeight, 1);
+T.AREA = round(metrics.Area, 1);
+T.VOLUME = round(metrics.Volume, 1);
+T.INTENSITYQ50 = round(metrics.IntensityQ50, 1);
+
+shapewrite(table2struct(T), '26995_12710_seg_metrics.shp');</code></pre>
+
+        <p>After exporting, you can try opening the shapefile in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
+
+        <h2>
+            <a id="step-8" class="anchor" href="step-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 8</b> - Exporting the labelled point cloud to a LAS file
+        </h2>
+
+
+        <p>Finally, we export the colored point cloud to a LAS file with <code>LASwrite()</code>:</p>
+
+
+<pre><code>% duplicate source file
+r = pc;
+
+% add RGB color fields
+r.record.red = uint16(rgb(:,1) * 65535);
+r.record.green = uint16(rgb(:,2) * 65535);
+r.record.blue = uint16(rgb(:,3) * 65535);
+
+% if necessary, adapt output record format to add RGB channel
+switch pc.header.point_data_format_id
+
+    case 1 % 1 -> 3
+
+        recordFormat = 3;
+
+    case 4 % 4 -> 5
+
+        recordFormat = 5;
+
+    case 6 % 6 -> 7
+
+        recordFormat = 7;
+
+    case 9 % 9 -> 10
+
+        recordFormat = 10;
+
+    otherwise % 2,3,5,7,8,10
+
+        recordFormat = pc.header.point_data_format_id;
+
+end
+
+LASwrite(r, ...
+    '26995_12710_ws_seg.las', ...
+    'version', 14, ...
+    'systemID', 'SEGMENTATION', ...
+    'recordFormat', recordFormat, ...
+    'verbose', true);</code></pre>
+
+     <p>After exporting, you can try opening the LAS file in any appropriate CAD, GIS or 3D visualization software (e.g. <a href="http://c42f.github.io/displaz/">Displaz</a>, <a href="https://www.fugro.com/about-fugro/our-expertise/technology/fugroviewer">FugroViewer</a>).</p>
+
+
+        <footer class="site-footer">
+            <span class="site-footer-owner"><a href="https://github.com/mparkan/Digital-Forestry-Toolbox">Digital-forestry-toolbox</a> is maintained by <a href="https://github.com/mparkan">mparkan</a>.</span>
+
+        </footer>
+
+        </section>
+
+
+    </body>
+</html>

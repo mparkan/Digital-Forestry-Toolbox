@@ -7,16 +7,18 @@
         <link rel="shortcut icon" type="image/png" href="img/favicon_dft.png"/>
         <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
         <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+        <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css'>
         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+
     </head>
     <body>
-        <section class="page-header">
+        <section class="page-header main">
             <h1 class="project-name">Digital-Forestry-Toolbox</h1>
-            <h2 class="project-tagline">A collection of digital forestry tools for Matlab</h2>
-            <a href="https://github.com/mparkan/Digital-Forestry-Toolbox" class="btn">View on GitHub</a>
-            <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master" class="btn">Download .zip</a>
-            <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master" class="btn">Download .tar.gz</a>
+            <h2 class="project-tagline white">A collection of digital forestry tools for Matlab</h2>
+            <a href="https://github.com/mparkan/Digital-Forestry-Toolbox" class="btn"><i class="fa fa-github" aria-hidden="true"></i> View on GitHub</a>
+            <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master" class="btn"><i class="fa fa-download" aria-hidden="true"></i> Download .zip</a>
+            <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master" class="btn"><i class="fa fa-download" aria-hidden="true"></i> Download .tar.gz</a>
         </section>
 
         <section class="main-content">
@@ -36,6 +38,7 @@
                 <li>Start Matlab</li>
                 <li>Add the DFT folders to the Matlab search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
                 <li>Open any of the functions in Matlab and check the header for syntax and example usage</li>
+                <li>Check the <a href="#tutorials">tutorials</a></li>
             </ol>
 
             <h2>
@@ -66,20 +69,30 @@
 
             <p> We then use <code>scatter3()</code> to plot non-noise points colored by return intensity:</p>
 
-<pre><code>figure
-scatter3(pc.record.x(~idxl_noise), ...
-pc.record.y(~idxl_noise), ...
-pc.record.z(~idxl_noise), ...
-6, ...
-pc.record.intensity(~idxl_noise), ...
-'Marker', '.');
-colorbar
-axis equal tight vis3d
-title('Return intensity')
-xlabel('X')
-ylabel('Y')
-ylabel('Z')
-</code></pre>
+            <pre><code>figure
+            scatter3(pc.record.x(~idxl_noise), ...
+            pc.record.y(~idxl_noise), ...
+            pc.record.z(~idxl_noise), ...
+            6, ...
+            pc.record.intensity(~idxl_noise), ...
+            'Marker', '.');
+            colorbar
+            axis equal tight vis3d
+            title('Return intensity')
+            xlabel('X')
+            ylabel('Y')
+            ylabel('Z')
+            </code></pre>
+
+            <h2>
+                <a id="tutorials" class="anchor" href="tutorials" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Tutorials
+            </h2>
+
+            <ul>
+                <li><a href="tutorial-1.html">Tutorial 1 - Basic point cloud manipulation and visualization</a></li>
+                <li><a href="tutorial-2.html">Tutorial 2 - Individual tree crown detection using marker controlled watershed segmentation</a></li>
+
+            </ul>
 
 
             <h2>
@@ -307,6 +320,10 @@ ylabel('Z')
                         <td><code>treeWatershed()</code></td>
                         <td>Extract individual tree crowns from a raster Canopy Height Model (CHM) using the (optionally marker-controlled) watershed segmentation described in <a href="http://link.springer.com/article/10.1007/s10310-007-0041-9">Kwak et al. (2007)</a>
                         </td>
+                    </tr>
+                    <tr>
+                        <td><code>treeMetrics()</code></td>
+                        <td>Computes various segment metrics based on geometry, intensity and pulse return characteristics</td>
                     </tr>
                 </tbody>
             </table>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="UTF-8">
+        <title>DFT - Tutorial 1</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" type="image/png" href="img/favicon_dft.png"/>
+        <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+        <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css'>
+
+        <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+
+        <script type="text/javascript" async
+                src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+        </script>
+
+    </head>
+    <body>
+
+        <section class="page-header tutorial">
+            <h1 class="project-name">Digital-Forestry-Toolbox</h1>
+            <br>
+            <!--<h2 class="project-tagline white">A collection of digital forestry tools for Matlab</h2>-->
+            <a href="index.html" class="btn"><i class="fa fa-home" aria-hidden="true"></i> Back to homepage</a>
+        </section>
+
+        <section class="main-content">
+
+            <h1>Basic point cloud manipulation and visualization</h1>
+
+
+            <br>
+            <hr>
+            <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
+            <p> In this tutorial, you will learn about basic point cloud manipulation and visualization. Before starting, you should:</p>
+
+            <ol>
+                <li>Download and uncompress the Digital Forestry Toolbox (DFT) <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master">Zip</a> or <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master">Tar</a> archive</li>
+                <li>Download the <a href="http://maps.zh.ch/download/hoehen/2014/lidar/26995_12710.laz">26995_12710.laz file</a> from the Zürich 2014 airborne laser scanning campaign archive and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
+                <li>Start Matlab</li>
+                <li>Add the DFT folders to the Matlab search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
+            </ol>
+
+            <hr>
+            <br>
+
+            <h2>
+                <a id="step-1" class="anchor" href="step-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 1</b> - Reading the LAS file
+            </h2>
+
+            <p>We start by importing the XYZ, classification and intensity attributes from the LAS file using <code>LASread()</code>:</p>
+
+            <pre><code>pc = LASread('26995_12710.las');
+xyz = [pc.record.x, pc.record.y, pc.record.z];
+classification = pc.record.classification;
+intensity = pc.record.intensity;</code></pre>
+
+            <p>Note that the point classification uses the following scheme:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2</td>
+                        <td>Terrain</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Low vegetation (< 50 cm)</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Medium vegetation (< 3 m)</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>High vegetation (> 3 m)</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Buildings</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Outliers and incorrect measurements (Noise)</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Bridges (> 3m)</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Strip border points (Overlap)</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>Overhead lines, masts, antennae</td>
+                    </tr>
+                    <tr>
+                        <td>17</td>
+                        <td>Other (vehicles, etc. )</td>
+                    </tr>
+                </tbody>
+            </table>
+
+
+            <h2>
+                <a id="step-2" class="anchor" href="step-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 2</b> - Subsetting
+            </h2>
+
+            <p>We now subset the point cloud to keep only medium and high vegetation points located within a Region Of Interest (ROI):</p>
+
+
+            <pre><code>% define a Region Of Interest (ROI)
+x_roi = [2699597, 2699584, 2699778, 2699804];
+y_roi = [1271166, 1271307, 1271341, 1271170];
+
+% create ROI logical index (with inclusion test)
+idxl_roi = inpolygon(xyz(:,1), xyz(:,2), x_roi, y_roi);
+
+% create class subset logical index
+idxl_class = ismember(classification, [4,5]);
+
+% combine subsetting indices
+idxl_sample = idxl_roi & idxl_class;
+
+% apply subsetting indices
+xyz_s = xyz(idxl_sample,:);
+intensity_s = intensity(idxl_sample);</code></pre>
+
+            <h2>
+                <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Visualization
+            </h2>
+
+            <p>Use <code>scatter3()</code> to create an interactive 3D plot of the point cloud subset created in the previou step. You can use <code>caxis()</code> to specify the colormap range and increase contrast. Also note that it may useful to specify <code>opengl hardware</code> at the beginning of your script, for better graphics performance when working with large datasets.</p>
+
+            <pre><code>figure
+scatter3(xyz_s(:,1), ...
+xyz_s(:,2), ...
+xyz_s(:,3), ...
+6, ...
+intensity_s, ...
+'Marker', '.');
+colorbar
+caxis(quantile(intensity_s, [0.01, 0.99]))
+axis equal tight vis3d
+title('Return intensity')
+xlabel('x')
+ylabel('y')
+ylabel('z')</code></pre>
+
+            <figure>
+                <img src="img/tutorial_2_ima_1.png" alt="" style="width:90%;">
+                <figcaption>Figure 1 - Point cloud subset colored by return intensity. Notice the intensity difference between coniferous and deciduous trees (the point cloud was acquired in leaf-off conditions, in March 2014).</figcaption>
+            </figure>
+
+
+            <h2>
+                <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Checking the acquisition dates
+            </h2>
+
+            <p>Knowing when the data you are using was acquired is important to identify the phenological stage and to correlate your analysis with field observations. Four time formats are commonly encountered when working with airborne laser scanning data:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Format</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GPS week time</td>
+                        <td>The fractional number of seconds since the beginning of the GPS week.</td>
+                    </tr>
+                    <tr>
+                        <td>Standard GPS time</td>
+                        <td>The fractional number of seconds since January 6, 1980 00:00h.</td>
+                    </tr>
+                    <tr>
+                        <td>Adjusted Standard GPS Time</td>
+                        <td>Standard GPS time minus 10<sup>9</sup> (for improved floating point resolution).</td>
+                    </tr>
+                    <tr>
+                        <td>Coordinated Universal Time (UTC)</td>
+                        <td>International time standard, also known as Greenwich Mean Time (GMT).</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>The <a href="https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html">ASPRS LAS format</a> can store the GPS timestamp of each point in either GPS week time or adjusted standard GPS time. The time format is specified in the LAS file header Global Encoding field (starting with version LAS 1.2). In Matlab, you can check its value in <code>pc.header.global_encoding_gps_time_type</code>. <b>The dataset we are using now is in LAS 1.1 format which does not provide any metadata on the time format. Nonetheless, the range of values in the GPS time record indicates it is stored in Adjusted Standard GPS Time. Thus, to get the UTC time, you can use:</b></p>
+
+            <pre><code>utc_time = gps2utc(pc.record.gps_time + 10^9, 'verbose', true);</code></pre>
+
+            <p>You'll notice the dataset was acquired on March 10 and 13, 2014.</p>
+
+            <h2>
+                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Clipping directly to a LAS file
+            </h2>
+
+
+            <p>You may want to a LAS file and directly write it to a new file. You can do this with <code>LASclip()</code>:</p>
+
+            <pre><code>LASclip('26995_12710.las', ...
+       [x_roi', y_roi'], ...
+       '26995_12710_clip.las', ...
+       'verbose', true);</code></pre>
+
+            <h2>
+                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Computing the spatial extent of a LAS file
+            </h2>
+
+
+            <p>You can compute the spatial extent (bounding box, convex hull or concave hull) of LAS files with <code>LASextent()</code>:</p>
+
+            <pre><code>extent = LASextent('26995_12710.las', ...
+    '26995_12710_extent.shp', ...
+    'method', 'concavehull', ...
+    'fig', false, ...
+    'verbose', true);</code></pre>
+
+            <h2>
+                <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Extracting a cross-section from a 3D point cloud
+            </h2>
+
+            <p>You can extract cross-sections of 3D point clouds with <code>crossSection()</code>:</p>
+
+            <pre><code>width = 2;
+p0 = [2699582, 1271120];
+p1 = [2699884, 1271333];
+[~, ~, profile] = crossSection(xyz, ...
+    width, ...
+    p0, ...
+    p1, ...
+    'verbose', true, ...
+    'fig', true);</code></pre>
+
+            <p>The resulting cross section should look like this:</p>
+
+            <figure>
+                <img src="img/tutorial_2_ima_2.png" alt="" style="width:90%;">
+                <figcaption>Figure 2 - 2m wide cross-section of the 3D point cloud.</figcaption>
+            </figure>
+
+
+            <footer class="site-footer">
+                <span class="site-footer-owner"><a href="https://github.com/mparkan/Digital-Forestry-Toolbox">Digital-forestry-toolbox</a> is maintained by <a href="https://github.com/mparkan">mparkan</a>.</span>
+
+            </footer>
+
+        </section>
+
+
+    </body>
+</html>
