@@ -42,7 +42,7 @@ function extent = LASextent(points, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 13, 2017
+% Last revision: October 5, 2017
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -132,7 +132,16 @@ warning('off');
 
 for j = 1:n_files
     
-    extent.FILEPATH{j,1} = [filelist(j).path, filesep, filelist(j).name, filelist(j).ext];
+    if ~isempty(filelist(j).path)
+        
+        extent.FILEPATH{j,1} = [filelist(j).path, filesep, filelist(j).name, filelist(j).ext];
+        
+    else
+        
+        extent.FILEPATH{j,1} = [filelist(j).name, filelist(j).ext];
+        
+    end
+    
     extent.FILENAME{j,1} = filelist(j).name;
     
     % read LAS file
@@ -191,25 +200,29 @@ for j = 1:n_files
             extent.PDENSITY(j,1) = median(accumarray(idxn_unit, idxn_unit, [], @numel));
             
             % compute date metadata (if GPS time is in satellite format)
-            if pc.header.global_encoding_gps_time_type == 1
+            if isfield(pc.header, 'global_encoding_gps_time_type')
                 
-                utc_time = gps2utc(pc.record.gps_time + 10^9, ...
-                    'verbose', false);
+                if pc.header.global_encoding_gps_time_type == 1
+                    
+                    utc_time = gps2utc(pc.record.gps_time + 10^9, ...
+                        'verbose', false);
+                    
+                    [Y,M,D,~,~,~] = datevec(utc_time);
+                    
+                    unique_date = sort(unique(datenum(Y,M,D)));
+                    start_date = min(unique_date);
+                    end_date = max(unique_date);
+                    
+                    % number of surveys
+                    extent.NSURVEYS(j,1) = length(unique_date);
+                    
+                    [extent.YSTART(j,1), extent.MSTART(j,1), extent.DSTART(j,1),~,~,~] = datevec(start_date);
+                    [extent.YEND(j,1), extent.MEND(j,1), extent.DEND(j,1),~,~,~] = datevec(end_date);
+                    
+                    extent.DATES{j,1} = strjoin(cellstr(datestr(unique_date, 'yyyy/mm/dd')), ',');
+                    
+                end
                 
-                [Y,M,D,~,~,~] = datevec(utc_time);
-                
-                unique_date = sort(unique(datenum(Y,M,D)));
-                start_date = min(unique_date);
-                end_date = max(unique_date);
-                
-                % number of surveys
-                extent.NSURVEYS(j,1) = length(unique_date);
-                
-                [extent.YSTART(j,1), extent.MSTART(j,1), extent.DSTART(j,1),~,~,~] = datevec(start_date);
-                [extent.YEND(j,1), extent.MEND(j,1), extent.DEND(j,1),~,~,~] = datevec(end_date);
-                
-                extent.DATES{j,1} = strjoin(cellstr(datestr(unique_date, 'yyyy/mm/dd')), ',');
-
             end
             
             % subsample point cloud
