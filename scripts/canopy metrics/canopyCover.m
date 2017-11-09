@@ -194,11 +194,13 @@ switch arg.Results.method
             end
             
             dt_ind = sub2ind([nrows, ncols], dt.Points(:,2), dt.Points(:,1));
-            dt_labels = arg.Results.crowns(dt_ind);
-            dt_labels_triplet = dt_labels(dt.ConnectivityList);
-            idxl_void = any(dt_labels_triplet == 0,2);
-            dt_labels_triplet = dt_labels_triplet(~idxl_void,:);
+
+            % use distance transform to fill missing ITC labels
+            [~, idxn_nnz] = bwdist(arg.Results.crowns ~= 0);
+            itc_labels = arg.Results.crowns(idxn_nnz);
+            dt_labels = itc_labels(dt_ind);
             
+            dt_labels_triplet = dt_labels(dt.ConnectivityList);
             crown_area = accumarray(arg.Results.crowns(:) + 1, true(size(arg.Results.crowns(:))));
             crown_area = crown_area(2:end);
             crown_area_triplet = sum(crown_area(dt_labels_triplet), 2);
@@ -225,9 +227,7 @@ switch arg.Results.method
                 
             end
             
-            cover_crown_triplets = -ones(size(dt,1),1);
-            cover_crown_triplets(~idxl_void) = crown_area_triplet ./ convex_crown_area;
-            cover_crown_triplets = [-1; cover_crown_triplets];
+            cover_crown_triplets = crown_area_triplet ./ convex_crown_area;  
             
             if arg.Results.verbose
                 
@@ -235,7 +235,9 @@ switch arg.Results.method
                 
             end
             
-            cover = reshape(cover_crown_triplets(id_triangulation+1), nrows, ncols);
+            cover = zeros(size(id_triangulation));
+            cover(id_triangulation ~= 0) = cover_crown_triplets(id_triangulation(id_triangulation ~= 0));
+            cover = reshape(cover, nrows, ncols);
             
             if arg.Results.fig
                 
@@ -247,6 +249,7 @@ switch arg.Results.method
                 ylabel('row')
                 axis equal tight
                 colorbar
+                caxis([0,1])
                 
             end
             
