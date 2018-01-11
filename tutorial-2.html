@@ -146,13 +146,13 @@ intensity = pc.record.intensity;</code></pre>
 
             <p>In this step, tree top (local maxima) detection is applied to the CHM using a variable radius convolution window defined by a function of the pixel height value:</p>
 
-            $$\DeclareMathOperator*{\argmax}{argmax}
-            r(h) = 1 + 0.5 \cdot ln(\argmax_h(h,1)) $$
+            $$\DeclareMathOperator*{\max}{max}
+            r(h) = 0.5 + 0.25 \cdot ln(\max_h(h,1)) $$
 
             <p>Local maxima are merged if separated by less than the adjacency distance defined by function:</p>
 
-            $$\DeclareMathOperator*{\argmin}{argmin}
-            d_{adj}(h) = \argmin_h(0.5 + 0.5 \cdot ln(\argmax_h(h,1)) , 4) $$
+            $$\DeclareMathOperator*{\min}{min}
+            d_{adj}(h) = \min_h(0.5 + 0.5 \cdot ln(\max_h(h,1)) , 4) $$
 
             <p>These two functions are respectively specified with the <code>'allometry'</code> and <code>'adjacency'</code> parameters in <code>canopyPeaks()</code>:</p>
 
