@@ -37,15 +37,15 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %    windowRadius (optional, default: 4) - numeric value, fixed circular window radius in map units
 %    used to detect local maxima when method is set to 'fixedRadius'.
 %
-%    allometry (optional, default: @(h) 1 + 0.5*log(max(h,1))) - anonymous function handle of the form @(h) = ...,
+%    allometry (optional, default: @(h) 0.5 + 0.25*log(max(h,1))) - anonymous function handle of the form @(h) = ...,
 %    specifying the allometric relation between tree height and crown
-%    diameter (not radius) in map units when method is set to 'allometric radius'.
+%    radius in map units when method is set to 'allometric radius'.
 %     examples:
-%     @(h) 3.09632 + 0.00895 * h.^2; % deciduous forest (Popescu et al, 2004)
-%     @(h) 3.75105 - 0.17919 * h + 0.01241 * h.^2; % coniferous forests (Popescu et al, 2004)
-%     @(h) 2.51503 + 0.00901 * h.^2; % mixed forests (Popescu et al, 2004)
-%     @(h) 1.7425 * h.^0.5566; % mixed forests (Chen et al., 2006)
-%     @(h) 1.2 + 0.16 * h; % mixed forests (Pitkänen et al., 2004)
+%     @(h) (3.09632 + 0.00895 * h.^2)/2; % deciduous forest (Popescu et al, 2004)
+%     @(h) (3.75105 - 0.17919 * h + 0.01241 * h.^2)/2; % coniferous forests (Popescu et al, 2004)
+%     @(h) (2.51503 + 0.00901 * h.^2)/2; % mixed forests (Popescu et al, 2004)
+%     @(h) (1.7425 * h.^0.5566)/2; % mixed forests (Chen et al., 2006)
+%     @(h) (1.2 + 0.16 * h)/2; % mixed forests (Pitkänen et al., 2004)
 %
 %    adjacency (optional, default: @(h) min(0.5 + 0.5*log(max(h,1)),4) - anonymous function handle of the form @(h) = ...,
 %    which defines the minimum 3D distance separating peaks. Peaks separated by a smaller distance
@@ -68,7 +68,7 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %    [crh, xyh] = canopyPeaks(double(chm), ...
 %        refmat, ...
 %        'method', 'allometricRadius', ...
-%        'allometry', @(h) 1 + 0.5*log(max(h,1)), ...
+%        'allometry', @(h) 0.5 + 0.25*log(max(h,1)), ...
 %        'adjacency' @(h) min(0.5 + 0.5*log(max(h,1)),4), ...
 %        'fig', true, ...
 %        'verbose', true);
@@ -98,7 +98,7 @@ addRequired(arg, 'refmat', @isnumeric);
 addParameter(arg, 'method', 'fixedRadius', @(x) any(validatestring(x, {'fixedRadius', 'allometricRadius', 'hMaxima'})));
 addParameter(arg, 'minPeakHeight', 2, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'windowRadius', 4, @(x) isnumeric(x) && (numel(x) == 1));
-addParameter(arg, 'allometry', @(h) 1 + 0.5*log(max(h,1)), @(x) strfind(func2str(x),'@(h)') == 1);
+addParameter(arg, 'allometry', @(h) 0.5 + 0.25*log(max(h,1)), @(x) strfind(func2str(x),'@(h)') == 1);
 addParameter(arg, 'adjacency', @(h) min(0.5 + 0.5*log(max(h,1)),4), @(x) strfind(func2str(x),'@(h)') == 1);
 addParameter(arg, 'minHeightDifference', 0.1, @isnumeric);
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
@@ -132,7 +132,7 @@ switch arg.Results.method
     case 'allometricRadius'
         
         % determine convolution window size for each pixel
-        crown_radius = arg.Results.allometry(chm) ./ 2;
+        crown_radius = arg.Results.allometry(chm);
         window_radius = max(round(crown_radius ./ gridResolution),1);
         unique_window_radius = unique(window_radius);
 
