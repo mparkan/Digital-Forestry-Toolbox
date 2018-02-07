@@ -34,7 +34,7 @@ function s = LASread(filepath, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2015b, GNU Octave 4.0.0 (configured for "i686-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
 % See also: LASWRITE
 %
@@ -42,7 +42,7 @@ function s = LASread(filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 10, 2017
+% Last revision: February 7, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -188,6 +188,7 @@ r.header(k).compatibility = [12, 13, 14];
 r.header(k).full_name = 'Global Encoding - GPS Time Type';
 r.header(k).short_name = 'global_encoding_gps_time_type';
 r.header(k).type = {'ubit1', 'ubit1', 'ubit1'};
+r.header(k).parent_type = {'uint16', 'uint16', 'uint16'};
 r.header(k).storage_type = {'logical', 'logical', 'logical'};
 r.header(k).byte_length = [1/8, 1/8, 1/8];
 r.header(k).bit_position = [0, 0, 0];
@@ -207,6 +208,7 @@ r.header(k).compatibility = [13, 14];
 r.header(k).full_name = 'Global Encoding - Waveform Data Packets Internal (LAS >= 1.3 only)';
 r.header(k).short_name = 'global_encoding_waveform_data_packets_internal';
 r.header(k).type = {'ubit1', 'ubit1'};
+r.header(k).parent_type = {'uint16', 'uint16'};
 r.header(k).storage_type = {'logical', 'logical'};
 r.header(k).byte_length = [1/8, 1/8];
 r.header(k).bit_position = [1, 1];
@@ -226,6 +228,7 @@ r.header(k).compatibility = [13, 14];
 r.header(k).full_name = 'Global Encoding - Waveform Data Packets External (LAS >= 1.3 only)';
 r.header(k).short_name = 'global_encoding_waveform_data_packets_external';
 r.header(k).type = {'ubit1', 'ubit1'};
+r.header(k).parent_type = {'uint16', 'uint16'};
 r.header(k).storage_type = {'logical', 'logical'};
 r.header(k).byte_length = [1/8, 1/8];
 r.header(k).bit_position = [2, 2];
@@ -245,6 +248,7 @@ r.header(k).compatibility = [13, 14];
 r.header(k).full_name = 'Global Encoding - Return numbers have been synthetically generated (LAS >= 1.3 only)';
 r.header(k).short_name = 'global_encoding_synthetic_return_numbers';
 r.header(k).type = {'ubit1', 'ubit1'};
+r.header(k).parent_type = {'uint16', 'uint16'};
 r.header(k).storage_type = {'logical', 'logical'};
 r.header(k).byte_length = [1/8, 1/8];
 r.header(k).bit_position = [3, 3];
@@ -264,6 +268,7 @@ r.header(k).compatibility = [14];
 r.header(k).full_name = 'Global Encoding - WKT (LAS >= 1.4 only)';
 r.header(k).short_name = 'global_encoding_wkt';
 r.header(k).type = {'ubit1'};
+r.header(k).parent_type = {'uint16'};
 r.header(k).storage_type = {'logical'};
 r.header(k).byte_length = [1/8];
 r.header(k).bit_position = [4];
@@ -283,6 +288,7 @@ r.header(k).compatibility = [12, 13, 14];
 r.header(k).full_name = 'Global Encoding - Reserved (LAS >= 1.2 only)';
 r.header(k).short_name = 'global_encoding_reserved';
 r.header(k).type = {'ubit15', 'ubit12', 'ubit11'};
+r.header(k).parent_type = {'uint16', 'uint16', 'uint16'};
 r.header(k).storage_type = {'double', 'double', 'double'};
 r.header(k).byte_length = [15/8, 12/8, 11/8];
 r.header(k).bit_position = [1, 4, 5];
@@ -345,7 +351,7 @@ r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%u', '%u', '%u', '%u', '%u'};
 r.header(k).default_value = 0;
 r.header(k).value = [];
-r.header(k).validation = @(x) isnumeric(x) && (numel(x) == 1); 
+r.header(k).validation = @(x) isnumeric(x) && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
 r.header(k).warning_message = 'The Project ID - GUID data 3 field was not specified';
@@ -916,63 +922,79 @@ k = 1;
 % X, long, 4 bytes, *
 r.record(k).full_name = 'X';
 r.record(k).short_name = 'x';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32'};
 r.record(k).storage_type = {'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32'};
-r.record(k).byte_length = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1 1];
+r.record(k).bit_length = [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = true;
-r.record(k).scale = 1;
-r.record(k).offset = 0;
+r.record(k).scale = [];
+r.record(k).offset = [];
 r.record(k).value = [];
 k = k + 1;
 
 % Y, long, 4 bytes, *
 r.record(k).full_name = 'Y';
 r.record(k).short_name = 'y';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32'};
 r.record(k).storage_type = {'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32'};
-r.record(k).byte_length = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1 1];
+r.record(k).bit_length = [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = true;
-r.record(k).scale = 1;
-r.record(k).offset = 0;
+r.record(k).scale = [];
+r.record(k).offset = [];
 r.record(k).value = [];
 k = k + 1;
 
 % Z, long, 4 bytes, *
 r.record(k).full_name = 'Z';
 r.record(k).short_name = 'z';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32'};
 r.record(k).storage_type = {'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32', 'int32'};
-r.record(k).byte_length = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1 1];
+r.record(k).bit_length = [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = true;
-r.record(k).scale = 1;
-r.record(k).offset = 0;
+r.record(k).scale = [];
+r.record(k).offset = [];
 r.record(k).value = [];
 k = k + 1;
 
 % Intensity, unsigned short, 2 bytes
 r.record(k).full_name = 'Intensity';
 r.record(k).short_name = 'intensity';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16'};
 r.record(k).storage_type = {'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16'};
-r.record(k).byte_length = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1 1];
+r.record(k).bit_length = [16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = false;
 r.record(k).flag_transform = false;
@@ -984,12 +1006,16 @@ k = k + 1;
 % Return Number, 3 bits (bits 0, 1, 2), 3 bits, *
 r.record(k).full_name = 'Return Number';
 r.record(k).short_name = 'return_number';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit3', 'ubit3', 'ubit3', 'ubit3', 'ubit3', 'ubit3', 'ubit4', 'ubit4', 'ubit4', 'ubit4', 'ubit4'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [3/8, 3/8, 3/8, 3/8, 3/8, 3/8, 4/8, 4/8, 4/8, 4/8, 4/8];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1 1];
+r.record(k).bit_length = [3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1001,12 +1027,16 @@ k = k + 1;
 % Number of Returns (given pulse), 3 bits (bits 3, 4, 5), 3 bits, *
 r.record(k).full_name = 'Number of Returns (given pulse)';
 r.record(k).short_name = 'number_of_returns';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [115, 115, 115, 115, 115, 115, 116, 116, 116, 116, 116];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit3', 'ubit3', 'ubit3', 'ubit3', 'ubit3', 'ubit3', 'ubit4', 'ubit4', 'ubit4', 'ubit4', 'ubit4'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [3/8, 3/8, 3/8, 3/8, 3/8, 3/8, 4/8, 4/8, 4/8, 4/8, 4/8];
+r.record(k).bit_offset = [4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5];
+r.record(k).bit_length = [3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1018,12 +1048,16 @@ k = k + 1;
 % Classification flag 1 - Synthetic, 1 bit (bit 0), 1 bit, *
 r.record(k).full_name = 'Classification flag 1 - Synthetic';
 r.record(k).short_name = 'classification_flag_1';
+r.record(k).version_compatibility = [14];
 r.record(k).format_compatibility = [6, 7, 8, 9, 10];
 r.record(k).bit_position = [120, 120, 120, 120, 120];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8];
+r.record(k).bit_offset = [1, 1, 1, 1, 1];
+r.record(k).bit_length = [1, 1, 1, 1, 1];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1035,12 +1069,16 @@ k = k + 1;
 % Classification flag 2 - Key-point, 1 bit (bit 1), 1 bit, *
 r.record(k).full_name = 'Classification flag 2 - Key-point';
 r.record(k).short_name = 'classification_flag_2';
+r.record(k).version_compatibility = [14];
 r.record(k).format_compatibility = [6, 7, 8, 9, 10];
 r.record(k).bit_position = [121, 121, 121, 121, 121];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8];
+r.record(k).bit_offset = [2, 2, 2, 2, 2];
+r.record(k).bit_length = [1, 1, 1, 1, 1];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1052,12 +1090,16 @@ k = k + 1;
 % Classification flag 3 - Withheld, 1 bit (bit 2), 1 bit, *
 r.record(k).full_name = 'Classification flag 3 - Withheld';
 r.record(k).short_name = 'classification_flag_3';
+r.record(k).version_compatibility = [14];
 r.record(k).format_compatibility = [6, 7, 8, 9, 10];
 r.record(k).bit_position = [122, 122, 122, 122, 122];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8];
+r.record(k).bit_offset = [3, 3, 3, 3, 3];
+r.record(k).bit_length = [1, 1, 1, 1, 1];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1069,12 +1111,16 @@ k = k + 1;
 % Classification flag 4 - Overlap, 1 bit (bit 3), 1 bit, *
 r.record(k).full_name = 'Classification flag 4 - Overlap';
 r.record(k).short_name = 'classification_flag_4';
+r.record(k).version_compatibility = [14];
 r.record(k).format_compatibility = [6, 7, 8, 9, 10];
 r.record(k).bit_position = [123, 123, 123, 123, 123];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8];
+r.record(k).bit_offset = [4, 4, 4, 4, 4];
+r.record(k).bit_length = [1, 1, 1, 1, 1];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1086,12 +1132,16 @@ k = k + 1;
 % Scanner channel, 2 bits (bit 4-5), 1 bit, *
 r.record(k).full_name = 'Scanner channel';
 r.record(k).short_name = 'scanner_channel';
+r.record(k).version_compatibility = [14];
 r.record(k).format_compatibility = [6, 7, 8, 9, 10];
 r.record(k).bit_position = [124, 124, 124, 124, 124];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit2', 'ubit2', 'ubit2', 'ubit2', 'ubit2'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [2/8, 2/8, 2/8, 2/8, 2/8];
+r.record(k).bit_offset = [5, 5, 5, 5, 5];
+r.record(k).bit_length = [2, 2, 2, 2, 2];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1103,12 +1153,16 @@ k = k + 1;
 % Scan Direction Flag, 1 bit (bit 6), 1 bit, *
 r.record(k).full_name = 'Scan Direction Flag';
 r.record(k).short_name = 'scan_direction_flag';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [118, 118, 118, 118, 118, 118, 126, 126, 126, 126, 126];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1'};
 r.record(k).storage_type = {'logical', 'logical', 'logical', 'logical', 'logical', 'logical', 'logical', 'logical', 'logical', 'logical', 'logical'};
-r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8];
+r.record(k).bit_offset = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7];
+r.record(k).bit_length = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1120,12 +1174,16 @@ k = k + 1;
 % Edge of Flight Line, 1 bit (bit 7), 1 bit, *
 r.record(k).full_name = 'Edge of Flight Line';
 r.record(k).short_name = 'flightline_edge_flag';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [119, 119, 119, 119, 119, 127, 127, 127, 127, 127];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1'};
 r.record(k).storage_type = {'logical', 'logical', 'logical', 'logical', 'logical', 'logical', 'logical', 'logical', 'logical', 'logical', 'logical'};
-r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8];
+r.record(k).bit_offset = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8];
+r.record(k).bit_length = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1137,12 +1195,16 @@ k = k + 1;
 % ASPRS classification number (0-31), 5 bits (bits 0, 1, 2, 3, 4), *
 r.record(k).full_name = 'Classification (number)';
 r.record(k).short_name = 'classification'; % 'classification_number';
+r.record(k).version_compatibility = [11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5];
 r.record(k).bit_position = [120, 120, 120, 120, 120, 120];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit5', 'ubit5', 'ubit5', 'ubit5', 'ubit5', 'ubit5'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [5/8, 5/8, 5/8, 5/8, 5/8, 5/8];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1];
+r.record(k).bit_length = [5, 5, 5, 5, 5, 5];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1154,12 +1216,16 @@ k = k + 1;
 % Synthetic - If set, then this point was created by a technique other than LIDAR collection such as digitized from a photogrammetric stereo model, 1 bit, *
 r.record(k).full_name = 'Classification (synthetic flag)';
 r.record(k).short_name = 'classification_synthetic';
+r.record(k).version_compatibility = [11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5];
 r.record(k).bit_position = [125, 125, 125, 125, 125, 125];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1'};
 r.record(k).storage_type = {'logical', 'logical', 'logical', 'logical', 'logical', 'logical'};
-r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8];
+r.record(k).bit_offset = [6, 6, 6, 6, 6, 6];
+r.record(k).bit_length = [1, 1, 1, 1, 1, 1];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1171,12 +1237,16 @@ k = k + 1;
 % Keypoint - If set, this point is considered to be a model key-point and thus generally should not be withheld in a thining algorithm, 1 bit, *
 r.record(k).full_name = 'Classification (key-point flag)';
 r.record(k).short_name = 'classification_keypoint';
+r.record(k).version_compatibility = [11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5];
 r.record(k).bit_position = [126, 126, 126, 126, 126, 126];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1'};
 r.record(k).storage_type = {'logical', 'logical', 'logical', 'logical', 'logical', 'logical'};
-r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8];
+r.record(k).bit_offset = [7, 7, 7, 7, 7, 7];
+r.record(k).bit_length = [1, 1, 1, 1, 1, 1];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1188,12 +1258,16 @@ k = k + 1;
 % Withheld - If set, this point should not be included in processing (synonymous with Deleted), 1 bit, *
 r.record(k).full_name = 'Classification (withheld flag)';
 r.record(k).short_name = 'classification_withheld';
+r.record(k).version_compatibility = [11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5];
 r.record(k).bit_position = [127, 127, 127, 127, 127, 127];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1', 'ubit1'};
 r.record(k).storage_type = {'logical', 'logical', 'logical', 'logical', 'logical', 'logical'};
-r.record(k).byte_length = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8];
+r.record(k).bit_offset = [8, 8, 8, 8, 8, 8];
+r.record(k).bit_length = [1, 1, 1, 1, 1, 1];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = true;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1205,12 +1279,16 @@ k = k + 1;
 % Scan Angle, unsigned char, 1 byte, *
 r.record(k).full_name = 'Scan Angle';
 r.record(k).short_name = 'scan_angle';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [128, 128, 128, 128, 128, 128, 144, 144, 144, 144, 144];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'int16', 'int16', 'int16', 'int16', 'int16'};
 r.record(k).storage_type = {'uchar', 'uchar', 'uchar', 'uchar', 'uchar', 'uchar', 'int16', 'int16', 'int16', 'int16', 'int16'};
-r.record(k).byte_length = [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+r.record(k).bit_length = [8, 8, 8, 8, 8, 8, 16, 16, 16, 16, 16];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1219,15 +1297,40 @@ r.record(k).offset = 0;
 r.record(k).value = [];
 k = k + 1;
 
-% Classification, unsigned char, 1 byte, *
+% Classification, unsigned char, 1 byte, * (LAS 1.4)
 r.record(k).full_name = 'Classification';
 r.record(k).short_name = 'classification';
+r.record(k).version_compatibility = [14];
 r.record(k).format_compatibility = [6, 7, 8, 9, 10];
 r.record(k).bit_position = [128, 128, 128, 128, 128];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [1, 1, 1, 1, 1];
+r.record(k).bit_offset = [1, 1, 1, 1, 1];
+r.record(k).bit_length = [8, 8, 8, 8, 8];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
+r.record(k).flag_bit_field = false;
+r.record(k).flag_mandatory = true;
+r.record(k).flag_transform = false;
+r.record(k).scale = 1;
+r.record(k).offset = 0;
+r.record(k).value = [];
+k = k + 1;
+
+% Classification, unsigned char, 1 byte, * (LAS 1.0)
+r.record(k).full_name = 'Classification';
+r.record(k).short_name = 'classification';
+r.record(k).version_compatibility = [10];
+r.record(k).format_compatibility = [0,1];
+r.record(k).bit_position = [120, 120];
+r.record(k).byte_position = r.record(k).bit_position ./ 8;
+r.record(k).type = {'uint8', 'uint8'};
+r.record(k).storage_type = {'uint8', 'uint8'};
+r.record(k).bit_offset = [1, 1];
+r.record(k).bit_length = [8, 8];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1239,12 +1342,16 @@ k = k + 1;
 % User Data, unsigned char, 1 byte
 r.record(k).full_name = 'User Data';
 r.record(k).short_name = 'user_data';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [136, 136, 136, 136, 136, 136, 136, 136, 136, 136, 136];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+r.record(k).bit_length = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = false;
 r.record(k).flag_transform = false;
@@ -1256,12 +1363,16 @@ k = k + 1;
 % Point Source ID, unsigned short, 2 bytes, *
 r.record(k).full_name = 'Point Source ID';
 r.record(k).short_name = 'point_source_id';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [144, 144, 144, 144, 144, 144, 160, 160, 160, 160, 160];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16'};
 r.record(k).storage_type = {'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16'};
-r.record(k).byte_length = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+r.record(k).bit_length = [16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1273,12 +1384,16 @@ k = k + 1;
 % GPS Time, double, 8 bytes, *
 r.record(k).full_name = 'GPS Time';
 r.record(k).short_name = 'gps_time';
+r.record(k).version_compatibility = [10, 11, 12, 13, 14];
 r.record(k).format_compatibility = [1, 3, 4, 5, 6, 7, 8, 9, 10];
 r.record(k).bit_position = [160, 160, 160, 160, 176, 176, 176, 176, 176];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint64', 'uint64', 'uint64', 'uint64', 'uint64', 'uint64', 'uint64', 'uint64', 'uint64'};
 r.record(k).storage_type = {'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double'};
-r.record(k).byte_length = [8, 8, 8, 8, 8, 8, 8, 8, 8];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1,];
+r.record(k).bit_length = [64, 64, 64, 64, 64, 64, 64, 64, 64, 64];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1290,12 +1405,16 @@ k = k + 1;
 % Red, unsigned short, 2 bytes, *
 r.record(k).full_name = 'Red';
 r.record(k).short_name = 'red';
+r.record(k).version_compatibility = [12, 13, 14];
 r.record(k).format_compatibility = [2, 3, 5, 7, 8, 10];
 r.record(k).bit_position = [160, 224, 224, 240, 240, 240];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16'};
 r.record(k).storage_type = {'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16'};
-r.record(k).byte_length = [2, 2, 2, 2, 2, 2];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1];
+r.record(k).bit_length = [16, 16, 16, 16, 16, 16];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1307,12 +1426,16 @@ k = k + 1;
 % Green, unsigned short, 2 bytes, *
 r.record(k).full_name = 'Green';
 r.record(k).short_name = 'green';
+r.record(k).version_compatibility = [12, 13, 14];
 r.record(k).format_compatibility = [2, 3, 5, 7, 8, 10];
 r.record(k).bit_position = [176, 240, 240, 256, 256, 256];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16'};
 r.record(k).storage_type = {'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16'};
-r.record(k).byte_length = [2, 2, 2, 2, 2, 2];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1];
+r.record(k).bit_length = [16, 16, 16, 16, 16, 16];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1324,12 +1447,16 @@ k = k + 1;
 % Blue, unsigned short, 2 bytes, *
 r.record(k).full_name = 'Blue';
 r.record(k).short_name = 'blue';
+r.record(k).version_compatibility = [12, 13, 14];
 r.record(k).format_compatibility = [2, 3, 5, 7, 8, 10];
 r.record(k).bit_position = [192, 256, 256, 272, 272, 272];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16'};
 r.record(k).storage_type = {'uint16', 'uint16', 'uint16', 'uint16', 'uint16', 'uint16'};
-r.record(k).byte_length = [2, 2, 2, 2, 2, 2];
+r.record(k).bit_offset = [1, 1, 1, 1, 1, 1];
+r.record(k).bit_length = [16, 16, 16, 16, 16, 16];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1341,12 +1468,16 @@ k = k + 1;
 % NIR, unsigned short, 2 bytes, *
 r.record(k).full_name = 'Near infrared';
 r.record(k).short_name = 'nir';
+r.record(k).version_compatibility = [14];
 r.record(k).format_compatibility = [8, 10];
 r.record(k).bit_position = [288, 288];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint16', 'uint16'};
 r.record(k).storage_type = {'uint16', 'uint16'};
-r.record(k).byte_length = [2, 2];
+r.record(k).bit_offset = [1, 1];
+r.record(k).bit_length = [16, 16];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1358,12 +1489,16 @@ k = k + 1;
 % Wave Packet Descriptor Index, Unsigned char, 1 byte, *
 r.record(k).full_name = 'Wave Packet Descriptor Index';
 r.record(k).short_name = 'wave_packet_descriptor_index';
+r.record(k).version_compatibility = [13, 14];
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [224, 272, 240, 304];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint8', 'uint8', 'uint8', 'uint8'};
 r.record(k).storage_type = {'uint8', 'uint8', 'uint8', 'uint8'};
-r.record(k).byte_length = [1, 1, 1, 1];
+r.record(k).bit_offset = [1, 1, 1, 1];
+r.record(k).bit_length = [8, 8, 8, 8];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1375,12 +1510,16 @@ k = k + 1;
 % Byte offset to waveform data, Unsigned long long, 8 bytes, *
 r.record(k).full_name = 'Byte offset to waveform data';
 r.record(k).short_name = 'offset_to_waveform_data';
+r.record(k).version_compatibility = [13, 14];
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [232, 280, 248, 312];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint64', 'uint64', 'uint64', 'uint64'};
 r.record(k).storage_type = {'uint64', 'uint64', 'uint64', 'uint64'};
-r.record(k).byte_length = [8, 8, 8, 8];
+r.record(k).bit_offset = [1, 1, 1, 1];
+r.record(k).bit_length = [64, 64, 64, 64];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1392,12 +1531,16 @@ k = k + 1;
 % Waveform packet size in bytes, Unsigned long, 4 bytes, *
 r.record(k).full_name = 'Waveform packet size in bytes';
 r.record(k).short_name = 'waveform_packet_size';
+r.record(k).version_compatibility = [13, 14];
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [296, 344, 312, 376];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint32', 'uint32', 'uint32', 'uint32'};
 r.record(k).storage_type = {'uint32', 'uint32', 'uint32', 'uint32'};
-r.record(k).byte_length = [4, 4, 4, 4];
+r.record(k).bit_offset = [1, 1, 1, 1];
+r.record(k).bit_length = [32, 32, 32, 32];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1409,12 +1552,16 @@ k = k + 1;
 % Return Point Waveform Location, float, 4 bytes, *
 r.record(k).full_name = 'Return Point Waveform Location';
 r.record(k).short_name = 'return_point_waveform_location';
+r.record(k).version_compatibility = [13, 14];
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [328, 376, 344, 408];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint32', 'uint32', 'uint32', 'uint32'};
 r.record(k).storage_type = {'uint32', 'uint32', 'uint32', 'uint32'};
-r.record(k).byte_length = [4, 4, 4, 4];
+r.record(k).bit_offset = [1, 1, 1, 1];
+r.record(k).bit_length = [32, 32, 32, 32];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1426,12 +1573,16 @@ k = k + 1;
 % X(t), float, 4 bytes, *
 r.record(k).full_name = 'X(t)';
 r.record(k).short_name = 'x_t';
+r.record(k).version_compatibility = [13, 14];
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [360, 408, 376, 440];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint32', 'uint32', 'uint32', 'uint32'};
 r.record(k).storage_type = {'single', 'single', 'single', 'single'};
-r.record(k).byte_length = [4, 4, 4, 4];
+r.record(k).bit_offset = [1, 1, 1, 1];
+r.record(k).bit_length = [32, 32, 32, 32];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1443,12 +1594,16 @@ k = k + 1;
 % Y(t), float, 4 bytes, *
 r.record(k).full_name = 'Y(t)';
 r.record(k).short_name = 'y_t';
+r.record(k).version_compatibility = [13, 14];
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [392, 440, 408, 472];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint32', 'uint32', 'uint32', 'uint32'};
 r.record(k).storage_type = {'single', 'single', 'single', 'single'};
-r.record(k).byte_length = [4, 4, 4, 4];
+r.record(k).bit_offset = [1, 1, 1, 1];
+r.record(k).bit_length = [32, 32, 32, 32];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
@@ -1460,18 +1615,23 @@ k = k + 1;
 % Z(t), float, 4 bytes, *
 r.record(k).full_name = 'Z(t)';
 r.record(k).short_name = 'z_t';
+r.record(k).version_compatibility = [13, 14];
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [424, 472, 440, 504];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
 r.record(k).type = {'uint32', 'uint32', 'uint32', 'uint32'};
 r.record(k).storage_type = {'single', 'single', 'single', 'single'};
-r.record(k).byte_length = [4, 4, 4, 4];
+r.record(k).bit_offset = [1, 1, 1, 1];
+r.record(k).bit_length = [32, 32, 32, 32];
+r.record(k).byte_length = r.record(k).bit_length / 8;
+r.record(k).flag_extra_field = false;
 r.record(k).flag_bit_field = false;
 r.record(k).flag_mandatory = true;
 r.record(k).flag_transform = false;
 r.record(k).scale = 1;
 r.record(k).offset = 0;
 r.record(k).value = [];
+
 
 %% extra bytes format definition
 
@@ -1676,7 +1836,6 @@ if ismember(las_version, AUTH_LAS_VERSIONS)
         if flag_include_header
             
             idx_header_format(j) = true;
-            
             r.header(j).type = r.header(j).type{ind_header};
             r.header(j).byte_length = r.header(j).byte_length(ind_header);
             r.header(j).n_values = r.header(j).n_values(ind_header);
@@ -1684,9 +1843,11 @@ if ismember(las_version, AUTH_LAS_VERSIONS)
             r.header(j).print_format = r.header(j).print_format{ind_header};
             
             if r.header(j).flag_bit_field
-            
+                
                 r.header(j).bit_position = r.header(j).bit_position(ind_header);
-            
+                r.header(j).parent_type = r.header(j).parent_type{ind_header};
+                
+                
             end
             
         end
@@ -1735,16 +1896,13 @@ for j = 1:length(r.header)
             
             r.header(j).value = fread(fid, r.header(j).n_values, r.header(j).type, 0, MACHINE_FORMAT);
             
-        otherwise
+        otherwise % unpack bytes
             
-            % move to previous byte
-            fseek(fid, integer_byte_offset-1, 'bof');
-            
-            % skip offset bits
-            fread(fid, 1, 'ubit8', r.header(j).bit_position, MACHINE_FORMAT);
-            
-            % read bit(s)
-            r.header(j).value = fread(fid, r.header(j).n_values, r.header(j).type, 0, MACHINE_FORMAT);
+            fseek(fid, integer_byte_offset, 'bof');
+            A = fread(fid, 1, r.header(j).parent_type, 0, MACHINE_FORMAT);
+            bit_start = r.header(j).bit_position+1;
+            bit_end = r.header(j).bit_position + 8 * r.header(j).byte_length;
+            r.header(j).value = bitget(A, bit_start:bit_end);
             
     end
     
@@ -1785,38 +1943,27 @@ end
 
 %% adjust point record based on the Point Data Format ID (0-99 for spec)
 
-idx_record_format = false(length(r.record),1);
+point_data_format_id = r.header(phb_skeys.point_data_format_id).value;
 
-[flag_record_format, ~] = ismember(r.header(phb_skeys.point_data_format_id).value, AUTH_RECORD_FORMAT_ID);
+idxl_valid_version = cellfun(@(x) ismember(las_version, x), {r.record.version_compatibility});
+idxl_valid_format = cellfun(@(x) ismember(point_data_format_id, x), {r.record.format_compatibility});
 
-if flag_record_format
+r.record = r.record(idxl_valid_version & idxl_valid_format);
+
+for j = 1:length(r.record)
     
-    for j = 1:length(r.record)
-        
-        [flag_include_record, ind_record] = ismember(r.header(phb_skeys.point_data_format_id).value, r.record(j).format_compatibility);
-        
-        if flag_include_record
-            
-            idx_record_format(j) = true;
-            
-            r.record(j).format_compatibility = r.record(j).format_compatibility(ind_record);
-            r.record(j).bit_position = r.record(j).bit_position(ind_record);
-            r.record(j).byte_position = r.record(j).byte_position(ind_record);
-            r.record(j).type = r.record(j).type(ind_record);
-            r.record(j).byte_length = r.record(j).byte_length(ind_record);
-            r.record(j).storage_type = r.record(j).storage_type(ind_record);
-            
-        end
-        
-    end
+    [~, ind_record] = ismember(point_data_format_id, r.record(j).format_compatibility);
     
-else
-    
-    error('LASread:wrongPointDataFormatID', 'The point data format is not in the valid range (0-10)');
+    r.record(j).format_compatibility = r.record(j).format_compatibility(ind_record);
+    r.record(j).bit_position = r.record(j).bit_position(ind_record);
+    r.record(j).byte_position = r.record(j).byte_position(ind_record);
+    r.record(j).type = r.record(j).type(ind_record);
+    r.record(j).storage_type = r.record(j).storage_type(ind_record);
+    r.record(j).bit_offset = r.record(j).bit_offset(ind_record);
+    r.record(j).bit_length = r.record(j).bit_length(ind_record);
+    r.record(j).byte_length = r.record(j).byte_length(ind_record);
     
 end
-
-r.record(~idx_record_format) = [];
 
 [~, ind_record_sort] = sort([r.record.bit_position]);
 ind_last_record = ind_record_sort(end);
@@ -1869,11 +2016,11 @@ if flag_vlr
                     r.variable_length_records(j).value(k).reserved = fread(fid, 1, 'uint16', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).data_type = fread(fid, 1, 'uint8', 0, MACHINE_FORMAT);
                     extra_byte_options = fread(fid, 1, 'uint8', 0, MACHINE_FORMAT);
-                    r.variable_length_records(j).value(k).options.no_data_bit = bitget(extra_byte_options, 1, 'uint8');
-                    r.variable_length_records(j).value(k).options.min_bit = bitget(extra_byte_options, 2, 'uint8');
-                    r.variable_length_records(j).value(k).options.max_bit = bitget(extra_byte_options, 3, 'uint8');
-                    r.variable_length_records(j).value(k).options.scale_bit = bitget(extra_byte_options, 4, 'uint8');
-                    r.variable_length_records(j).value(k).options.offset_bit = bitget(extra_byte_options, 5, 'uint8');
+                    r.variable_length_records(j).value(k).options.no_data_bit = bitget(extra_byte_options, 1);
+                    r.variable_length_records(j).value(k).options.min_bit = bitget(extra_byte_options, 2);
+                    r.variable_length_records(j).value(k).options.max_bit = bitget(extra_byte_options, 3);
+                    r.variable_length_records(j).value(k).options.scale_bit = bitget(extra_byte_options, 4);
+                    r.variable_length_records(j).value(k).options.offset_bit = bitget(extra_byte_options, 5);
                     r.variable_length_records(j).value(k).name = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
                     r.variable_length_records(j).value(k).unused = fread(fid, 1, 'uint32', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).no_data = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
@@ -1891,19 +2038,20 @@ if flag_vlr
                     
                     r.record(ind_record).full_name = r.variable_length_records(j).value(k).name;
                     r.record(ind_record).short_name = lower(strrep(strtrim(regexprep(r.variable_length_records(j).value(k).name,'[^a-zA-Z0-9_\s]','')), ' ', '_'));
-                    % r.record(ind_record).version_compatibility = r.record(ind_record - 1).version_compatibility;
                     r.record(ind_record).format_compatibility = r.record(ind_record - 1).format_compatibility;
                     r.record(ind_record).bit_position = r.record(ind_last_record - 1).bit_position + (r.record(ind_last_record - 1).byte_length * 8);
                     r.record(ind_record).byte_position =  r.record(ind_record).bit_position ./ 8;
+                    r.record(ind_record).bit_offset = 1;
                     r.record(ind_record).type = {r.extra_bytes(ind_data_type).type};
-                    r.record(ind_record).storage_type = {r.extra_bytes(ind_data_type).type}; %{'double'};
+                    r.record(ind_record).storage_type = {r.extra_bytes(ind_data_type).type};
                     r.record(ind_record).byte_length = r.extra_bytes(ind_data_type).n_values * r.extra_bytes(ind_data_type).byte_length;
+                    r.record(ind_record).bit_length = r.record(ind_record).byte_length * 8;
                     r.record(ind_record).flag_extra_field = true;
                     r.record(ind_record).flag_bit_field = false;
                     r.record(ind_record).flag_mandatory = false;
                     r.record(ind_record).flag_transform = true;
                     r.record(ind_record).value = [];
-
+                    
                     if r.variable_length_records(j).value(k).options.scale_bit
                         
                         r.record(ind_record).scale = r.variable_length_records(j).value(k).scale(1);
@@ -2043,11 +2191,12 @@ if ~arg.Results.headerOnly && r.header(phb_skeys.n_point_records).value > 0
     % read byte chunks from blob
     for j = 1:size(r.record,2)
         
-        ind_start = floor(r.record(j).byte_position) + 1;
+        %ind_start = floor(r.record(j).byte_position) + 1;
+        ind_start = 1 + (r.record(j).bit_position - (r.record(j).bit_offset - 1)) / 8; % TEST
         
         nbitshift = 0;
         
-        if r.record(j).flag_bit_field
+        if r.record(j).flag_bit_field % unpack bits
             
             bytes = blob(ind_start : step : ind_end); % cast to uint8
             shift_left = floor(r.record(j).byte_position + 1) * 8 - (r.record(j).bit_position + r.record(j).byte_length * 8);
@@ -2060,40 +2209,25 @@ if ~arg.Results.headerOnly && r.header(phb_skeys.n_point_records).value > 0
             
             % add columns to byte array (one column per byte)
             for k = 1:r.record(j).byte_length
-
+                
                 bytes(:,k) = bitshift(cast(blob(ind_start: step : ind_end), r.record(j).type{:}), nbitshift);
                 ind_start = ind_start + 1; % increment byte address
+                nbitshift = nbitshift + 8;  % increment bit shift
                 
-                if ~strcmp(r.record(j).short_name, 'uuid') % r.record(j).byte_length ~= 16
+            end
+            
+            % merge byte array columns
+            byte_a = bytes(:,1);
+            if r.record(j).byte_length > 1
+                
+                for k = 1:r.record(j).byte_length-1
                     
-                    nbitshift = nbitshift + 8;  % increment bit shift
+                    byte_a = bitor(byte_a, bytes(:,k+1));
                     
                 end
                 
             end
             
-            % merge byte array columns
-            switch r.record(j).short_name
-                
-                case 'uuid'
-                    
-                    byte_a = bytes;
-                    
-                otherwise
-                    
-                    byte_a = bytes(:,1);
-                    if r.record(j).byte_length > 1
-                        
-                        for k = 1:r.record(j).byte_length-1
-                            
-                            byte_a = bitor(byte_a, bytes(:,k+1));
-                            
-                        end
-                        
-                    end
-                    
-            end
-     
             % adjust format
             switch r.record(j).storage_type{:}
                 
@@ -2119,28 +2253,6 @@ if ~arg.Results.headerOnly && r.header(phb_skeys.n_point_records).value > 0
     
     clear byte byte_a
     
-    
-    % reformat UUID % TEST
-    if ismember('uuid', fieldnames(pdr_skeys))
-        
-        [uuid_num_ref, ~, ic] = unique(r.record(pdr_skeys.uuid).value, 'rows');
-        
-        uuid_str_ref = cell(size(uuid_num_ref,1),1);
-        
-        for j = 1:size(uuid_num_ref,1)
-            
-            uuid_str_ref{j,1} = lower(sprintf('%s', dec2hex(uuid_num_ref(j,:))'));
-            
-        end
-        
-        idxl_void = all(bsxfun(@eq, uuid_num_ref, 0),2);
-        uuid_str_ref(idxl_void) = {repmat('0', 1, 32)};
-        
-        r.record(pdr_skeys.uuid).value = uuid_str_ref(ic);
-        
-    end
-
-
     % apply scale and offset when necessary
     r.record(pdr_skeys.x).scale = r.header(phb_skeys.x_scale_factor).value;
     r.record(pdr_skeys.x).offset = r.header(phb_skeys.x_offset).value;
@@ -2150,9 +2262,9 @@ if ~arg.Results.headerOnly && r.header(phb_skeys.n_point_records).value > 0
     r.record(pdr_skeys.z).offset = r.header(phb_skeys.z_offset).value;
     
     for j = 1:length(r.record)
-
+        
         if any([r.record(j).scale ~= 1,  r.record(j).offset ~= 0])
-
+            
             r.record(j).value = double(r.record(j).value) * r.record(j).scale + r.record(j).offset;
             
         end
@@ -2302,32 +2414,32 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                         
                     end
                     
-                case {5004, 5011, 5012, 5013, 5028, 5029} % Custom uint8 field (optional)
+                case {5013, 5017, 5018, 5043, 5044, 5061, 5063, 5071} % Custom uint8 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT);
                     
-                case {5025, 5026, 5027} % Custom uint16 field (optional)
+                case {5002, 5014, 5015, 5016} % Custom uint16 field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 2, 'uint16', 0, MACHINE_FORMAT);
                     
-                case 5000 % Custom char(32) field (optional) % TEST
+                case 5001 % Custom char(32) field (optional) % TEST
                     
                     r.extended_variable_length_records(j).value = cellstr(cast(reshape(fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT), [], 32), 'char'));
                     
-                case {5040, 5041} % Custom single field (optional)
+                case {5000, 5019, 5020, 5021} % Custom single field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 4, 'single', 0, MACHINE_FORMAT);
                     
-                case {5001, 5002, 5003, 5050} % Custom double field (optional)
+                case {5010, 5011, 5012, 5050, 5062} % Custom double field (optional)
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header / 8, 'double', 0, MACHINE_FORMAT);
-
-                case {5010} % Custom char(12) field (optional)
-                
+                    
+                case {5041} % Custom char(12) field (optional)
+                    
                     r.extended_variable_length_records(j).value = cellstr(cast(reshape(fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT), [], 12), 'char'));
                     
-               % You may add custom records here
-           
+                    % You may add custom records here
+                    
                 otherwise % Other
                     
                     r.extended_variable_length_records(j).value = fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT);
