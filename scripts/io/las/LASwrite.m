@@ -20,16 +20,22 @@ function varargout = LASwrite(s, filepath, varargin)
 % Syntax:  LASwrite(s, filepath, ...)
 %
 % Inputs:
-%    s - A structure containing the point cloud
-%    filepath - The path to the input LAS file
-%    version (optional, default: 14) - The output LAS version (see LAS specification)
-%    systemID (optional, default: 'OTHER') - The output LAS version (see LAS specification)
-%    recordFormat (optional, default: 3) - The output LAS record format (see LAS specification)
-%    verbose (optional, default: true) - If set to true, will display information
-%              in the console
+%    s - structure containing the fixed and variable length headers and point data records
+%    filepath - string, path to the output LAS file
+%    version (optional, default: 14) - integer value [10, 11, 12, 13 or 14], output LAS version (see LAS specification for details)
+%    systemID (optional, default: 'OTHER') - 32 character string, system Identifier (see LAS specification for details)
+%    guid (optional, default: '0000000000000000000000') - 32 character string, Globally Unique Identifier (e.g. '270DBE859CF44302AB0C35E0F25A0942') 
+%    recordFormat (optional, default: 3) - integer value [0-10], output LAS point record format (see LAS specification for details)
+%    verbose (optional, default: true) - boolean value, verbosiy switch
 %
 % Example:
-%    s = LASwrite(s, 'E:\las_data\my_points.las', 'version', 12, 'verbose', false)
+%    s = LASwrite(s, ...
+%        'E:\las_data\my_points.las', ...
+%        'version', 14, ...
+%        'systemID', 'MODIFICATION', ...
+%        'guid', '270DBE859CF44302AB0C35E0F25A0942', ...
+%        'recordFormat', 6, ...
+%        'verbose', false);
 %
 % Other m-files required: none
 % Subfunctions: none
@@ -42,7 +48,7 @@ function varargout = LASwrite(s, filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 7, 2018
+% Last revision: February 13, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -68,6 +74,7 @@ addRequired(arg, 's', @isstruct);
 addOptional(arg, 'filepath', [], @ischar);
 addParameter(arg, 'version', 14, @(x) (ismember(x, AUTH_LAS_VERSIONS) && numel(x) == 1));
 addParameter(arg, 'systemID', 'OTHER', @(x) ischar(x) && (length(x) <= 32));
+addParameter(arg, 'guid', [], @(x) ischar(x) && (length(strrep(x, '-', '')) == 32));
 addParameter(arg, 'recordFormat', 3, @(x) (ismember(x, AUTH_RECORD_FORMAT_ID) && numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
@@ -79,6 +86,29 @@ parse(arg, s, filepath, varargin{:});
 las_version = fix(arg.Results.version / 10)*10 + mod(arg.Results.version, 10);
 [~, ind_las_version] = ismember(las_version, AUTH_LAS_VERSIONS);
 
+
+%% parse GUID
+
+% A GUID is a 128-bit value consisting of one group of 8 hexadecimal digits,
+% followed by three groups of 4 hexadecimal digits each, followed by one group of 12 hexadecimal digits
+% 4 bytes | 2 bytes  | 2 bytes  | 2 bytes |  6 bytes
+
+if ~isempty(arg.Results.guid)
+    
+    guid_char = upper(strrep(arg.Results.guid, '-', ''));
+    guid_1 = hex2dec(guid_char(1:8));
+    guid_2 = hex2dec(guid_char(9:12));
+    guid_3 = hex2dec(guid_char(13:16));
+    guid_4 = hex2dec(reshape(reshape(guid_char(17:32), 2, [])', [], 2));
+    
+else
+    
+    guid_1 = s.header.project_id_1;
+    guid_2 = s.header.project_id_2;
+    guid_3 = s.header.project_id_3;
+    guid_4 = s.header.project_id_4;
+    
+end
 
 %% compute spatial extent
 
@@ -299,9 +329,9 @@ r.header(k).storage_type = {'double', 'double', 'double', 'double', 'double'};
 r.header(k).byte_length = [4, 4, 4, 4, 4];
 r.header(k).n_values = [1, 1 ,1 ,1 ,1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
-r.header(k).print_format = {'%u', '%u', '%u', '%u', '%u'};
-r.header(k).default_value = 0;
-r.header(k).value = [];
+r.header(k).print_format = {'%02X', '%02X', '%02X', '%02X', '%02X'};
+r.header(k).default_value = guid_1;
+r.header(k).value = r.header(k).default_value;
 r.header(k).validation = @(x) isnumeric(x) && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
@@ -317,9 +347,9 @@ r.header(k).storage_type = {'double', 'double', 'double', 'double', 'double'};
 r.header(k).byte_length = [2, 2, 2, 2, 2];
 r.header(k).n_values = [1, 1 ,1 ,1 ,1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
-r.header(k).print_format = {'%u', '%u', '%u', '%u', '%u'};
-r.header(k).default_value = 0;
-r.header(k).value = [];
+r.header(k).print_format = {'%02X', '%02X', '%02X', '%02X', '%02X'};
+r.header(k).default_value = guid_2;
+r.header(k).value = r.header(k).default_value;
 r.header(k).validation = @(x) isnumeric(x) && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
@@ -335,9 +365,9 @@ r.header(k).storage_type = {'double', 'double', 'double', 'double', 'double'};
 r.header(k).byte_length = [2, 2, 2, 2, 2];
 r.header(k).n_values = [1, 1 ,1 ,1 ,1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
-r.header(k).print_format = {'%u', '%u', '%u', '%u', '%u'};
-r.header(k).default_value = 0;
-r.header(k).value = [];
+r.header(k).print_format = {'%02X', '%02X', '%02X', '%02X', '%02X'};
+r.header(k).default_value = guid_3;
+r.header(k).value = r.header(k).default_value;
 r.header(k).validation = @(x) isnumeric(x) && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
@@ -348,14 +378,14 @@ k = k + 1;
 r.header(k).compatibility = [10, 11, 12, 13, 14];
 r.header(k).full_name = 'Project ID - GUID data 4';
 r.header(k).short_name = 'project_id_4';
-r.header(k).type = {'uint64', 'uint64', 'uint64', 'uint64', 'uint64'};
+r.header(k).type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8'}; % uint64
 r.header(k).storage_type = {'double', 'double', 'double', 'double', 'double'};
-r.header(k).byte_length = [8, 8, 8, 8 ,8];
-r.header(k).n_values = [1, 1 ,1 ,1 ,1];
+r.header(k).byte_length = [1, 1, 1, 1 ,1]; % [8, 8, 8, 8 ,8];
+r.header(k).n_values = [8, 8 ,8 ,8 ,8];
 r.header(k).flag_bit_field = [false, false, false, false, false];
-r.header(k).print_format = {'%u', '%u', '%u', '%u', '%u'};
-r.header(k).default_value = 0;
-r.header(k).value = [];
+r.header(k).print_format = {'%02X', '%02X', '%02X', '%02X', '%02X'};
+r.header(k).default_value = guid_4;
+r.header(k).value = r.header(k).default_value;
 r.header(k).validation = @(x) isnumeric(x) && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
@@ -1837,7 +1867,7 @@ for j = 1:length(r.header)
         if isempty(r.header(j).value)
             
             try
-
+                
                 r.header(j).value = s.header.(r.header(j).short_name);
                 
             catch
@@ -1916,7 +1946,7 @@ if flag_extra_byte
     ind_extra_records = find([s.variable_length_records.record_id] == 4);
     
     for j = 1:length(ind_extra_records)
-  
+        
         for k = 1:length(s.variable_length_records(ind_extra_records(j)).value)
             
             ind_record = ind_record + 1;
@@ -1934,7 +1964,7 @@ if flag_extra_byte
             r.record(ind_record).storage_type = {r.extra_bytes(ind_data_type).type};
             r.record(ind_record).byte_length = r.extra_bytes(ind_data_type).n_values * r.extra_bytes(ind_data_type).byte_length;
             r.record(ind_record).bit_length = r.record(ind_record).byte_length * 8;
-
+            
             r.record(ind_record).flag_bit_field = false;
             r.record(ind_record).flag_mandatory = false;
             r.record(ind_record).flag_transform = true;
@@ -1980,7 +2010,7 @@ for j = 1:length(r.record)
     try
         
         r.record(j).value = s.record.(r.record(j).short_name);
-
+        
     catch
         
         % fill with zeros, if the record values are not specified
@@ -2117,7 +2147,7 @@ r.record(pdr_skeys.z).offset = r.header(phb_skeys.z_offset).value;
 for j = 1:length(r.record)
     
     if any([r.record(j).scale ~= 1,  r.record(j).offset ~= 0])
-    %if r.record(j).flag_transform
+        %if r.record(j).flag_transform
         
         r.record(j).value = cast((r.record(j).value - r.record(j).offset) / r.record(j).scale, r.record(j).type{:});
         
@@ -2146,24 +2176,6 @@ switch r.record(pdr_skeys.scan_angle).type{:}
         
 end
 
-
-%% reformat UUID
-
-% TEST
-if ismember('uuid', fieldnames(pdr_skeys))
-    
-    [uuid_ref, ~, ic] = unique(s.record.uuid);
-    uuid_ref_num = zeros(length(uuid_ref), 16, 'uint8');
-    
-    for j = 1:length(uuid_ref)
-        
-        uuid_ref_num(j,:) = uint8(hex2dec([uuid_ref{j}(1:2:end)', uuid_ref{j}(2:2:end)']))';
-        
-    end
-    
-    r.record(pdr_skeys.uuid).value = uuid_ref_num(ic,:);
-    
-end
 
 %% write structure to LAS file
 
@@ -2219,7 +2231,25 @@ if ~isempty(arg.Results.filepath)
         
         if arg.Results.verbose
             
-            fprintf(sprintf('%s: %s\\n', r.header(j).full_name, r.header(j).print_format), r.header(j).value);
+            switch r.header(j).short_name
+                
+                case {'n_points_by_return', 'n_points_by_return_extended'}
+                    
+                    str = '';
+                    for k = 1:r.header(j).n_values
+                        
+                        str = [str, sprintf(['%u->' r.header(j).print_format ', '], k, r.header(j).value(k))];
+                        
+                    end
+                    
+                    fprintf('%s: %s\n', r.header(j).full_name, str(1:end-2));
+                    
+                otherwise
+                    
+                    fprintf('%s: %s\n', r.header(j).full_name, sprintf(r.header(j).print_format, r.header(j).value));
+                    
+            end
+            %fprintf(sprintf('%s: %s\\n', r.header(j).full_name, r.header(j).print_format), r.header(j).value);
             
         end
         
@@ -2381,7 +2411,7 @@ if ~isempty(arg.Results.filepath)
                 otherwise % Other
                     
                     fwrite(fid, typecast(s.variable_length_records(j).value, 'uint8'), 'uint8', 0, MACHINE_FORMAT);
-
+                    
             end
             
             byte_offset = byte_offset + 54 + s.variable_length_records(j).record_length_after_header;
@@ -2408,9 +2438,9 @@ if ~isempty(arg.Results.filepath)
     bit_count = 0;
     
     for j = 1:size(r.record,2)
-
+        
         if r.record(j).flag_bit_field % pack bit fields into byte
-
+            
             byte = bitor(bitshift(uint8(r.record(j).value), bit_count), byte);
             bit_count = bit_count + r.record(j).bit_length;
             
@@ -2432,11 +2462,11 @@ if ~isempty(arg.Results.filepath)
             ind_byte = ind_byte(:);
             
             blob(ind_byte) = typecast(cast(reshape(r.record(j).value',[],1), r.record(j).type{:}), 'uint8');
-
+            
             bit_count = 0;
             
         end
-          
+        
     end
     
     % write blob to file
@@ -2445,168 +2475,168 @@ if ~isempty(arg.Results.filepath)
     fprintf('done!\n');
     
     %% write extended variable length records to file
-
-        if flag_evlr
-            
-            byte_offset = ftell(fid); %r.header(phb_skeys.offset_to_evlr).value;
-            
-            for j = 1:r.header(phb_skeys.number_of_evlr).value
-                
-                fseek(fid, byte_offset, 'bof');
-                
-                % write common header part
-                fwrite(fid, s.extended_variable_length_records(j).reserved, 'uint16', 0, MACHINE_FORMAT); % Reserved, unsigned short, 2 bytes;
-                user_id = horzcat(s.extended_variable_length_records(j).user_id, char(zeros(1, 16))); % zero padding
-                fwrite(fid, user_id(1:16), 'char', 0, MACHINE_FORMAT); % User ID, char[16], 16 bytes, *
-                fwrite(fid, s.extended_variable_length_records(j).record_id , 'uint16', 0, MACHINE_FORMAT); % Record ID, unsigned short, 2 bytes, *
-                fwrite(fid, s.extended_variable_length_records(j).record_length_after_header , 'uint64', 0, MACHINE_FORMAT); % Record Length After Header, unsigned short, 2 bytes, *
-                description = horzcat(s.extended_variable_length_records(j).description, char(zeros(1, 32))); % zero padding
-                fwrite(fid, description(1:32) , 'char', 0, MACHINE_FORMAT); % Description, char[32], 32 bytes
-                
-                % write defined variable length header entries
-                switch s.extended_variable_length_records(j).record_id
-                    
-                    case 0 % Classification lookup (optional)
-                        
-                    case 1 % Reserved (optional)
-                        
-                    case 2 % Histogram (optional)
-                        
-                    case 3 % Text area description (optional)
-                        
-                        string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
-                        fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Text area description (optional) EVLR\n');
-                        
-                    case 4 % Extra bytes (optional)
-                        
-                        n_extra_records = s.extended_variable_length_records(j).record_length_after_header / 192;
-                        
-                        for k = 1:n_extra_records
-                            
-                            fwrite(fid, s.extended_variable_length_records(j).value(k).reserved, 'uint16', 0, MACHINE_FORMAT);
-                            fwrite(fid, s.extended_variable_length_records(j).value(k).data_type, 'uint8', 0, MACHINE_FORMAT);
-                            fwrite(fid, s.extended_variable_length_records(j).value(k).options, 'uint8', 0, MACHINE_FORMAT);
-                            name = horzcat(s.extended_variable_length_records(j).value(k).name, char(zeros(1, 32))); % zero padding
-                            fwrite(fid, name(1:32), 'char', 0, MACHINE_FORMAT);
-                            
-                            fwrite(fid, s.extended_variable_length_records(j).value(k).unused, 'uint32', 0, MACHINE_FORMAT);
-                            fwrite(fid, s.extended_variable_length_records(j).value(k).no_data, 'double', 0, MACHINE_FORMAT);
-                            fwrite(fid, s.extended_variable_length_records(j).value(k).min, 'double', 0, MACHINE_FORMAT);
-                            fwrite(fid, s.extended_variable_length_records(j).value(k).max, 'double', 0, MACHINE_FORMAT);
-                            fwrite(fid, s.extended_variable_length_records(j).value(k).scale, 'double', 0, MACHINE_FORMAT);
-                            fwrite(fid, s.extended_variable_length_records(j).value(k).offset, 'double', 0, MACHINE_FORMAT);
-                            description = horzcat(s.extended_variable_length_records(j).value(k).description, char(zeros(1, 32))); % zero padding
-                            fwrite(fid, description(1:32), 'char', 0, MACHINE_FORMAT);
-                            
-                        end
-                        
-                        fprintf('WARNING: writing Extra bytes (optional) EVLR\n');
-                        
-                    case num2cell(100:354) % Waveform Packet descriptor (required when using point formats 4, 5, 9, 10)
-                        
-                        fwrite(fid, s.extended_variable_length_records(j).value.bits_per_sample, 'uint8', 0, MACHINE_FORMAT); % Bits per sample, Unsigned char, 1 byte, *
-                        fwrite(fid, s.extended_variable_length_records(j).value.compression_type, 'uint8', 0, MACHINE_FORMAT); % Waveform compression type, Unsigned char, 1 byte, *
-                        fwrite(fid, s.extended_variable_length_records(j).value.number_samples, 'uint32', 0, MACHINE_FORMAT); % Number of samples, Unsigned long, 4 bytes, *
-                        fwrite(fid, s.extended_variable_length_records(j).value.temporal_sample_spacing, 'uint32', 0, MACHINE_FORMAT); % Temporal Sample Spacing, Unsigned long, 4 bytes, *
-                        fwrite(fid, s.extended_variable_length_records(j).value.digitizer_gain, 'double', 0, MACHINE_FORMAT); % Digitizer Gain, double, 8 bytes, *
-                        fwrite(fid, s.extended_variable_length_records(j).value.digitizer_offset, 'double', 0, MACHINE_FORMAT); % Digitizer Offset, double, 8 bytes, *
-                        fprintf('WARNING: writing Waveform Packet descriptor EVLR\n');
-                        
-                    case 2111 % OGC Math Transform WKT Record (optional)
-                        
-                        string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
-                        fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing OGC Math Transform WKT Record (optional) EVLR\n');
-                        
-                    case 2112 % OGC Coordinate System WKT Record (optional)
-                        
-                        string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
-                        fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing OGC Coordinate System WKT Record (optional) EVLR\n');
+    
+    if flag_evlr
         
-                    case 34735 % GeoKeyDirectoryTag Record (mandatory)
-                        
-                        s.extended_variable_length_records(j).value.w_key_directory_version = 1; % wKeyDirectoryVersion, unsigned short, wKeyDirectoryVersion = 1 Always
-                        s.extended_variable_length_records(j).value.w_key_revision = 1; % wKeyRevision, unsigned short, wKeyRevision = 1 Always
-                        s.extended_variable_length_records(j).value.w_minor_revision = 0; % wMinorRevision, unsigned short, wMinorRevision = 0 Always
-                        s.extended_variable_length_records(j).value.w_number_of_keys = length(s.extended_variable_length_records(j).value.s_key_entry); % wNumberOfKeys, unsigned short, Number of sets of 4 unsigned shorts to follow
-                        
-                        fwrite(fid, s.extended_variable_length_records(j).value.w_key_directory_version, 'uint16', 0, MACHINE_FORMAT);
-                        fwrite(fid, s.extended_variable_length_records(j).value.w_key_revision, 'uint16', 0, MACHINE_FORMAT);
-                        fwrite(fid, s.extended_variable_length_records(j).value.w_minor_revision, 'uint16', 0, MACHINE_FORMAT);
-                        fwrite(fid, s.extended_variable_length_records(j).value.w_number_of_keys, 'uint16', 0, MACHINE_FORMAT);
-                        
-                        for i=1:s.extended_variable_length_records(j).value.w_number_of_keys
-                            
-                            fwrite(fid, s.extended_variable_length_records(j).value.s_key_entry{i}(1), 'uint16', 0, MACHINE_FORMAT);
-                            fwrite(fid, s.extended_variable_length_records(j).value.s_key_entry{i}(2), 'uint16', 0, MACHINE_FORMAT);
-                            fwrite(fid, s.extended_variable_length_records(j).value.s_key_entry{i}(3), 'uint16', 0, MACHINE_FORMAT);
-                            fwrite(fid, s.extended_variable_length_records(j).value.s_key_entry{i}(4), 'uint16', 0, MACHINE_FORMAT);
-                            
-                        end
-                        
-                        fprintf('WARNING: writing GeoKeyDirectoryTag Record to EVLR\n');
-                        
-                    case 34736 % GeoDoubleParamsTag Record (optional)
-                        
-                        fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing GeoDoubleParamsTag Record to EVLR\n');
-                        
-                    case 34737 % GeoAsciiParamsTag Record (optional)
-                        
-                        string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
-                        fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing GeoAsciiParamsTag Record to EVLR\n');
-                        
-                    case {5013, 5017, 5018, 5043, 5044, 5061, 5063, 5071} % Custom uint8 field (optional)
-                        
-                        fwrite(fid, s.extended_variable_length_records(j).value, 'uint8', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Custom uint8 field to EVLR\n');
-                        
-                    case {5002, 5014, 5015, 5016} % Custom uint16 field (optional)
-                        
-                        fwrite(fid, s.extended_variable_length_records(j).value, 'uint16', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Custom uint16 field to EVLR\n');
+        byte_offset = ftell(fid); %r.header(phb_skeys.offset_to_evlr).value;
+        
+        for j = 1:r.header(phb_skeys.number_of_evlr).value
+            
+            fseek(fid, byte_offset, 'bof');
+            
+            % write common header part
+            fwrite(fid, s.extended_variable_length_records(j).reserved, 'uint16', 0, MACHINE_FORMAT); % Reserved, unsigned short, 2 bytes;
+            user_id = horzcat(s.extended_variable_length_records(j).user_id, char(zeros(1, 16))); % zero padding
+            fwrite(fid, user_id(1:16), 'char', 0, MACHINE_FORMAT); % User ID, char[16], 16 bytes, *
+            fwrite(fid, s.extended_variable_length_records(j).record_id , 'uint16', 0, MACHINE_FORMAT); % Record ID, unsigned short, 2 bytes, *
+            fwrite(fid, s.extended_variable_length_records(j).record_length_after_header , 'uint64', 0, MACHINE_FORMAT); % Record Length After Header, unsigned short, 2 bytes, *
+            description = horzcat(s.extended_variable_length_records(j).description, char(zeros(1, 32))); % zero padding
+            fwrite(fid, description(1:32) , 'char', 0, MACHINE_FORMAT); % Description, char[32], 32 bytes
+            
+            % write defined variable length header entries
+            switch s.extended_variable_length_records(j).record_id
+                
+                case 0 % Classification lookup (optional)
                     
-                    case 5001 % Custom char(32) field (optional) % TEST
+                case 1 % Reserved (optional)
+                    
+                case 2 % Histogram (optional)
+                    
+                case 3 % Text area description (optional)
+                    
+                    string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
+                    fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing Text area description (optional) EVLR\n');
+                    
+                case 4 % Extra bytes (optional)
+                    
+                    n_extra_records = s.extended_variable_length_records(j).record_length_after_header / 192;
+                    
+                    for k = 1:n_extra_records
                         
-                        char32 = char(cellfun(@(x) horzcat(x, char(zeros(1, 32-length(x)))), s.extended_variable_length_records(j).value, 'UniformOutput', false)); % TODO
-                        fwrite(fid, char32, 'char', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Custom char(32) field to EVLR\n');
+                        fwrite(fid, s.extended_variable_length_records(j).value(k).reserved, 'uint16', 0, MACHINE_FORMAT);
+                        fwrite(fid, s.extended_variable_length_records(j).value(k).data_type, 'uint8', 0, MACHINE_FORMAT);
+                        fwrite(fid, s.extended_variable_length_records(j).value(k).options, 'uint8', 0, MACHINE_FORMAT);
+                        name = horzcat(s.extended_variable_length_records(j).value(k).name, char(zeros(1, 32))); % zero padding
+                        fwrite(fid, name(1:32), 'char', 0, MACHINE_FORMAT);
                         
-                    case {5000, 5019, 5020, 5021} % Custom single field (optional)
+                        fwrite(fid, s.extended_variable_length_records(j).value(k).unused, 'uint32', 0, MACHINE_FORMAT);
+                        fwrite(fid, s.extended_variable_length_records(j).value(k).no_data, 'double', 0, MACHINE_FORMAT);
+                        fwrite(fid, s.extended_variable_length_records(j).value(k).min, 'double', 0, MACHINE_FORMAT);
+                        fwrite(fid, s.extended_variable_length_records(j).value(k).max, 'double', 0, MACHINE_FORMAT);
+                        fwrite(fid, s.extended_variable_length_records(j).value(k).scale, 'double', 0, MACHINE_FORMAT);
+                        fwrite(fid, s.extended_variable_length_records(j).value(k).offset, 'double', 0, MACHINE_FORMAT);
+                        description = horzcat(s.extended_variable_length_records(j).value(k).description, char(zeros(1, 32))); % zero padding
+                        fwrite(fid, description(1:32), 'char', 0, MACHINE_FORMAT);
                         
-                        fwrite(fid, s.extended_variable_length_records(j).value, 'single', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Custom single field to EVLR\n');
+                    end
+                    
+                    fprintf('WARNING: writing Extra bytes (optional) EVLR\n');
+                    
+                case num2cell(100:354) % Waveform Packet descriptor (required when using point formats 4, 5, 9, 10)
+                    
+                    fwrite(fid, s.extended_variable_length_records(j).value.bits_per_sample, 'uint8', 0, MACHINE_FORMAT); % Bits per sample, Unsigned char, 1 byte, *
+                    fwrite(fid, s.extended_variable_length_records(j).value.compression_type, 'uint8', 0, MACHINE_FORMAT); % Waveform compression type, Unsigned char, 1 byte, *
+                    fwrite(fid, s.extended_variable_length_records(j).value.number_samples, 'uint32', 0, MACHINE_FORMAT); % Number of samples, Unsigned long, 4 bytes, *
+                    fwrite(fid, s.extended_variable_length_records(j).value.temporal_sample_spacing, 'uint32', 0, MACHINE_FORMAT); % Temporal Sample Spacing, Unsigned long, 4 bytes, *
+                    fwrite(fid, s.extended_variable_length_records(j).value.digitizer_gain, 'double', 0, MACHINE_FORMAT); % Digitizer Gain, double, 8 bytes, *
+                    fwrite(fid, s.extended_variable_length_records(j).value.digitizer_offset, 'double', 0, MACHINE_FORMAT); % Digitizer Offset, double, 8 bytes, *
+                    fprintf('WARNING: writing Waveform Packet descriptor EVLR\n');
+                    
+                case 2111 % OGC Math Transform WKT Record (optional)
+                    
+                    string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
+                    fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing OGC Math Transform WKT Record (optional) EVLR\n');
+                    
+                case 2112 % OGC Coordinate System WKT Record (optional)
+                    
+                    string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
+                    fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing OGC Coordinate System WKT Record (optional) EVLR\n');
+                    
+                case 34735 % GeoKeyDirectoryTag Record (mandatory)
+                    
+                    s.extended_variable_length_records(j).value.w_key_directory_version = 1; % wKeyDirectoryVersion, unsigned short, wKeyDirectoryVersion = 1 Always
+                    s.extended_variable_length_records(j).value.w_key_revision = 1; % wKeyRevision, unsigned short, wKeyRevision = 1 Always
+                    s.extended_variable_length_records(j).value.w_minor_revision = 0; % wMinorRevision, unsigned short, wMinorRevision = 0 Always
+                    s.extended_variable_length_records(j).value.w_number_of_keys = length(s.extended_variable_length_records(j).value.s_key_entry); % wNumberOfKeys, unsigned short, Number of sets of 4 unsigned shorts to follow
+                    
+                    fwrite(fid, s.extended_variable_length_records(j).value.w_key_directory_version, 'uint16', 0, MACHINE_FORMAT);
+                    fwrite(fid, s.extended_variable_length_records(j).value.w_key_revision, 'uint16', 0, MACHINE_FORMAT);
+                    fwrite(fid, s.extended_variable_length_records(j).value.w_minor_revision, 'uint16', 0, MACHINE_FORMAT);
+                    fwrite(fid, s.extended_variable_length_records(j).value.w_number_of_keys, 'uint16', 0, MACHINE_FORMAT);
+                    
+                    for i=1:s.extended_variable_length_records(j).value.w_number_of_keys
                         
-                    case {5010, 5011, 5012, 5050, 5062} % Custom double field (optional)
+                        fwrite(fid, s.extended_variable_length_records(j).value.s_key_entry{i}(1), 'uint16', 0, MACHINE_FORMAT);
+                        fwrite(fid, s.extended_variable_length_records(j).value.s_key_entry{i}(2), 'uint16', 0, MACHINE_FORMAT);
+                        fwrite(fid, s.extended_variable_length_records(j).value.s_key_entry{i}(3), 'uint16', 0, MACHINE_FORMAT);
+                        fwrite(fid, s.extended_variable_length_records(j).value.s_key_entry{i}(4), 'uint16', 0, MACHINE_FORMAT);
                         
-                        fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Custom double field to EVLR\n');
-                        
-                    case {5041} % Custom char(12) field (optional)
-                
-                        char12 = char(cellfun(@(x) horzcat(x, char(zeros(1, 12-length(x)))), s.extended_variable_length_records(j).value, 'UniformOutput', false)); % TODO
-                        fwrite(fid, char12, 'char', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Custom char(12) field to EVLR\n');
-                        
-                        % You may add custom records here
-                        
-                        
-                    otherwise % Other
-                        
-                        fwrite(fid, typecast(s.extended_variable_length_records(j).value, 'uint8'), 'uint8', 0, MACHINE_FORMAT);
-                        fprintf('WARNING: writing Custom uint8 field to EVLR\n');
-                        
-                end
-
-                byte_offset = byte_offset + 60 + s.extended_variable_length_records(j).record_length_after_header;
-                
+                    end
+                    
+                    fprintf('WARNING: writing GeoKeyDirectoryTag Record to EVLR\n');
+                    
+                case 34736 % GeoDoubleParamsTag Record (optional)
+                    
+                    fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing GeoDoubleParamsTag Record to EVLR\n');
+                    
+                case 34737 % GeoAsciiParamsTag Record (optional)
+                    
+                    string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
+                    fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing GeoAsciiParamsTag Record to EVLR\n');
+                    
+                case {5013, 5017, 5018, 5043, 5044, 5061, 5063, 5071} % Custom uint8 field (optional)
+                    
+                    fwrite(fid, s.extended_variable_length_records(j).value, 'uint8', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing Custom uint8 field to EVLR\n');
+                    
+                case {5002, 5014, 5015, 5016} % Custom uint16 field (optional)
+                    
+                    fwrite(fid, s.extended_variable_length_records(j).value, 'uint16', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing Custom uint16 field to EVLR\n');
+                    
+                case 5001 % Custom char(32) field (optional) % TEST
+                    
+                    char32 = char(cellfun(@(x) horzcat(x, char(zeros(1, 32-length(x)))), s.extended_variable_length_records(j).value, 'UniformOutput', false)); % TODO
+                    fwrite(fid, char32, 'char', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing Custom char(32) field to EVLR\n');
+                    
+                case {5000, 5019, 5020, 5021} % Custom single field (optional)
+                    
+                    fwrite(fid, s.extended_variable_length_records(j).value, 'single', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing Custom single field to EVLR\n');
+                    
+                case {5010, 5011, 5012, 5050, 5062} % Custom double field (optional)
+                    
+                    fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing Custom double field to EVLR\n');
+                    
+                case {5041} % Custom char(12) field (optional)
+                    
+                    char12 = char(cellfun(@(x) horzcat(x, char(zeros(1, 12-length(x)))), s.extended_variable_length_records(j).value, 'UniformOutput', false)); % TODO
+                    fwrite(fid, char12, 'char', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing Custom char(12) field to EVLR\n');
+                    
+                    % You may add custom records here
+                    
+                    
+                otherwise % Other
+                    
+                    fwrite(fid, typecast(s.extended_variable_length_records(j).value, 'uint8'), 'uint8', 0, MACHINE_FORMAT);
+                    fprintf('WARNING: writing Custom uint8 field to EVLR\n');
+                    
             end
             
+            byte_offset = byte_offset + 60 + s.extended_variable_length_records(j).record_length_after_header;
+            
         end
-
+        
+    end
+    
     
     %% close file
     

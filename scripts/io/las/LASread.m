@@ -20,13 +20,12 @@ function s = LASread(filepath, varargin)
 % Syntax:  [s] = LASread(filepath, headerOnly, verbose)
 %
 % Inputs:
-%    filepath - The path to the input LAS file
-%    headerOnly (optional, default: false) - If set to true, will read only the public header content
-%    verbose (optional, default: true) - If set to true, will display the public header information
-%              in the console
+%    filepath - string, path to the input LAS file
+%    headerOnly (optional, default: false) - boolean value, verbosiy switch, If set to true, will read only the public header content
+%    verbose (optional, default: true) - boolean value, verbosiy switch
 %
 % Outputs:
-%    s - A structure containing the fixed and variable length headers and point data records
+%    s - structure containing the fixed and variable length headers and point data records
 %
 % Example:
 %    s = LASread('E:\data\points.las', false, true)
@@ -42,7 +41,7 @@ function s = LASread(filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 7, 2018
+% Last revision: February 13, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -312,7 +311,7 @@ r.header(k).storage_type = {'double', 'double', 'double', 'double', 'double'};
 r.header(k).byte_length = [4, 4, 4, 4, 4];
 r.header(k).n_values = [1, 1 ,1 ,1 ,1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
-r.header(k).print_format = {'%u', '%u', '%u', '%u', '%u'};
+r.header(k).print_format = {'%02X', '%02X', '%02X', '%02X', '%02X'};
 r.header(k).default_value = 0;
 r.header(k).value = [];
 r.header(k).validation = @(x) isnumeric(x) && (numel(x) == 1);
@@ -330,7 +329,7 @@ r.header(k).storage_type = {'double', 'double', 'double', 'double', 'double'};
 r.header(k).byte_length = [2, 2, 2, 2, 2];
 r.header(k).n_values = [1, 1 ,1 ,1 ,1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
-r.header(k).print_format = {'%u', '%u', '%u', '%u', '%u'};
+r.header(k).print_format = {'%02X', '%02X', '%02X', '%02X', '%02X'};
 r.header(k).default_value = 0;
 r.header(k).value = [];
 r.header(k).validation = @(x) isnumeric(x) && (numel(x) == 1);
@@ -348,7 +347,7 @@ r.header(k).storage_type = {'double', 'double', 'double', 'double', 'double'};
 r.header(k).byte_length = [2, 2, 2, 2, 2];
 r.header(k).n_values = [1, 1 ,1 ,1 ,1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
-r.header(k).print_format = {'%u', '%u', '%u', '%u', '%u'};
+r.header(k).print_format = {'%02X', '%02X', '%02X', '%02X', '%02X'};
 r.header(k).default_value = 0;
 r.header(k).value = [];
 r.header(k).validation = @(x) isnumeric(x) && (numel(x) == 1);
@@ -361,12 +360,12 @@ k = k + 1;
 r.header(k).compatibility = [10, 11, 12, 13, 14];
 r.header(k).full_name = 'Project ID - GUID data 4';
 r.header(k).short_name = 'project_id_4';
-r.header(k).type = {'uint64', 'uint64', 'uint64', 'uint64', 'uint64'};
+r.header(k).type = {'uint8', 'uint8', 'uint8', 'uint8', 'uint8'}; % uint64
 r.header(k).storage_type = {'double', 'double', 'double', 'double', 'double'};
-r.header(k).byte_length = [8, 8, 8, 8 ,8];
-r.header(k).n_values = [1, 1 ,1 ,1 ,1];
+r.header(k).byte_length = [1, 1, 1, 1, 1]; % [8, 8, 8, 8 ,8];
+r.header(k).n_values = [8, 8 ,8 ,8 ,8];
 r.header(k).flag_bit_field = [false, false, false, false, false];
-r.header(k).print_format = {'%u', '%u', '%u', '%u', '%u'};
+r.header(k).print_format = {'%02X', '%02X', '%02X', '%02X', '%02X'};
 r.header(k).default_value = 0;
 r.header(k).value = [];
 r.header(k).validation = @(x) isnumeric(x) && (numel(x) == 1);
@@ -1916,8 +1915,25 @@ for j = 1:length(r.header)
     
     if arg.Results.verbose
         
-        fprintf(sprintf('%s: %s\\n', r.header(j).full_name, r.header(j).print_format), r.header(j).value);
-        
+        switch r.header(j).short_name
+            
+            case {'n_points_by_return', 'n_points_by_return_extended'}
+                
+                str = '';
+                for k = 1:r.header(j).n_values
+                   
+                    str = [str, sprintf(['%u->' r.header(j).print_format ', '], k, r.header(j).value(k))]; 
+                    
+                end
+                
+                fprintf('%s: %s\n', r.header(j).full_name, str(1:end-2));
+                
+            otherwise
+                
+                fprintf('%s: %s\n', r.header(j).full_name, sprintf(r.header(j).print_format, r.header(j).value));
+                
+        end
+
     end
     
 end
