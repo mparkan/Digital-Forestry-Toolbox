@@ -1,5 +1,5 @@
 function varargout = rasterize(xyz, xv, yv, varargin)
-% RASTERIZE - creates a 2D or 3D raster from scattered points with coordinates X,Y,Z by binning
+% RASTERIZE - creates a 2D or 3D raster from scattered 3D points with coordinates XYZ by binning
 % them in the cells defined by edges XV, YV and optionaly ZV, applying the FUN
 % function to the VAL values contained in each grid cell. Cells which do not
 % contain any points are filled with the FILL value.
@@ -37,51 +37,39 @@ function varargout = rasterize(xyz, xv, yv, varargin)
 %
 % Example:
 %    pc = LASread('..\data\measurements\vector\als\zh_2014_coniferous.las', false, true);
-%    x = pc.record.x;
-%    y = pc.record.y;
-%    z = pc.record.z;
+%    xyz = [pc.record.x, pc.record.y, pc.record.z];
 %    
 %    dxy = 0.5;
-%    xv = min(x):dxy:max(x);
-%    yv = min(y):dxy:max(y);
-%    zv = min(z):dxy:max(z);
-%    xv = [xv, xv(end)+ceil(mod(max(x), dxy))*dxy];
-%    yv = [yv, yv(end)+ceil(mod(max(y), dxy))*dxy];
-%    zv = [zv, zv(end)+ceil(mod(max(z), dxy))*dxy];
-%    [~, sub, raster] = rasterize([x, y, z], xv, yv, zv, z, @(x) numel(x));
-%    
-%    nrows = length(yv);
-%    ncols = length(xv);
-%    nlevels = length(zv);
-%    
-%    ind = sub2ind([nrows, ncols, nlevels], sub(:,2), sub(:,1), sub(:,3)); % 3d (row, col, lev) linear index for each point
-%    [idxn_cells, ~, idxn_voxel_to_point] = unique(ind); % assign raster cell metrics to corresponding points
-%    [row_voxel, col_voxel, lev_voxel] = ind2sub([nrows, ncols, nlevels], idxn_cells);
-%    density = raster(idxn_cells);
+%    XY = round(xyz(:,1:2) / dxy) * dxy;
+%    xy_min = min(XY, [], 1);
+%    xy_max = max(XY, [], 1);
+%    xv = xy_min(1):dxy:xy_max(1);
+%    yv = xy_min(2):dxy:xy_max(2);
+%
+%    [~, ~, raster] = rasterize(xyz, ...
+%        xv, ...
+%        yv, ...
+%        [], ...
+%        xyz(:,3), ...
+%        @(x) numel(x));
 %    
 %    figure
-%    scatter3(col_voxel, row_voxel, lev_voxel, 20, ...
-%        density, ...
-%        'Marker', '.');
-%    xlabel('col')
-%    ylabel('row')
-%    zlabel('level')
-%    title('Point count per voxel')
-%    colorbar
-%    axis equal tight vis3d
+%    imagesc(raster)
+%    colorbar  
+%    axis equal tight
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
-% See also:
+% See also: rasterize.m
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
-% Author: Matthew Parkan, EPFL - GIS Research Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: August 22, 2017
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: February 22, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -121,7 +109,7 @@ yv = linspace(yv(1)-dy/2, yv(end)+dy/2, length(yv)+1);
 if isempty(arg.Results.zv) % 2D raster
     
     % check if coordinates are located within the grid extent
-    idxl_in = (x >= xv(1) & x <= xv(end) & y >= yv(1) & y <= yv(end));
+    idxl_in = (x >= xv(1)) & (x <= xv(end)) & (y >= yv(1)) & (y <= yv(end));
     
     varargout{1} = idxl_in;
     
@@ -132,8 +120,8 @@ if isempty(arg.Results.zv) % 2D raster
     end
     
     % pixel correspondance indices
-    [~, ~, ind_col] = histcounts(x(idxl_in), [xv, xv(end)]);
-    [~, ~, ind_row] = histcounts(y(idxl_in), [yv, yv(end)]);
+    [~, ind_col] = histc(x(idxl_in), xv);
+    [~, ind_row] = histc(y(idxl_in), yv);
     
     varargout{2} = [ind_col, ind_row];
     
@@ -164,9 +152,9 @@ else % 3D raster
         
     end
     
-    [~, ~, ind_col] = histcounts(x(idxl_in), [xv, xv(end)]);
-    [~, ~, ind_row] = histcounts(y(idxl_in), [yv, yv(end)]);
-    [~, ~, ind_lev] = histcounts(z(idxl_in), [zv, zv(end)]);
+    [~, ind_col] = histc(x(idxl_in), xv);
+    [~, ind_row] = histc(y(idxl_in), yv);
+    [~, ind_lev] = histc(z(idxl_in), zv);
     
     varargout{2} = uint32([ind_col, ind_row, ind_lev]);
     
