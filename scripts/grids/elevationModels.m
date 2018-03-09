@@ -23,18 +23,16 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %    yv (optional, default: []) - Rx1 matrix, containing the ordered y coordinates of the grid
 %    cells row centers
 %
-%    classTerrain (optional, default: [2]) - numeric vector, point classes used to represent the terrain
+%    classTerrain (optional, default: [2, 9]) - numeric vector, point classes used to represent the terrain
 %
-%    classSurface (optional, default: [4, 5, 6]) - numeric vector, point classes used to represent the surface
+%    classSurface (optional, default: [3, 4, 5, 6]) - numeric vector, point
+%    classes used to represent the surface (note that points with terrain class are also used)
 %
-%    closing (optional, default: 0) - integer value, the number of morphological closing operations applied to 
-%    the mask to suppress holes in the raster
+%    closing (optional, default: 0) - integer value, the radius of the circular structuring element used
+%    in the morphological closing to suppress holes in the raster
 %
 %    smoothingFilter (optional, default: []) - numeric matrix, two-dimensional smoothing
 %    filter, e.g. fspecial('gaussian', [4 4], 1)
-%
-%    alpha (optional, default: 5) - numeric value, minimum edge length (in map units, not pixel units) used
-%    when computing the alpha shape  that defines the data mask
 %
 %    outputModels (optional, default: {'terrain', 'surface', 'height', 'density'}) - cell array of strings, output models i.e {'terrain', 'surface', 'height', 'density'}
 %
@@ -56,9 +54,8 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %     'classTerrain', [2], ...
 %     'classSurface', [4,5], ...
 %     'cellResolution', 1, ...
-%     'closing', 3, ...
+%     'closing', 5, ...
 %     'smoothingFilter', fspecial('gaussian', [3, 3], 0.5), ...
-%     'alpha', 5, ...
 %     'outputModels', {'terrain', 'surface', 'height', 'density'}, ...
 %     'fig', true, ...
 %     'verbose', true);
@@ -81,7 +78,7 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 22, 2018
+% Last revision: March 8, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -93,11 +90,11 @@ arg = inputParser;
 addRequired(arg, 'xyz', @(x) (size(x,2) == 3) && isnumeric(x));
 addRequired(arg, 'classification', @(x) (size(x,2) == 1) && isnumeric(x));
 addParameter(arg, 'classTerrain', [2, 9], @isnumeric);
-addParameter(arg, 'classSurface', [4, 5, 6], @isnumeric);
+addParameter(arg, 'classSurface', [3, 4, 5, 6], @isnumeric);
 addParameter(arg, 'cellResolution', 1, @(x) isnumeric(x) & (numel(x) == 1));
 addParameter(arg, 'xv', [], @isnumeric);
 addParameter(arg, 'yv', [], @isnumeric);
-addParameter(arg, 'closing', inf, @(x) isnumeric(x) & (numel(x) == 1) & (x >= 0));
+addParameter(arg, 'closing', 5, @(x) isnumeric(x) & (numel(x) == 1) & (x >= 0));
 addParameter(arg, 'smoothingFilter', [], @isnumeric);
 addParameter(arg, 'outputModels', {'terrain', 'surface', 'height', 'density'}, @(x) iscell(x) & any(ismember(x, {'terrain', 'surface', 'height', 'density'})));
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
@@ -141,12 +138,15 @@ if arg.Results.verbose
 end
 
 [~, ~, mask] = rasterize(xyz, xv, yv, [], xyz(:,3), @any, false);
-n = ceil(arg.Results.closing);
-if n > 0
+r = ceil(arg.Results.closing);
+
+if r > 0
     
-    BW = bwmorph(padarray(mask, [n, n], false), 'close', n);
-    mask = BW(n+1:end-n,n+1:end-n);
-    
+    SE = bwdist(padarray(true, [r,r])) <= r;
+    SE(ceil(size(SE,1)/2), ceil(size(SE,2)/2)) = 0; % set central convolution window value to zero
+    BW = imclose(padarray(mask, [r, r], false), SE);
+    mask = BW(r+1:end-r,r+1:end-r);    
+
 end
 
 models.mask = flipud(mask);
@@ -170,6 +170,7 @@ if any(ismember(arg.Results.outputModels, {'density'}))
     
     [~, ~, density_overall] = rasterize(xyz, xv, yv, [], xyz(:,3), @numel, 0);
     models.density.overall = single(flipud(density_overall));
+    models.density.overall(~models.mask) = nan;
     
     if arg.Results.verbose
         
@@ -244,6 +245,7 @@ if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}))
         
         % flip verticaly
         dtm = single(flipud(dtm));
+        dtm(~models.mask) = nan;
         
         % store values and interpolant in structure
         models.terrain.values = dtm;
@@ -254,7 +256,7 @@ if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}))
             figure
             gh11 = imagesc(models.terrain.values);
             colormap(gray)
-            set(gh11, 'AlphaData', double(models.mask))
+            set(gh11, 'AlphaData', double(models.mask)) % transparency not yet available in Octave;
             title('Terrain Model')
             axis equal tight
             colorbar
@@ -266,6 +268,7 @@ if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}))
             
             [~, ~, density_terrain] = rasterize(xyz_terrain, xv, yv, [], xyz_terrain(:,3), @numel, 0);
             models.density.terrain = single(flipud(density_terrain));
+            models.density.terrain(~models.mask) = nan;
             
             % display terrain model point density
             if arg.Results.fig
@@ -326,6 +329,7 @@ if any(ismember(arg.Results.outputModels, {'surface', 'height'}))
         
     end
         
+    dsm(~models.mask) = nan;
     models.surface.values = single(dsm);
     
     % display surface model
@@ -346,6 +350,7 @@ if any(ismember(arg.Results.outputModels, {'surface', 'height'}))
         
         [~, ~, density_surface] = rasterize(xyz_surface(idxl_in,:), xv, yv, [], xyz_surface(idxl_in,3), @numel, 0);
         models.density.surface = single(flipud(density_surface));
+        models.density.surface(~models.mask) = nan;
         
         % display surface model point density
         if arg.Results.fig
