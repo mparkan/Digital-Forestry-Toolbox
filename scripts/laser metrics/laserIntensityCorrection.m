@@ -53,7 +53,9 @@ function intensity_corr = laserIntensityCorrection(intensity_target, xyzt_target
 %    pc = LASread('E:\als\mypoints.las', false, true);
 %    xyzt_target = [pc.record.x, pc.record.y, pc.record.z, pc.record.gps_time];
 %
-%    traj = TRJread('E:\trajectories\4242.trj', false, true);
+%    traj = TRJread('E:\trajectories\4242.trj', ...
+%    'headerOnly', false, ...
+%    'verbose', true);
 %    xyzt_sensor = [traj.record.X, traj.record.Y, traj.record.Z, traj.record.Time];
 %
 %    intensity_corr = laserIntensityCorrection(pc.record.intensity, ...
