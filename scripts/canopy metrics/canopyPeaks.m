@@ -47,10 +47,6 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %     @(h) (1.7425 * h.^0.5566)/2; % mixed forests (Chen et al., 2006)
 %     @(h) (1.2 + 0.16 * h)/2; % mixed forests (Pitkänen et al., 2004)
 %
-%    adjacency (optional, default: @(h) min(0.5 + 0.5*log(max(h,1)),4) - anonymous function handle of the form @(h) = ...,
-%    which defines the minimum 3D distance separating peaks. Peaks separated by a smaller distance
-%    are grouped and only the highest peak within each group is retained.
-%
 %    minHeightDifference (optional, default: 0.1) - numeric value, threshold
 %    height difference below which the H-maxima transform suppresses all local maxima (only when method is set to 'hMaxima')
 %
@@ -69,22 +65,21 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %        refmat, ...
 %        'method', 'allometricRadius', ...
 %        'allometry', @(h) 0.5 + 0.25*log(max(h,1)), ...
-%        'adjacency' @(h) min(0.5 + 0.5*log(max(h,1)),4), ...
 %        'fig', true, ...
 %        'verbose', true);
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
-% See also: treeWatershed.m
+% See also: rasterize.m
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: August 22, 2017
+% Last revision: March 8, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -98,13 +93,14 @@ addRequired(arg, 'refmat', @isnumeric);
 addParameter(arg, 'method', 'fixedRadius', @(x) any(validatestring(x, {'fixedRadius', 'allometricRadius', 'hMaxima'})));
 addParameter(arg, 'minPeakHeight', 2, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'windowRadius', 4, @(x) isnumeric(x) && (numel(x) == 1));
-addParameter(arg, 'allometry', @(h) 0.5 + 0.25*log(max(h,1)), @(x) strfind(func2str(x),'@(h)') == 1);
-addParameter(arg, 'adjacency', @(h) min(0.5 + 0.5*log(max(h,1)),4), @(x) strfind(func2str(x),'@(h)') == 1);
+addParameter(arg, 'allometry', @(h) 1 + 0.5*log(max(h,1)), @(x) strfind(func2str(x),'@(h)') == 1);
 addParameter(arg, 'minHeightDifference', 0.1, @isnumeric);
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', false, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, chm, refmat, varargin{:});
+
+OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system is Matlab or GNU Octave
 
 
 %% find tree tops
@@ -117,17 +113,19 @@ end
 
 gridResolution = abs(refmat(1,2));
 chm(chm < 0) = 0;
+chm(isnan(chm)) = 0;
 chm = double(chm);
 
 switch arg.Results.method
     
     case 'fixedRadius'
         
-        SE = strel('disk', round(arg.Results.windowRadius / gridResolution)).getnhood();
+        r = round(arg.Results.windowRadius / gridResolution);
+        SE = bwdist(padarray(true, [r,r])) <= r;
         SE(ceil(size(SE,1)/2), ceil(size(SE,2)/2)) = 0; % set central convolution window value to zero
-        idx_lm = chm > imdilate(chm, SE);
-        val_lm = chm(idx_lm);
-        [row_lm, col_lm] = ind2sub(size(idx_lm), find(idx_lm));
+        idxl_lm = chm > imdilate(chm, SE);
+        val_lm = chm(idxl_lm);
+        [row_lm, col_lm] = ind2sub(size(idxl_lm), find(idxl_lm));
         
     case 'allometricRadius'
         
@@ -135,36 +133,41 @@ switch arg.Results.method
         crown_radius = arg.Results.allometry(chm);
         window_radius = max(round(crown_radius ./ gridResolution),1);
         unique_window_radius = unique(window_radius);
-
         n_radius = length(unique_window_radius);
         
-        idx_lm = cell(n_radius,1);
+        idxn_lm = cell(n_radius,1);
    
         for j = 1:n_radius
             
-            SE = strel('disk', unique_window_radius(j)).getnhood();
+            r = unique_window_radius(j);
+            SE = bwdist(padarray(true, [r,r])) <= r;
             SE(ceil(size(SE,1)/2), ceil(size(SE,2)/2)) = 0;
-            
-            idx_lm{j,1} = find((chm > imdilate(chm, SE)) & (window_radius == unique_window_radius(j)));
+            idxn_lm{j,1} = find((chm > imdilate(chm, SE)) & (window_radius == r));
             
         end
         
-        [row_lm, col_lm] = ind2sub(size(window_radius), cell2mat(idx_lm));
+        [row_lm, col_lm] = ind2sub(size(window_radius), cell2mat(idxn_lm));
         val_lm = chm(sub2ind(size(chm), row_lm, col_lm));
         
     case 'hMaxima'    
         
-        % The H-maxima transform suppresses all maxima in the intensity image I whose height is less than h
-        idx_lm = imextendedmax(chm, arg.Results.minHeightDifference, 8);
-        val_lm = chm(idx_lm);
-        [row_lm, col_lm] = ind2sub(size(idx_lm), find(idx_lm));
+        % H-maxima transformation (remove local maxima with height < h)
+        I_hmax = imreconstruct(chm-arg.Results.minHeightDifference, chm, 8);
+        idxl_lm = imregionalmax(I_hmax, 8);
         
+        % find centroids of maxima regions
+        CC = bwconncomp(idxl_lm, 8);
+        stats = regionprops(CC, 'centroid');
+        cr_centroid = ceil(cell2mat({stats.Centroid}'));
+        row_lm = cr_centroid(:,2);
+        col_lm = cr_centroid(:,1);
+        val_lm = chm(sub2ind(size(chm), row_lm, col_lm));
+
 end
 
 % transform image to map coordinates
-% crh = [col_lm, row_lm, val_lm];
-[nrows, ncols] = size(chm);
 xy = [row_lm, col_lm, ones(size(row_lm))] * refmat;
+crh = [col_lm, row_lm, val_lm];
 xyh = [xy, val_lm];
 
 if arg.Results.verbose
@@ -172,6 +175,7 @@ if arg.Results.verbose
     fprintf('done!\n');
     
 end
+
 
 %% filter tree tops below height threshold
 
@@ -183,79 +187,13 @@ end
 
 idxl_height_filter = (val_lm >= arg.Results.minPeakHeight);
 
-% crh = crh(idxl_height_filter,:);
+crh = crh(idxl_height_filter,:);
 xyh = xyh(idxl_height_filter,:);
 
 % sort peaks by decreasing height
 [~, idxn_sort] = sort(xyh(:,3), 1, 'descend');
 xyh = xyh(idxn_sort,:);
-
-if arg.Results.verbose
-    
-    fprintf('done!\n');
-    
-end
-
-
-%% merge adjacent treetops 
-
-if arg.Results.verbose
-   
-    fprintf('merging peaks...');
-    
-end
-
-r_adj = arg.Results.adjacency(xyh(:,3));
-r_max = max(r_adj);
-
-[idxn_adj, d_adj] = rangesearch(xyh(:,1:3), ...
-    xyh(:,1:3), ...
-    r_max);
-
-for j = 1:length(idxn_adj)
-    
-    idxl_range = d_adj{j} <= r_adj(j);
-    idxn_adj{j} = idxn_adj{j}(idxl_range);
-    d_adj{j} = d_adj{j}(idxl_range);
-    
-end
-
-n_adj = cellfun(@numel, idxn_adj);
-idxl_pair = (n_adj > 1);
-
-pairs = cell2mat(cellfun(@(x) nchoosek(x,2), idxn_adj(idxl_pair), 'UniformOutput', false));
-
-% remove duplicate edges
-[~, idxl_unique_edges, ~] = unique(sort(pairs, 2), 'rows');
-
-pairs = pairs(idxl_unique_edges,:);
-
-% build  graph
-EdgeTable = table(pairs, ...
-    'VariableNames',{'EndNodes'});
-
-NodeTable = table((1:size(xyh,1))', ...
-    'VariableNames',{'ID'});
-
-G = graph(EdgeTable, NodeTable);
-
-% find connected components
-idxn_cluster = conncomp(G, ...
-    'OutputForm', 'vector')';
-
-% compute highest peak in cluster
-idxn_peak = accumarray(idxn_cluster, G.Nodes.ID, [], @(x) x(1));
-xyz_cl = xyh(idxn_peak,:); % xyh_peak
-xyh = xyz_cl;
-    
-% transform map to image coordinates
-rc_cl = [xyz_cl(:,1) - refmat(3,1), xyz_cl(:,2) - refmat(3,2)] / refmat(1:2,:);
-rc_cl = round(rc_cl);
-rc_cl(rc_cl == 0) = 1;
-rc_cl(rc_cl(:,1) > nrows,1) = nrows;
-rc_cl(rc_cl(:,2) > ncols,2) = nrows;
-crh_cl = [rc_cl(:,[2 1]), xyz_cl(:,3)];
-crh = crh_cl;
+crh = crh(idxn_sort,:);
 
 if arg.Results.verbose
     
@@ -271,9 +209,8 @@ if arg.Results.fig
     figure
     imagesc(chm);
     colormap('gray');
-    colorbar;
     hold on
-    plot(crh(:,1), crh(:,2), 'rx');
+    plot(crh(:,1), crh(:,2), 'rx', 'MarkerSize', 3);
     axis equal tight
     caxis(quantile(chm(:), [0.01, 0.99]))
     xlabel('col');
