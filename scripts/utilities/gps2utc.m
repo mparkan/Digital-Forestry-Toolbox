@@ -24,13 +24,15 @@ function utc_time = gps2utc(gps_time, varargin)
 %
 % Example:
 %
-%    utc_time = gps2utc(gps_time, ...
+%    pc = LASread(zh_2014_coniferous.las);
+%
+%    utc_time = gps2utc(pc.record.gps_time + 10^9, ...
 %                'verbose', true);
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -38,9 +40,8 @@ function utc_time = gps2utc(gps_time, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: January 18, 2017
-% Acknowledgments: This work was supported by the Swiss Forestry and Wood
-% Research Fund, WHFF (OFEV) - project 2013.18
+% Last revision: March 15, 2018
+% Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
 
@@ -82,10 +83,11 @@ leap_dates = [datenum(1980,1,1,0,0,0),...
 leap_seconds = [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18]';
 
 
-%% add leap seconds
+%% remove leap seconds
 
-[~, ~, idxn_bin] = histcounts(gps_time, [leap_dates, inf]);
-utc_time = datenum(1980,1,6,0,0,0) + (gps_time + leap_seconds(idxn_bin)) / (24 * 3600);
+t = datenum(1980,1,6,0,0,0) + (gps_time / (24 * 3600));
+[~, idxn_bin] = histc(t, leap_dates);
+utc_time = t - (leap_seconds(idxn_bin) / (24 * 3600));
 
 
 %% convert to vector and string format 
