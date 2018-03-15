@@ -22,13 +22,15 @@ function [info] = HDRread(filepath, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2015b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
-% Author: Matthew Parkan, EPFL - GIS Research Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: November 23, 2015
+% This code is part of the Matlab Digital Forestry Toolbox
+%
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: March 15, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -37,7 +39,7 @@ function [info] = HDRread(filepath, varargin)
 arg = inputParser;
 
 addRequired(arg, 'filepath', @(x) ischar(x));
-addParamValue(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, filepath, varargin{:});
 
