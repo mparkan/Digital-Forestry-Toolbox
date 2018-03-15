@@ -67,15 +67,18 @@ function intensity_corr = laserIntensityCorrection(intensity_target, xyzt_target
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
-% See also: laserTimeFormat.m, TRJread.m, SBETread.m, LASread.m
+% See also:
 %
-% Author: Matthew Parkan, EPFL - GIS Laboratory (LASIG)
+% This code is part of the Matlab Digital Forestry Toolbox
+%
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: January 19, 2017
+% Last revision: March 15, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
+
 
 %% check argument validity
 
@@ -101,9 +104,9 @@ if arg.Results.verbose
     
 end
 
-xi_sensor = interp1(xyzt_sensor(:,4), xyzt_sensor(:,1), xyzt_target(:,4), 'spline');
-yi_sensor = interp1(xyzt_sensor(:,4), xyzt_sensor(:,2), xyzt_target(:,4), 'spline');
-zi_sensor = interp1(xyzt_sensor(:,4), xyzt_sensor(:,3), xyzt_target(:,4), 'spline');
+xi_sensor = interp1(xyzt_sensor(:,4), xyzt_sensor(:,1), xyzt_target(:,4), 'linear');
+yi_sensor = interp1(xyzt_sensor(:,4), xyzt_sensor(:,2), xyzt_target(:,4), 'linear');
+zi_sensor = interp1(xyzt_sensor(:,4), xyzt_sensor(:,3), xyzt_target(:,4), 'linear');
 
 if arg.Results.verbose
     
@@ -169,13 +172,20 @@ end
 if arg.Results.fig
     
     figure
+    scatter3(xyzt_sensor(:,1), ...
+        xyzt_sensor(:,2), ...
+        xyzt_sensor(:,3), ...
+        6, ...
+        [0, 0, 0], ...
+        'Marker', '.');
+    hold on
     scatter3(xi_sensor, ...
         yi_sensor, ...
         zi_sensor, ...
         6, ...
-        [0, 0, 0], ...
+        [1, 0, 0], ...
         'Marker', '.');
-    axis equal tight vis3d
+    axis equal tight
     title('Interpolated sensor trajectory')
     xlabel('x')
     ylabel('y')
