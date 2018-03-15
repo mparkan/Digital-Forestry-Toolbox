@@ -52,7 +52,6 @@ addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, filepath, varargin{:});
 
-
 % check file format
 fclose('all');
 fid = fopen(filepath, 'r');
