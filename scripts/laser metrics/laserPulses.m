@@ -32,20 +32,21 @@ function [pulse_number, pulse_returns, ind_pulse] = laserPulses(return_number)
 %
 % Example:
 %
-% [pulse_number, pulse_returns, ind_pulse] = laserPulses(return_number);
+% pc = LASread('E:\als\mypoints.las', false, true);
+% [pulse_number, pulse_returns, ind_pulse] = laserPulses(pc.record.return_number);
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016a
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
-% Author: Matthew Parkan, EPFL - GIS Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: May 16, 2016
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: March 15, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -71,6 +72,7 @@ pulse_returns = uint8(diff(find([rdiff; true])));
 
 
 %% build pulse/index index matrix
+
 n_pulses = pulse_number(end);
 max_return_number = double(max(unique(return_number)));
 
