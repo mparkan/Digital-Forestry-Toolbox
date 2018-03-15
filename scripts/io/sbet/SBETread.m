@@ -1,4 +1,4 @@
-function trajectory = SBETread(filepath, verbose)
+function trajectory = SBETread(filepath, varargin)
 %SBETREAD - Reads a Smoothed Best Estimated Trajectory (SBET) Applanix file.
 % TRAJECTORY = SBETread(FILEPATH, VERBOSE) reads the SBET file specified in FILEPATH
 % into the structure TRAJECTORY.
@@ -30,57 +30,50 @@ function trajectory = SBETread(filepath, verbose)
 %
 % Inputs:
 %    filepath - The path to the input SBET file
-%    verbose (optional, default: true) - boolean value, verbosiy switch
+%    verbose - If set to true, will display status information in the console
 %
 % Outputs:
 %    trajectory - A structure containing the trajectory records
 %
 % Example:
-%    trajectory = SBETread('E:\trajectories\sbet_2014041001.out', true);
+%    trajectory = SBETread('E:\trajectories\sbet_2014041001.out', 'verbose', true)
 %
+% Other m-files required: none
+% Subfunctions: none
+% MAT-files required: none
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
-% See also: TRJread.m
+% See also:
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
-% Author: Matthew Parkan, EPFL - GIS Research Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: May 13, 2016
-% Acknowledgments: This work was supported by the Swiss Forestry and Wood
-% Research Fund, WHFF (OFEV) - project 2013.18
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: March 15, 2018
+% Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
 
 %% check argument validity
 
-isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0; % determine if system is Matlab or GNU Octave
+arg = inputParser;
 
-if ~isOctave
+addRequired(arg, 'filepath', @ischar);
+addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
+
+parse(arg, filepath, varargin{:});
+
+% check file format
+fclose('all');
+fid = fopen(filepath, 'r');
+
+if fid == -1
     
-    arg = inputParser;
-    
-    addRequired(arg, 'filepath', @checkFilepath);
-    addRequired(arg, 'verbose', @islogical);
-    
-    parse(arg, filepath, verbose);
+    error('Could not open file');
     
 end
 
-fclose('all');
-
-    function checkFilepath(filepath)
-        
-        fid = fopen(filepath, 'r');
-        
-        if fid == -1
-            
-            error('Could not open file');
-            
-        end
-        
-        fclose(fid);
-        
-    end
+fclose(fid);
 
 %% record block format definition
 
@@ -266,7 +259,7 @@ end
 %% read trajectory position record
 
 
-if verbose
+if arg.Results.verbose
     
     fprintf('reading trajectory position record...');
     
@@ -298,7 +291,7 @@ for j = 1:length(r.record)
 end
 
 
-if verbose
+if arg.Results.verbose
     
     fprintf('done!\n');
     
