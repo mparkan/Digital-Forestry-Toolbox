@@ -28,27 +28,27 @@ function [index, footprint, profile] = crossSection(xyz, width, p0, p1, varargin
 %    
 % Example:
 %    pc = LASread('..\data\measurements\vector\als\zh_2014_coniferous.las', false, true);
-%    x = pc.record.x;
-%    y = pc.record.y;
-%    z = pc.record.z;
 %    
 %    width = 2;
 %    p0 = [699501, 271206];
 %    p1 = [699698, 271199];
-%    [~, ~, profile] = crossSection([x, y, z], width, p0, p1, 'verbose', false, 'fig', true);
+%    [~, ~, profile] = crossSection([pc.record.x, pc.record.y, pc.record.z], ...
+%         width, p0, p1, ...
+%         'verbose', false, ...
+%         'fig', true);
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016a
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
-% See also: viewerCrossSection.m
+% See also:
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
-% Author: Matthew Parkan, EPFL - GIS Research Laboratory
-% Website: http://lasig.epfl.ch/
-% Last revision: May 27, 2016
+% Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
+% Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
+% Last revision: March 15, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -61,8 +61,8 @@ addRequired(arg, 'xyz', @(x) isnumeric(x) && (size(x,2) == 3));
 addRequired(arg, 'width', @(x) isnumeric(x) && (numel(x) == 1));
 addRequired(arg, 'p0', @(x) isnumeric(x) && (numel(x) == 2));
 addRequired(arg, 'p1', @(x) isnumeric(x) && (numel(x) == 2));
-addParamValue(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
-addParamValue(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, xyz, width, p0, p1, varargin{:});
 
@@ -108,16 +108,6 @@ if arg.Results.fig
     hold on
     plot(p1(:,1), p1(:,2), 'bx')
     axis equal
-    
-    figure
-    scatter3(pb(:,1), pb(:,2), pb(:,3), 8, pb(:,3), 'Marker', '.');
-    hold on
-    scatter3(pq(:,1), pq(:,2), pq(:,3), 8, [1, 0.65, 0], 'Marker', '.');
-    colormap('gray')
-    axis equal tight vis3d
-    xlabel('x')
-    ylabel('y')
-    zlabel('z')
     
 end
 
