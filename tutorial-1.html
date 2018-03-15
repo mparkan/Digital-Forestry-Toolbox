@@ -30,10 +30,10 @@
 
             <h1>Basic point cloud manipulation and visualization</h1>
 
-
             <br>
             <hr>
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
+            <p style="text-align: center"><b>Last update: March 15, 2018 / Matlab r2017b, GNU Octave 4.2.1</b></p>
             <p> In this tutorial, you will learn about basic point cloud manipulation and visualization. Before starting, you should:</p>
 
             <ol>
@@ -52,10 +52,7 @@
 
             <p>We start by importing the XYZ, classification and intensity attributes from the LAS file using <code>LASread()</code>:</p>
 
-            <pre><code>pc = LASread('26995_12710.las');
-xyz = [pc.record.x, pc.record.y, pc.record.z];
-classification = pc.record.classification;
-intensity = pc.record.intensity;</code></pre>
+            <pre><code>pc = LASread('26995_12710.las');</code></pre>
 
             <p>Note that the point classification uses the following scheme:</p>
 
@@ -123,17 +120,17 @@ x_roi = [2699597, 2699584, 2699778, 2699804];
 y_roi = [1271166, 1271307, 1271341, 1271170];
 
 % create ROI logical index (with inclusion test)
-idxl_roi = inpolygon(xyz(:,1), xyz(:,2), x_roi, y_roi);
+idxl_roi = inpolygon(pc.record.x, pc.record.y, x_roi, y_roi);
 
 % create class subset logical index
-idxl_class = ismember(classification, [4,5]);
+idxl_class = ismember(pc.record.classification, [4,5]);
 
 % combine subsetting indices
 idxl_sample = idxl_roi & idxl_class;
 
 % apply subsetting indices
-xyz_s = xyz(idxl_sample,:);
-intensity_s = intensity(idxl_sample);</code></pre>
+xyz_s = [pc.record.x(idxl_sample), pc.record.y(idxl_sample), pc.record.z(idxl_sample)];
+intensity_s = pc.record.intensity(idxl_sample);</code></pre>
 
             <h2>
                 <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Visualization
@@ -150,7 +147,7 @@ intensity_s, ...
 'Marker', '.');
 colorbar
 caxis(quantile(intensity_s, [0.01, 0.99]))
-axis equal tight vis3d
+axis equal tight
 title('Return intensity')
 xlabel('x')
 ylabel('y')
@@ -235,7 +232,7 @@ ylabel('z')</code></pre>
             <pre><code>width = 2;
 p0 = [2699582, 1271120];
 p1 = [2699884, 1271333];
-[~, ~, profile] = crossSection(xyz, ...
+[~, ~, profile] = crossSection([pc.record.x, pc.record.y, pc.record.z], ...
     width, ...
     p0, ...
     p1, ...
