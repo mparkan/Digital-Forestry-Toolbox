@@ -8,14 +8,28 @@
         <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
         <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
         <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css'>
+
         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+
+        <style>
+
+            table {
+                width:1000px !important;
+                table-layout:fixed !important;
+                }
+
+             td {
+                word-wrap:break-word;
+                }
+
+        </style>
 
     </head>
     <body>
         <section class="page-header main">
             <h1 class="project-name">Digital-Forestry-Toolbox</h1>
-            <h2 class="project-tagline white">A collection of digital forestry tools for Matlab</h2>
+            <h2 class="project-tagline white">A collection of digital forestry tools for Matlab/Octave</h2>
             <a href="https://github.com/mparkan/Digital-Forestry-Toolbox" class="btn"><i class="fa fa-github" aria-hidden="true"></i> View on GitHub</a>
             <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master" class="btn"><i class="fa fa-download" aria-hidden="true"></i> Download .zip</a>
             <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master" class="btn"><i class="fa fa-download" aria-hidden="true"></i> Download .tar.gz</a>
@@ -26,7 +40,7 @@
                 <a id="about" class="anchor" href="#about" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>About
             </h2>
 
-            <p>The Digital Forestry Toolbox (DFT) is collection of functions and tutorials for Matlab designed to help process and analyze remote sensing data related to forests.</p>
+            <p>The Digital Forestry Toolbox (DFT) is collection of functions and tutorials for Matlab/Octave designed to help process and analyze remote sensing data related to forests.</p>
 
             <h2>
                 <a id="setup" class="anchor" href="#setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setup
@@ -35,9 +49,9 @@
             <ol>
                 <li>Download and uncompress the <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master">Zip</a> or <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master">Tar</a> archive</li>
                 <li>If you want to use the example LAZ files included in the <a href="http://mparkan.github.io/Digital-Forestry-Toolbox/#data-1">data folder or the external links</a>, you must first uncompress them with <a href="http://www.laszip.org/">LASzip</a></li>
-                <li>Start Matlab</li>
-                <li>Add the DFT folders to the Matlab search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
-                <li>Open any of the functions in Matlab and check the header for syntax and example usage</li>
+                <li>Start Matlab/Octave</li>
+                <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
+                <li>Open any of the functions in Matlab/Octave and check the header for syntax and example usage</li>
                 <li>Check the <a href="#tutorials">tutorials</a></li>
             </ol>
 
@@ -69,7 +83,8 @@
 
             <p> We then use <code>scatter3()</code> to plot non-noise points colored by return intensity:</p>
 
-            <pre><code>figure
+            <pre><code>
+            figure
             scatter3(pc.record.x(~idxl_noise), ...
             pc.record.y(~idxl_noise), ...
             pc.record.z(~idxl_noise), ...
@@ -188,31 +203,40 @@
             </h4>
 
             <table>
+                <col width="150">
+                <col width="150">
+                <col width="600">
                 <thead>
                     <tr>
                         <th>Function</th>
+                        <th>GNU Octave support</th>
                         <th>Description</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><code>LASread()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Read 3D point cloud from ASPRS LAS (1.0-1.4) file (.las)</td>
                     </tr>
                     <tr>
                         <td><code>LASwrite()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Write 3D point cloud to ASPRS LAS (1.0-1.4) file (.las)</td>
                     </tr>
                     <tr>
                         <td><code>HDRread()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Read ENVI header file (.hdr)</td>
                     </tr>
                     <tr>
                         <td><code>SBETread()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Read Applanix SBET trajectory file (.sbet)</td>
                     </tr>
                     <tr>
                         <td><code>TRJread()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Read Terrascan TRJ trajectory file (.trj)</td>
                     </tr>
                 </tbody>
@@ -223,23 +247,30 @@
             </h4>
 
             <table>
+                <col width="150">
+                <col width="150">
+                <col width="600">
                 <thead>
                     <tr>
                         <th>Function</th>
+                        <th>GNU Octave support</th>
                         <th>Description</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><code>LASclip()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Clip 3D point cloud (LAS file) with a polygon</td>
                     </tr>
                     <tr>
                         <td><code>LASextent()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Extract spatial extent of 3D point clouds (LAS files) and write result to ESRI shapefile (.shp)</td>
                     </tr>
                     <tr>
                         <td><code>LASmerge()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Merge 3D point clouds (LAS files)</td>
                     </tr>
                 </tbody>
@@ -250,19 +281,25 @@
             </h4>
 
             <table>
+                <col width="150">
+                <col width="150">
+                <col width="600">
                 <thead>
                     <tr>
                         <th>Function</th>
+                        <th>GNU Octave support</th>
                         <th>Description</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><code>elevationModels()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Compute elevation models (i.e. terrain, surface, height) from a 3D classified point cloud</td>
                     </tr>
                     <tr>
                         <td><code>rasterize()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Convert a 3D point cloud to a 2D/3D raster</td>
                     </tr>
                 </tbody>
@@ -273,27 +310,35 @@
             </h4>
 
             <table>
+                <col width="150">
+                <col width="150">
+                <col width="600">
                 <thead>
                     <tr>
                         <th>Function</th>
+                        <th>GNU Octave support</th>
                         <th>Description</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><code>laserEchoRatio()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Computes the echo ratio of a 3D point cloud</td>
                     </tr>
                     <tr>
                         <td><code>laserIntensityCorrection()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Corrects return intensity for the sensor to target range</td>
                     </tr>
                     <tr>
                         <td><code>laserPulses()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Determines the pulse number associated with the individual returns (sorted by acquisition GPS time)</td>
                     </tr>
                     <tr>
                         <td><code>laserTimeFormat()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Convert GPS week time to GPS satellite time, GPS adjusted time or UTC time</td>
                     </tr>
                 </tbody>
@@ -304,25 +349,32 @@
             </h4>
 
             <table>
+                <col width="150">
+                <col width="150">
+                <col width="600">
                 <thead>
                     <tr>
                         <th>Function</th>
+                        <th>GNU Octave support</th>
                         <th>Description</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><code>treeRegionGrowing()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Extract individual tree crowns from a 3D point cloud using a modified version of the top down region growing algorithm described in <a href="http://kellylab.berkeley.edu/storage/papers/2012-Li-etal-PERS.pdf">Li et al. (2012)</a>
                         </td>
                     </tr>
                     <tr>
                         <td><code>treeWatershed()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Extract individual tree crowns from a raster Canopy Height Model (CHM) using the (optionally marker-controlled) watershed segmentation described in <a href="http://link.springer.com/article/10.1007/s10310-007-0041-9">Kwak et al. (2007)</a>
                         </td>
                     </tr>
                     <tr>
                         <td><code>treeMetrics()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Computes various segment metrics based on geometry, intensity and pulse return characteristics</td>
                     </tr>
                 </tbody>
@@ -333,20 +385,26 @@
             </h4>
 
             <table>
+                <col width="150">
+                <col width="150">
+                <col width="600">
                 <thead>
                     <tr>
                         <th>Function</th>
+                        <th>GNU Octave support</th>
                         <th>Description</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><code>canopyCover()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Computes a canopy crown cover map using either a convolution window or the Delaunay triangulation method described in <a href="http://www.mdpi.com/2072-4292/4/3/762/htm">Eysn et al. (2012)</a>
                         </td>
                     </tr>
                     <tr>
                         <td><code>canopyPeaks()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Find local maxima (peaks) coordinates in a raster Canopy Height Model (CHM)</td>
                     </tr>
                 </tbody>
@@ -357,34 +415,43 @@
             </h4>
 
             <table>
+                <col width="150">
+                <col width="150">
+                <col width="600">
                 <thead>
                     <tr>
                         <th>Function</th>
+                        <th>GNU Octave support</th>
                         <th>Description</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><code>alt2height()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Converts 3D point cloud altitude to height above terrain
                         </td>
                     </tr>
                     <tr>
                         <td><code>clusterColor()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Topological coloring of 2D or 3D labelled points (i.e. assign distinct colors to adjacent clusters)
                         </td>
                     </tr>
                     <tr>
                         <td><code>crossSection()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Extract a 2D cross-section from a 3D point cloud</td>
                     </tr>
                     <tr>
                         <td><code>geomedian()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Compute the geometric median of a an array of 3D points
                         </td>
                     </tr>
                     <tr>
                         <td><code>gps2utc()</code></td>
+                        <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
                         <td>Convert GPS satellite time (i.e. number of seconds since 1980-1-6) to UTC time
                         </td>
                     </tr>
