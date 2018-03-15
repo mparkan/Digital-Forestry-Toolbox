@@ -21,12 +21,14 @@ function trajectory = TRJread(filepath, varargin)
 %    trajectory - A structure containing the header information and trajectory records
 %
 % Example:
-%    trajectory = TRJread('E:\trajectories\1701.trj', false, true);
+%    trajectory = TRJread('E:\trajectories\1701.trj', ...
+%        'headerOnly', false, ...
+%        'verbose', true);
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -34,50 +36,40 @@ function trajectory = TRJread(filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: September 11, 2017
+% Last revision: March 15, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
-
 %% check argument validity
 
-isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0; % determine if system is Matlab or GNU Octave
+machineformat = 'ieee-le'; % little-endian format
 
-if ~isOctave
+arg = inputParser;
+
+addRequired(arg, 'filepath', @ischar);
+addParameter(arg, 'headerOnly', false, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
+
+parse(arg, filepath, varargin{:});
+
+
+% check file format
+fclose('all');
+fid = fopen(filepath, 'r');
+
+if fid == -1
     
-    arg = inputParser;
-    
-    addRequired(arg, 'filepath', @checkFilepath);
-    addParameter(arg, 'headerOnly', false, @(x) islogical(x) && (numel(x) == 1));
-    addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
-    
-    parse(arg, filepath, varargin{:});
+    error('Could not open file');
     
 end
 
-fclose('all');
+if ~strcmp(sprintf('%c', fread(fid, 8, 'char', 0, machineformat)), 'TSCANTRJ')
+    
+    error('Input file is not a valid TRJ file');
+    
+end
 
-    function checkFilepath(filepath)
-        
-        machineformat = 'ieee-le'; % all data is in little-endian format
-        fid = fopen(filepath, 'r');
-        
-        if fid == -1
-            
-            error('Could not open file');
-            
-        end
-        
-        if ~strcmp(sprintf('%c', fread(fid, 8, 'char', 0, machineformat)), 'TSCANTRJ')
-            
-            error('Input file is not a valid TRJ file');
-            
-        end
-        
-        fclose(fid);
-        
-    end
-
+fclose(fid);
 
 
 %% header block format definition
@@ -311,8 +303,10 @@ while byte_offset < r.TrajHdr(TrajHdr_skeys.HdrSize).value
     
     if ismember(r.TrajHdr(j).type, {'uchar','char'})
         
-        r.TrajHdr(j).value = sprintf('%c', fread(fid, r.TrajHdr(j).n_values, r.TrajHdr(j).type, 0, machineformat));
-        
+        val = fread(fid, r.TrajHdr(j).n_values, r.TrajHdr(j).type, 0, machineformat);
+        str = strtrim(cellstr(sprintf('%c', val)));
+        r.TrajHdr(j).value = str{:};
+
     else
         
         r.TrajHdr(j).value = fread(fid, r.TrajHdr(j).n_values, r.TrajHdr(j).type, 0, machineformat);
