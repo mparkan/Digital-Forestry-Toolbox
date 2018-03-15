@@ -39,15 +39,15 @@ function t = laserTimeFormat(gps_week_number, gps_week_time, format)
 % Other m-files required: gps2utc.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
-% See also: gps2utc.m
+% See also:
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: January 18, 2017
+% Last revision: March 15, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -64,6 +64,10 @@ parse(arg, gps_week_time, gps_week_number, format);
 
 
 %% reformat time
+
+% reshape to column format
+gps_week_number = gps_week_number(:);
+gps_week_time = gps_week_time(:);
 
 % update LAS GPS time
 switch format
