@@ -34,13 +34,15 @@
             <br>
             <hr>
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
+            <p style="text-align: center"><b>Last update: March 16, 2018 / Matlab r2017b, GNU Octave 4.2.1</b></p>
             <p> In this tutorial, you will learn how to detect individual tree crowns from a raster Canopy Height Model (CHM) using marker controlled watershed segmentation. Before starting, you should:</p>
 
             <ol>
                 <li>Download and uncompress the Digital Forestry Toolbox (DFT) <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master">Zip</a> or <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master">Tar</a> archive</li>
                 <li>Download the <a href="http://maps.zh.ch/download/hoehen/2014/lidar/26995_12710.laz">26995_12710.laz file</a> from the Zürich 2014 airborne laser scanning campaign archive and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
-                <li>Start Matlab</li>
-                <li>Add the DFT folders to the Matlab search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
+                <li>Start Matlab/Octave</li>
+                <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
+                <li>Open and run <code>dft_tutorial_2.m</code></li>
             </ol>
 
             <hr>
@@ -134,7 +136,7 @@ intensity = pc.record.intensity;</code></pre>
             <p>Note that we have only used classes 4 (medium vegetation) and 5 (high vegetation) when computing the surface model (with the <code>'classSurface'</code> parameter). We've also applied a 4x4 pixel Gaussian lowpass filter (with the <code>'smoothingFilter'</code> parameter). The resulting CHM should look like this:</p>
 
             <figure>
-                <img src="img/tutorial_1_ima_1.png" alt="" style="width:90%;">
+                <img src="img/dft_tutorial_2_ima_1.png" alt="" style="width:90%;">
                 <figcaption>Figure 1 - Raster canopy height model.</figcaption>
             </figure>
 
@@ -149,25 +151,19 @@ intensity = pc.record.intensity;</code></pre>
             $$\DeclareMathOperator*{\max}{max}
             r(h) = 0.5 + 0.25 \cdot ln(\max_h(h,1)) $$
 
-            <p>Local maxima are merged if separated by less than the adjacency distance defined by function:</p>
-
-            $$\DeclareMathOperator*{\min}{min}
-            d_{adj}(h) = \min_h(0.5 + 0.5 \cdot ln(\max_h(h,1)) , 4) $$
-
-            <p>These two functions are respectively specified with the <code>'allometry'</code> and <code>'adjacency'</code> parameters in <code>canopyPeaks()</code>:</p>
+            <p>This function is specified with the <code>'allometry'</code> parameter in <code>canopyPeaks()</code>:</p>
 
             <pre><code>[peaks_crh, ~] = canopyPeaks(models.height.values, ...
     refmat, ...
     'method', 'allometricRadius', ...
     'allometry', @(h) 0.5 + 0.25*log(max(h,1)), ...
-    'adjacency', @(h) min(0.5 + 0.5*log(max(h,1)),4), ...
     'fig', true, ...
     'verbose', true);</code></pre>
 
             The resulting tree top detection should look like this:</p>
 
         <figure>
-            <img src="img/tutorial_1_ima_2.png" alt="" style="width:90%;">
+            <img src="img/dft_tutorial_2_ima_2.png" alt="" style="width:90%;">
             <figcaption>Figure 2 - Tree top detection.</figcaption>
         </figure>
 
