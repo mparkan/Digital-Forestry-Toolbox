@@ -1,12 +1,12 @@
-function label = treeWatershed(chm, varargin)
-% TREEWATERSHED - extract Individual Tree Crowns (ITC) label from a raster Canopy Height Model (CHM) 
+function varargout = treeWatershed(chm, varargin)
+% TREEWATERSHED - extract Individual Tree Crowns (ITC) label from a raster Canopy Height Model (CHM)
 % using (optional marker-controlled) watershed segmentation.
 %
-% LABEL = TREEWATERSHED produces the label matrix LABEL containing individual tree crown labels 
+% [LABEL, ...] = TREEWATERSHED produces the label matrix LABEL containing individual tree crown labels
 % for each pixel using the approach described in Kwak et al. (2007) [1]. The function takes as input the raster Canopy
 % Height Model CHM and the image coordinates MARKERS of individual tree tops.
 %
-% [1] D.-A. Kwak, W.-K. Lee, J.-H. Lee, G. S. Biging, and P. Gong, 
+% [1] D.-A. Kwak, W.-K. Lee, J.-H. Lee, G. S. Biging, and P. Gong,
 % "Detection of individual trees and estimation of tree height using LiDAR data,"
 % J For Res, vol. 12, no. 6, pp. 425–434, Oct. 2007.
 %
@@ -15,11 +15,11 @@ function label = treeWatershed(chm, varargin)
 %
 % Inputs:
 %    chm - RxC numeric matrix, raster Canopy Height Model (CHM) with R rows and C columns
-%    
-%    markers (optional, default: []) - Mx3 numeric matrix, images coordinates (col, row) and height 
+%
+%    markers (optional, default: []) - Mx3 numeric matrix, images coordinates (col, row) and height
 %    values of markers used in the watershed algorithm
 %
-%    minHeight (optional, default: 1) - numeric value, minimum canopy height, all values 
+%    minHeight (optional, default: 1) - numeric value, minimum canopy height, all values
 %    below this threshold are set to zero.
 %
 %    mask (optional, default: []) - RxC boolean matrix, any segment that is
@@ -32,15 +32,15 @@ function label = treeWatershed(chm, varargin)
 %
 % Outputs:
 %    label - RxC numeric matrix, individual tree crown labels
+%    colors - Nx1 numeric matrix, topological color indices
 %
 % Example:
 %    [chm, refmat, ~] = geotiffread('..\data\measurements\raster\chm\so_2014_woodland_pasture.tif');
-%    
+%
 %    [crh, xyh] = canopyPeaks(double(chm), ...
 %        refmat, ...
 %        'method', 'allometricRadius', ...
-%        'allometry', @(h) 1 + 0.5*log(max(h,1)), ...
-%        'adjacency' @(h) min(0.5 + 0.5*log(max(h,1)),4), ...
+%        'allometry', @(h) 0.5 + 0.25*log(max(h,1)), ....
 %        'fig', true, ...
 %        'verbose', true);
 %
@@ -53,15 +53,15 @@ function label = treeWatershed(chm, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
-% See also: canopyPeaks.m, canopyCover.m
+% See also: rasterize.m
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: September 11, 2017
+% Last revision: March 9, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -74,67 +74,59 @@ addRequired(arg, 'chm', @isnumeric);
 addParameter(arg, 'markers', [], @isnumeric);
 addParameter(arg, 'minHeight', 1, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'mask', [], @(x) islogical(x) && any(x(:)) && all(size(x) == size(chm)));
+addParameter(arg, 'seams', false, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, chm, varargin{:});
+nargoutchk(1, 2);
 
+%% apply height threshold
 
-%% compute gradient magnitude
-
-if arg.Results.verbose
-    
-    fprintf('computing gradient magnitude...');
-    
-end
-
+chm = double(chm);
 chm(chm <= arg.Results.minHeight) = 0;
 
-hy = fspecial('sobel');
-hx = hy';
-Iy = imfilter(double(chm), hy, 'replicate');
-Ix = imfilter(double(chm), hx, 'replicate');
-gradient_magnitude = sqrt(Ix.^2 + Iy.^2);
 
-% gradient mask
-gradient_mask = false(size(chm));
-gradient_mask(gradient_magnitude > 1.2) = 1;
-
-% fill holes in gradient mask
-connected_components = bwconncomp(~gradient_mask);
-numPixels = cellfun(@numel, connected_components.PixelIdxList);
-gradient_mask(cell2mat(connected_components.PixelIdxList(numPixels < 10)')) = 1; 
-
-if arg.Results.verbose
-    
-    fprintf('done!\n');
-    
-end
-
-   
 %% compute watershed transform
 
 if arg.Results.verbose
     
     fprintf('computing watershed transform...');
+    pause(0.01);
     
 end
 
-if isempty(arg.Results.markers) 
+I = -chm;
+
+% impose regional minima in CHM (marker controled watershed)
+if ~isempty(arg.Results.markers)
     
-    % basic watershed transform
-    label = watershed(-chm, 8);
-    
-else 
-    
-    % marker controled watershed transform
     ind_peaks = sub2ind(size(chm), arg.Results.markers(:,2), arg.Results.markers(:,1));
     marker = false(size(chm));
     marker(ind_peaks) = 1;
-    I = imimposemin(-chm, marker, 8);
-    label = watershed(I, 8);
+    
+    I_range = max(I(:)) - min(I(:));
+    
+    if I_range == 0
+        
+        h0 = 0.1;
+        
+    else
+        
+        h0 = 0.0001 * I_range;
+        
+    end
+    
+    E = inf(size(chm));
+    E(marker) = -Inf;
+    
+    J = imreconstruct(imcomplement(E), imcomplement(min(I + h0, E)), 8);
+    I = imcomplement(J);
     
 end
+
+% apply watershed algorithm
+label = single(watershed(I, 8));
 
 if arg.Results.verbose
     
@@ -142,44 +134,107 @@ if arg.Results.verbose
     
 end
 
-%% filter non vegetation pixels
 
-label(~gradient_mask) = 0;
+%% apply mask
 
+label(chm < 1) = 0;
 
-%% mask segments near border
+%% remove segments that intersect the inverted mask
 
 if ~isempty(arg.Results.mask)
-    
-    idxl_boundary = ismember(label, label(~arg.Results.mask));
-    label(idxl_boundary) = 0;
 
+    idxl_mask = ismember(label, label(~arg.Results.mask));
+    label(idxl_mask) = 0;
+    
 end
+
+%% remove seam lines
+
+if ~arg.Results.seams
+    
+    [d_nn, idxn_nn] = bwdist(label ~= 0);
+    idxl_dist = ((d_nn >= 1) & (d_nn < 2));
+    label(idxl_dist) = label(idxn_nn(idxl_dist));
+    
+end
+
+%% remove nan values
+
+label(isnan(chm)) = 0;
+
+
+%% reassign labels
+
+[label(label ~= 0), ~] = grp2idx(label(label ~= 0));
+varargout{1} = label;
+
 
 %% plot results
 
+if arg.Results.fig || (nargout == 2)
+    
+    if arg.Results.verbose
+        
+        fprintf('topological coloring...');
+        pause(0.01);
+        
+    end
+    
+    % topological coloring
+    cmap = [0, 0, 0;
+        166,206,227;
+        31,120,180;
+        178,223,138;
+        51,160,44;
+        251,154,153;
+        227,26,28;
+        253,191,111;
+        255,127,0;
+        202,178,214;
+        106,61,154;
+        255,255,153;
+        177,89,40] ./ 255;
+    
+    N = max(label(:));
+    colors = zeros(size(label));
+    n_colors = 100;
+    
+    for k = 1:N
+        
+        idxn_adj = imdilate(label == k, true(4));
+        
+        % list available colors
+        idxl_color_pool = ~ismember(1:n_colors, colors(idxn_adj));
+        
+        % assign first available color
+        colors(idxn_adj) = find(idxl_color_pool,1);
+        
+    end
+    
+    colors = min(colors, size(cmap,1));
+    colors(label == 0) = 0;
+    
+    if nargout == 2
+        
+        varargout{2} = colors;
+        
+    end
+    
+    if arg.Results.verbose
+        
+        fprintf('done!\n');
+        
+    end
+    
+end
+
 if arg.Results.fig
     
-    % assign distinct colors to adjacent clusters 
-    [nrows, ncols] = size(label);
-    [xgrid, ygrid] = meshgrid(1:ncols, 1:nrows);
-    buffer = min(10, 3*sqrt(median(accumarray(label(:)+1, label(:), [], @numel))));
-
-    [color, ~, cmap] = clusterColor([xgrid(:), ygrid(:)], ...
-        label(:), ...
-        'adjacency', '2d', ...
-        'buffer', buffer, ...
-        'colormap', 'cmap12', ...
-        'unlabelledColor', [0.1, 0.1, 0.1], ...
-        'fig', false, ...
-        'verbose', false);
-    
     figure
-    imagesc(reshape(color, nrows, ncols))
+    imagesc(colors+1)
     axis equal tight
     xlabel('col');
     ylabel('row');
-    title('Individual tree crown labels')
     colormap(cmap);
     
 end
