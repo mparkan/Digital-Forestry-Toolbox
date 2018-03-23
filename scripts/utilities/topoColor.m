@@ -1,7 +1,7 @@
-function varargout = clusterColor(X, label, varargin)
-% CLUSTERCOLOR - assigns distinct colors to adjacent 3D point clusters (topological graph colouring)
+function varargout = topoColor(X, label, varargin)
+% TOPOCOLOR - assigns distinct colors to adjacent 3D point clusters (topological graph colouring)
 % using the largest degree first heuristic described in [1] and [2].
-% [COLOR, RGB] = CLUSTERCOLOR(X, LABEL, ...) assigns a distinct color index (COLOR) and RGB triplet (RGB) to each
+% [COLOR, RGB] = TOPOCOLOR(X, LABEL, ...) assigns a distinct color index (COLOR) and RGB triplet (RGB) to each
 % 3D labelled point cluster specified with X and LABEL. Clusters are considered adjacent if their 2D or 3D extents 
 % (plus an optional buffer) intersect. The colormaps are based on the values provided in [3] and [4].
 %
@@ -13,10 +13,10 @@ function varargout = clusterColor(X, label, varargin)
 % [4] Jacomy Mathieu, "I want hue - Colors for data scientists", Sciences-Po Medialab, http://tools.medialab.sciences-po.fr/iwanthue/
 %
 % Syntax:  
-%    clusterColor(X, label, ...)
-%    color = clusterColor(X, label, ...)
-%    [color, rgb] = clusterColor(X, label, ...)
-%    [color, rgb, cmap] = clusterColor(X, label, ...)
+%    topoColor(X, label, ...)
+%    color = topoColor(X, label, ...)
+%    [color, rgb] = topoColor(X, label, ...)
+%    [color, rgb, cmap] = topoColor(X, label, ...)
 %
 % Inputs:
 %    X - Nx2 or Nx3 numeric matrix, 2D or 3D point coordinates [x y] or [x y z]
@@ -48,7 +48,7 @@ function varargout = clusterColor(X, label, varargin)
 %
 % Example:
 %
-%    [color, rgb, cmap] = clusterColor([x y z], ...
+%    [color, rgb, cmap] = topoColor([x y z], ...
 %                label, ...
 %                'adjacency', '3d', ...   
 %                'buffer', 3, ...
@@ -60,7 +60,7 @@ function varargout = clusterColor(X, label, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -68,7 +68,7 @@ function varargout = clusterColor(X, label, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: August 21, 2017
+% Last revision: March 23, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -107,8 +107,7 @@ N = size(X,1);
 idxl_labelled = (label ~= 0);
 X = X(idxl_labelled,:);
 label = label(idxl_labelled);
-
-[label, id_label] = findgroups(label);
+[label, ~] = grp2idx(label);
 
 
 %% compute adjacency
@@ -142,7 +141,7 @@ if ~any(idxl_labelled)
     
 end
 
-% voxelize
+% rasterize
 switch arg.Results.adjacency
     
     case '2d'
@@ -156,7 +155,7 @@ switch arg.Results.adjacency
 end
 
 % find unique labels in each voxel
-Y = splitapply(@(x1){unique(x1)}, label, idxn_cell);
+Y = accumarray(idxn_cell, label, [], @(x) {unique(x)}, {nan});
 
 % number of adjacent nodes in each voxel
 n_adj = cellfun(@numel, Y);
@@ -204,10 +203,16 @@ else
     A = false(n_clusters);
     linearInd = sub2ind(size(A), [pairs(:,1); pairs(:,2)], [pairs(:,2); pairs(:,1)]);
     A(linearInd) = true;
+
+    % create graph structure
+    G = struct;
     
-    % create graph
-    G = graph(A);
-    G.Nodes.Label = unique(label);
+    % add nodes
+    G.Nodes.Label = unique(label); 
+    
+    % add edges
+    [row, col] = find(triu(A));
+    G.Edges.EndNodes = sortrows([row, col], 1);
     
 end
 
@@ -220,11 +225,15 @@ if arg.Results.verbose
     
 end
 
-% G.Nodes.Label = Cluster.Label;
-G.Nodes.Degree = degree(G,1:height(G.Nodes))';
+G.Nodes.Degree = sum(A, 1)'; % compute degree of nodes
+[~, idxn_sort] = sort(G.Nodes.Degree, 'descend');
 
-[~, idxn_sort] = sort(G.Nodes.Degree);
-G = reordernodes(G, idxn_sort(end:-1:1));
+% reorder nodes
+G.Nodes = structfun(@(x) x(idxn_sort), G.Nodes, 'UniformOutput', false);
+
+% reorder edges
+[~, Locb] = ismember(G.Edges.EndNodes, idxn_sort);
+G.Edges.EndNodes = sortrows(sort(Locb, 2), [1 2]);
 
 if arg.Results.verbose
     
@@ -243,14 +252,16 @@ if arg.Results.verbose
     
 end
 
-n = G.numnodes;
+n = size(A,1); %G.numnodes;
 G.Nodes.Color = zeros(n,1, 'uint8');
 n_colors = min(G.Nodes.Degree(1), 256);
 
 % traverse nodes
 for k = 1:n
     
-    idxn_adj = neighbors(G, k);
+    %idxn_adj = neighbors(G2, k);
+    idxn_adj = [G.Edges.EndNodes(G.Edges.EndNodes(:,2) == k, 1); G.Edges.EndNodes(G.Edges.EndNodes(:,1) == k, 2)];
+    
     idxn_color_adj = unique(G.Nodes.Color(idxn_adj));  % color index in node neighbourhood
     
     if isempty(idxn_color_adj)
@@ -336,7 +347,7 @@ switch arg.Results.colormap
         cmap = hsv(m);
     
     case 'cmap12' % 12 distinct colors - source: http://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
-        
+
         cmap = [166,206,227;
             31,120,180;
             178,223,138;
@@ -443,7 +454,7 @@ if arg.Results.fig
                 6, ...
                 rgb(idxl_labelled,:), ...
                 'Marker', '.')
-            axis equal tight vis3d
+            axis equal tight
             title('2D point coloring')
             xlabel('x')
             ylabel('y')
@@ -458,7 +469,7 @@ if arg.Results.fig
                 26, ...
                 rgb(idxl_labelled,:), ...
                 'Marker', '.')
-            axis equal tight vis3d
+            axis equal tight
             title('3D point coloring')
             xlabel('x')
             ylabel('y')
