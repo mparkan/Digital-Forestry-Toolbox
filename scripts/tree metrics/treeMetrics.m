@@ -1122,7 +1122,7 @@ for j = 1:length(L)
         case 'CrownDiameter'
             
             % crown diameter
-            metrics.CrownDiameter = round(2 * sqrt(metrics.ConvexArea ./ pi),1);
+            metrics.CrownDiameter = 2 * sqrt(metrics.ConvexArea ./ pi);
             
         case 'ConcaveSurfaceArea'
      
