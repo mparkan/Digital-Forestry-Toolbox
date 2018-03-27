@@ -1,10 +1,10 @@
-function [metrics, varargout] = treeMetrics(label, xyz, classification, intensity, returnNumber, returnTotal, varargin)
-% TREEMETRICS - computes segment features
+function [metrics, varargout] = treeMetrics(label, xyz, classification, intensity, returnNumber, returnTotal, rgb, varargin)
+% TREEMETRICS - computes segment metrics
 %
-% [LABEL, ...] = TREEMETRICS(LABEL, XYZ, CLASSIFICATION, INTENSITY, RETURNNUMBER, RETURNTOTAL ...) computes various 
-% segment metrics based on geometry, intensity and pulse return characteristics
+% [LABEL, ...] = TREEMETRICS(LABEL, XYZ, CLASSIFICATION, INTENSITY, RETURNNUMBER, RETURNTOTAL, RGB, ...) computes various
+% segment metrics based on geometry, intensity, opacity (pulse return) and color characteristics
 %
-% Syntax:  metrics = treeMetrics(label, xyz, classification, intensity, returnNumber, ...)
+% Syntax:  metrics = treeMetrics(label, xyz, classification, intensity, returnNumber, returnTotal, rgb, ...)
 %
 % Inputs:
 %    label - Nx1 integer vector, point label (individual tree label)
@@ -19,46 +19,60 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %
 %    returnTotal - Nx1 numeric vector, number of returns per pulse
 %
-%    classTerrain (optional, default: 2) - integer vector, ground class
+%    rgb - Nx3 numeric vector, [red, green, blue] triplets. Set to
+%    zeros(N,3) if the point cloud has no color.
+% 
+%    classTerrain (optional, default: 2) - integer vector, terrain class
 %    number(s)
 %
 %    metrics (optional, default: {'all'}) - cell array of strings, list of
-%    metrics to compute for each segment
-%    
-%    heightCorrection (optional, default: true) - boolean value, height
-%    correction flag (adjusts tree height in slopes)
+%    metrics to compute for each segment. The list can contain a
+%    combination of individual features (e.g. 'UUID', 'ConvexVolume',
+%    'TotalHeight', 'IntensityMedian'), feature categories (i.e. 'identifier', 'Basic', 
+%    'Spatial point pattern', 'External shape', 'Intensity statistics', 'Opacity statistics', 'Color'), 
+%    or 'all' (compute all features)
+%
+%    treePos (optional, default: []) - Mx3 numeric matrix, xyz coordinates of
+%    the tree positions. M is the number of segments (trees). If not specified, 
+%    the tree positions are automatically computed using the tree top 
+%    (highest point in segment) as a proxy for tree position
 %
 %    intensityScaling (optional, default: true) - boolean value, rescale
-%    intensity between 0 and 1 using the [0.005, 0.995] quantiles as limits. 
+%    intensity between 0 and 1 using the [0.001, 0.99] quantiles as limits
+%
+%    dependencies (optional, default: false) - boolean value, flag
+%    indicating if feature dependencies are included in the output
+%    (e.g. the 3D convex hull is a dependency of the volume)
+%
+%    scalarOnly (optional, default: true) - boolean value, flag indicating
+%    if only scalar values should be returned
 %
 %    verbose (optional, default: true) - boolean value, verbosiy switch
 %
-%    fig (optional, default: true) - boolean value, switch to plot figures
-%
 % Outputs:
-%    metrics - table, metrics for each segment
+%    metrics - structure, metrics for each segment
 %
 %    label - Nx1 integer vector, updated point label (individual tree labels)
 %
 % Example:
 %
-%    metrics = treeMetrics(label, ...
-%        xyz, ...
-%        classification, ...
-%        intensity, ...
-%        zeros(size(classification)), ...
-%        zeros(size(classification)), ...
-%        'metrics', {'all'}, ... 
-%        'heightCorrection', false, ...
-%        'intensityScaling', true, ...
-%        'fig', false, ...
-%        'verbose', true);
-%
+%    metrics = treeMetrics(label_3d, ...
+%         [pc.record.x, pc.record.y, pc.record.z], ...
+%         pc.record.classification, ...
+%         pc.record.intensity, ...
+%         pc.record.return_number, ...
+%         pc.record.number_of_returns, ...
+%         [pc.record.red, pc.record.green, pc.record.blue], ...
+%         'metrics', {'Identifiers', 'Intensity statistics', 'Opacity statistics', 'ConvexVolume', 'ConvexArea'}, ...
+%         'intensityScaling', true, ...
+%         'scalarOnly', true, ...
+%         'dependencies', true, ...
+%         'verbose', true);
 %
 % Other m-files required:
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -67,7 +81,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: October 10, 2017
+% Last revision: March 27, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -83,128 +97,658 @@ addRequired(arg, 'classification', @(x) (size(x,2) == 1) && isnumeric(x));
 addRequired(arg, 'intensity', @(x) (size(x,2) == 1) && isnumeric(x));
 addRequired(arg, 'returnNumber', @(x) (size(x,2) == 1) && isnumeric(x));
 addRequired(arg, 'returnTotal', @(x) (size(x,2) == 1) && isnumeric(x));
+addRequired(arg, 'rgb', @(x) (size(x,2) == 3) && isnumeric(x));
 addParameter(arg, 'classTerrain', 2, @(x) isnumeric(x));
 addParameter(arg, 'metrics', {'all'}, @(x) iscell(x) && ~isempty(x));
-addParameter(arg, 'heightCorrection', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'treePos', [], @(x) (size(x,2) == 3) && isnumeric(x));
 addParameter(arg, 'intensityScaling', true, @(x) islogical(x) && (numel(x) == 1));
-addParameter(arg, 'fig', false, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'dependencies', false, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'scalarOnly', false, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
-parse(arg, label, xyz, classification, intensity, returnNumber, returnTotal, varargin{:});
+parse(arg, label, xyz, classification, intensity, returnNumber, returnTotal, rgb, varargin{:});
+
+OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system is Matlab or GNU Octave
+
+nargoutchk(1,2);
+
+
+%% extract terrain points
+
+idxl_ter = ismember(classification, arg.Results.classTerrain);
+xyz_ter = unique(xyz(idxl_ter,:), 'rows');
+
+
+%% filter points
+
+% remove unlabeled points
+idxl_filter = false(size(xyz,1),1);
+idxl_filter(:,1) = (label ~= 0);
+idxl_filter = all(idxl_filter,2);
+
+[label, ~] = grp2idx(label(idxl_filter)); % reassign labels
+n_obs = length(unique(label));
+
+varargout{1} = zeros(length(label),1);
+varargout{1}(idxl_filter) = label;
+
+xyz = xyz(idxl_filter,:);
+intensity = double(intensity(idxl_filter));
+returnNumber = double(returnNumber(idxl_filter));
+returnTotal = double(returnTotal(idxl_filter));
+rgb = double(rgb(idxl_filter,:));
+
+
+%% sort points by label
+
+[label, idxn_sort] = sort(label);
+xyz = xyz(idxn_sort,:);
+intensity = intensity(idxn_sort);
+returnNumber = returnNumber(idxn_sort);
+returnTotal = returnTotal(idxn_sort);
+rgb = rgb(idxn_sort,:);
+
+
+%% compute auxiliary variables
+
+opacity = returnNumber ./ returnTotal;
+rg_chromaticity = bsxfun(@rdivide, rgb, sum(rgb,2));
+
+idxl_first = (returnNumber == 1);
+idxl_last = (returnNumber == returnTotal);
+idxl_single = (returnTotal == 1);
+
+intensity_first = intensity;
+intensity_first(~idxl_first) = nan;
+
+intensity_last = intensity;
+intensity_last(~idxl_last) = nan;
+
+intensity_single = intensity;
+intensity_single(~idxl_single) = nan;
+
+
+%% normalize segment coordinates
+
+if arg.Results.verbose
+    
+    tic
+    fprintf('normalizing coordinates...');
+    
+end
+
+% position proxy (root, centroid, apex)
+if isempty(arg.Results.treePos)
+    
+    proxy = 'apex';
+    % margin = 0.5;
+    
+    xyz_proxy = zeros(n_obs,3);
+    
+    switch proxy
+        
+        case 'root'
+            
+            [~, idxn_sort] = sort(xyz(:,3), 1, 'ascend'); % sort points by elevation
+            [~, idxn_first, ~] = unique(label(idxn_sort));
+            xyz_proxy = xyz(idxn_sort(idxn_first),:);
+            
+        case 'centroid'
+            
+            xyz_proxy(:,1) = accumarray(label, xyz(:,1), [], @mean, nan);
+            xyz_proxy(:,2) = accumarray(label, xyz(:,2), [], @mean, nan);
+            
+        case 'apex'
+            
+            [~, idxn_sort] = sort(xyz(:,3), 1, 'descend'); % sort points by elevation
+            [~, idxn_first, ~] = unique(label(idxn_sort));
+            xyz_proxy = xyz(idxn_sort(idxn_first),:);
+
+    end
+    
+    xyz_proxy(:,3) = griddata(xyz_ter(:,1), ...
+        xyz_ter(:,2), ...
+        xyz_ter(:,3), ...
+        xyz_proxy(:,1), ...
+        xyz_proxy(:,2), ...
+        'linear');
+    idxl_nan = isnan(xyz_proxy(:,3));
+    xyz_proxy(idxl_nan,3) = griddata(xyz_ter(:,1), ...
+        xyz_ter(:,2), ...
+        xyz_ter(:,3), ...
+        xyz_proxy(idxl_nan,1), ...
+        xyz_proxy(idxl_nan,2), ...
+        'nearest');
+    clear xyz_ter
+    
+else
+    
+    xyz_proxy = arg.Results.treePos;
+    
+end
+
+xyh = xyz - xyz_proxy(label,:);
+h_tot = accumarray(label, xyh(:,3), [], @max, nan);
+
+% normalized height
+h_n = xyh(:,3) ./ h_tot(label);
+
+if arg.Results.verbose
+    
+    fprintf('done!\n');
+    toc
+    
+end
+
+
+%% normalize intensity
+
+if arg.Results.intensityScaling
+    
+    if arg.Results.verbose
+        
+        tic
+        fprintf('rescaling intensity...');
+        
+    end
+    
+    qlim = quantile(intensity, [0.01, 0.99]); % [0.005, 0.995]
+    intensity(intensity < qlim(1)) = qlim(1);
+    intensity(intensity > qlim(2)) = qlim(2);
+    intensity = (intensity - min(intensity)) ./ (max(intensity) - min(intensity));
+    
+    if arg.Results.verbose
+        
+        fprintf('done!\n');
+        toc
+        
+    end
+    
+end
 
 
 %% list feature dependencies
 
 warning off
-meta = table;
+meta = struct;
+
+meta.Category = {};
+meta.Name = {};
+meta.Dependencies = {};
+meta.Scalar = [];
+meta.Octave = [];
 
 k = 1;
-
-meta.Name{k,1} = 'UUID';
-meta.Dependencies{k,1} = [];
+meta.Category{k} = 'Identifier';
+meta.Name{k} = 'UUID';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'Label';
-meta.Dependencies{k,1} = [];
+meta.Category{k} = 'Identifier';
+meta.Name{k} = 'LUID';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'IndexTree';
-meta.Dependencies{k,1} = [];
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'RandomControl';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'NPoints';
-meta.Dependencies{k,1} = [];
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'NPoints';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'XYZ';
-meta.Dependencies{k,1} = [];
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'XYZ';
+meta.Dependencies{k} = {'NPoints'};
+meta.Scalar(k) = false;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'Pos';
-meta.Dependencies{k,1} = {'XYZ'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'RGB';
+meta.Dependencies{k} = {'NPoints'};
+meta.Scalar(k) = false;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'XYZ0';
-meta.Dependencies{k,1} = {'XYZ', 'Pos'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'X';
+meta.Dependencies{k} = {'NPoints'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'TotalHeight';
-meta.Dependencies{k,1} = {'XYZ', 'Pos'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'Y';
+meta.Dependencies{k} = {'NPoints'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'ConvexHull3D';
-meta.Dependencies{k,1} = {'XYZ0'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'Z';
+meta.Dependencies{k} = {'NPoints'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'ConcaveHull2D';
-meta.Dependencies{k,1} = {'XYZ0', 'TotalHeight'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'XYH';
+meta.Dependencies{k} = {'NPoints'};
+meta.Scalar(k) = false;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'ConcaveHull3D';
-meta.Dependencies{k,1} = {'XYZ0', 'TotalHeight'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'UVW';
+meta.Dependencies{k} = {'XYH'};
+meta.Scalar(k) = false;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'Area';
-meta.Dependencies{k,1} = {'ConcaveHull2D'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'Opacity';
+meta.Dependencies{k} = {'NPoints'};
+meta.Scalar(k) = false;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'CrownDiameter';
-meta.Dependencies{k,1} = {'Area'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'Intensity';
+meta.Dependencies{k} = {'NPoints'};
+meta.Scalar(k) = false;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'SurfaceArea';
-meta.Dependencies{k,1} = {'ConcaveHull3D'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'ConvexHull2D';
+meta.Dependencies{k} = {'XYH'};
+meta.Scalar(k) = false;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'Volume';
-meta.Dependencies{k,1} = {'ConcaveHull3D'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'ConvexHull3D';
+meta.Dependencies{k} = {'XYH'};
+meta.Scalar(k) = false;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'SpecificSurface';
-meta.Dependencies{k,1} = {'Volume', 'SurfaceArea'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'ConcaveHull2D';
+meta.Dependencies{k} = {'XYH'};
+meta.Scalar(k) = false;
+meta.Octave(k) = false;
 k = k + 1;
 
-meta.Name{k,1} = 'ConvexSurfaceArea';
-meta.Dependencies{k,1} = {'ConvexHull3D'};
+meta.Category{k} = 'Basic';
+meta.Name{k} = 'ConcaveHull3D';
+meta.Dependencies{k} = {'XYH'};
+meta.Scalar(k) = false;
+meta.Octave(k) = false;
 k = k + 1;
 
-meta.Name{k,1} = 'ConvexVolume';
-meta.Dependencies{k,1} = {'ConvexHull3D'};
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'TotalHeight';
+meta.Dependencies{k} = {'XYZ', 'X', 'Y', 'Z'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'Convexity';
-meta.Dependencies{k,1} = {'ConvexSurfaceArea', 'SurfaceArea'};
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'HeightMean';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'Sphericity';
-meta.Dependencies{k,1} = {'SurfaceArea', 'Volume'};
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'HeightMedian';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'Opacity';
-meta.Dependencies{k,1} = {'Opacity'};
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'HeightSD';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'OpacityQ50';
-meta.Dependencies{k,1} = {'Opacity'};
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'HeightCV';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'Intensity';
-meta.Dependencies{k,1} = {'Intensity'};
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'HeightKurtosis';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'IntensityQ25';
-meta.Dependencies{k,1} = {'Intensity'};
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'HeightSkewness';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'IntensityQ50';
-meta.Dependencies{k,1} = {'Intensity'};
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'HeightQ25';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-meta.Name{k,1} = 'IntensityQ75';
-meta.Dependencies{k,1} = {'Intensity'};
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'HeightQ50';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
 k = k + 1;
 
-% Add you own custom metrics here
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'HeightQ75';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'HeightQ90';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'PrinCompVar1';
+meta.Dependencies{k} = {'UVW'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'PrinCompVar2';
+meta.Dependencies{k} = {'UVW'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Spatial point pattern';
+meta.Name{k} = 'PrinCompVar3';
+meta.Dependencies{k} = {'UVW'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConcaveArea';
+meta.Dependencies{k} = {'ConcaveHull2D'};
+meta.Scalar(k) = true;
+meta.Octave(k) = false;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConcaveSurfaceArea';
+meta.Dependencies{k} = {'ConcaveHull3D'};
+meta.Scalar(k) = true;
+meta.Octave(k) = false;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConcaveVolume';
+meta.Dependencies{k} = {'ConcaveHull3D'};
+meta.Scalar(k) = true;
+meta.Octave(k) = false;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConcaveSpecificSurface';
+meta.Dependencies{k} = {'ConcaveVolume', 'ConcaveSurfaceArea'};
+meta.Scalar(k) = true;
+meta.Octave(k) = false;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConcaveBoundaryFraction';
+meta.Dependencies{k} = {'ConcaveHull3D'};
+meta.Scalar(k) = true;
+meta.Octave(k) = false;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConvexArea';
+meta.Dependencies{k} = {'ConvexHull2D'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'CrownDiameter';
+meta.Dependencies{k} = {'ConvexArea'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConvexSurfaceArea';
+meta.Dependencies{k} = {'ConvexHull3D'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConvexVolume';
+meta.Dependencies{k} = {'ConvexHull3D'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'Convexity';
+meta.Dependencies{k} = {'ConvexSurfaceArea', 'ConcaveSurfaceArea'};
+meta.Scalar(k) = true;
+meta.Octave(k) = false;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConvexHullLacunarity';
+meta.Dependencies{k} = {'ConvexVolume', 'ConcaveVolume'};
+meta.Scalar(k) = true;
+meta.Octave(k) = false;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConvexSpecificSurface';
+meta.Dependencies{k} = {'ConvexVolume', 'ConvexSurfaceArea'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConvexBoundaryFraction';
+meta.Dependencies{k} = {'ConvexHull3D'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'AspectRatio';
+meta.Dependencies{k} = {'ConvexArea', 'TotalHeight'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConcavePointDensity';
+meta.Dependencies{k} = {'NPoints', 'ConcaveVolume'};
+meta.Scalar(k) = true;
+meta.Octave(k) = false;
+k = k + 1;
+
+meta.Category{k} = 'External shape';
+meta.Name{k} = 'ConvexPointDensity';
+meta.Dependencies{k} = {'NPoints', 'ConvexVolume'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Opacity statistics';
+meta.Name{k} = 'OpacityQ50';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Opacity statistics';
+meta.Name{k} = 'SingleReturnFraction';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Opacity statistics';
+meta.Name{k} = 'FirstReturnFraction';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Opacity statistics';
+meta.Name{k} = 'LastReturnFraction';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensityQ25';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensityQ50';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensityQ75';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensityQ90';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensityMean';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensityMax';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensitySD';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensityCV';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensityKurtosis';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensitySkewness';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensityFirstReturnQ50';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensityLastReturnQ50';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Intensity statistics';
+meta.Name{k} = 'IntensitySingleReturnQ50';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Color';
+meta.Name{k} = 'Chromaticity';
+meta.Dependencies{k} = [];
+meta.Scalar(k) = false;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Color';
+meta.Name{k} = 'ChromaticityRedMedian';
+meta.Dependencies{k} = {'Chromaticity'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+meta.Category{k} = 'Color';
+meta.Name{k} = 'ChromaticityGreenMedian';
+meta.Dependencies{k} = {'Chromaticity'};
+meta.Scalar(k) = true;
+meta.Octave(k) = true;
+k = k + 1;
+
+% Add additional metrics here
 
 
 %% build dependency graph
@@ -216,21 +760,101 @@ if arg.Results.verbose
     
 end
 
-G = digraph;
+if ismember('all', arg.Results.metrics)
+    
+    idxl_filter = true(length(meta.Name),1);
+    
+else
+    
+    idxl_filter = false(length(meta.Name),1);
+    
+    for j = 1:length(meta.Name)
+        
+        if any(ismember([meta.Category(j), meta.Name(j)], arg.Results.metrics))
+            
+            idxl_filter(j) = true;
+            if ~isempty(meta.Dependencies{j})
+                
+                idxl_filter(ismember(meta.Name, meta.Dependencies{j})) = true;
+                
+            end
+            
+        end
+        
+    end
+    
+    idxl_filter = false(length(meta.Name),1);
+    idxl_filter(ismember(meta.Category, arg.Results.metrics)) = true;
+    idxl_filter(ismember(meta.Name, arg.Results.metrics)) = true;
+    
+end
 
-% add nodes
-G = addnode(G, meta.Name);
+if OCTAVE_FLAG
+    
+    idxl_filter(~meta.Octave) = false;
+    
+end
+
+if ~any(idxl_filter)
+    
+    error('none of the specified metrics can be computed');
+    
+end
+
+% create directed adjacency matrix
+n = length(meta.Name);
+A = false(n);
+for j = 1:n
+    
+    if ~isempty(meta.Dependencies{j})
+        
+        A(:, j) = ismember(meta.Name, meta.Dependencies{j});
+        
+    end
+    
+end
+
+% graph structure
+G = struct;
+
+% add node names
+G.Nodes.Name = meta.Name;
+
+% compute indegree
+G.Nodes.Degree = sum(A,1);
 
 % add edges
-for k = 1:G.numnodes
+if any(A(:))
     
-    if ~isempty(meta.Dependencies{k,1})
+    [row, col] = find(A);
+    G.Edges.EndNodes = sortrows([row, col], 1);
+    
+else
+    
+    G.Edges.EndNodes = [];
+    
+end
+
+% topological sorting with depth first search
+idxn_start = find(idxl_filter);
+order = idxn_start(1);
+for j = 1:length(idxn_start)
+    
+    discovered = false(n,1);
+    S = idxn_start(j);
+    order = [order; idxn_start(j)];
+    
+    while ~isempty(S) % while S is not empty
         
-        for j = 1:length(meta.Dependencies{k,1})
+        v = S(end);
+        S(end) = [];
+        
+        if ~discovered(v)
             
-            G = addedge(G, ...
-                meta.Name(k,1), ...
-                meta.Dependencies{k,1}(j));
+            discovered(v) = true;
+            idxl_adj = G.Edges.EndNodes(:,2) == v;
+            S = [S; G.Edges.EndNodes(idxl_adj,1)];
+            order = [order; G.Edges.EndNodes(idxl_adj,1)];
             
         end
         
@@ -238,7 +862,7 @@ for k = 1:G.numnodes
     
 end
 
-H = transreduction(G);
+L = unique(flipud(order), 'first');
 
 if arg.Results.verbose
     
@@ -248,369 +872,478 @@ if arg.Results.verbose
 end
 
 
-%% determine evaluation order
-
-if ismember('all', arg.Results.metrics)
-    
-    metrics_list = meta.Name;
-    
-else
-    
-    metrics_list = arg.Results.metrics;
-    
-end
-
-dependencies = cell(length(metrics_list),1);
-
-for j = 1:length(metrics_list)
-    
-    dependencies{j,1} = bfsearch(H, metrics_list{j});
-    
-end
-
-id_nodes = unique(vertcat(dependencies{:}));
-
-HS = subgraph(H, id_nodes);
-
-idxn_exec = flip(toposort(HS));
-
-if arg.Results.fig
-    
-    figure
-    plot(HS)
-    title('metric dependencies')
-    
-end
-
-
-%% reassign labels
-
-idxl_null = (label == 0);
-newlabel = zeros(size(label));
-[newlabel(~idxl_null), ~] = grp2idx(label(~idxl_null));
-label = newlabel;
-
-
-%% compute terrain model
-
-idxl_ter = ismember(classification, arg.Results.classTerrain);
-
-F = scatteredInterpolant(xyz(idxl_ter,1), ...
-    xyz(idxl_ter,2), ...
-    xyz(idxl_ter,3), ...
-    'linear', ...
-    'nearest');
-
-
-%% filter out abnormal segments
-
-if arg.Results.heightCorrection
-    
-    % terrain altitude
-    z_ter = F(xyz(:,1), xyz(:,2));
-    
-    htol = 1.5;
-    idxn_error = splitapply(@(j,z,zt) {j(z < (max(zt)-htol))}, ...
-        (1:length(label))', ...
-        xyz(:,3), ...
-        z_ter, ...
-        label+1);
-    
-    idxn_error = cell2mat(idxn_error(2:end));
-    label(idxn_error) = 0;
-    
-    varargout{1} = label;
-    
-end
-
-
-%% normalize intensity
-
-if ~isa(intensity, 'double')
-    
-    intensity = double(intensity);
-    fprintf('Waring: intensity was cast to double storage format\n');
-    
-end
-
-if arg.Results.intensityScaling
-    
-    qlim = quantile(intensity, [0.005, 0.995]);
-    intensity(intensity < qlim(1)) = qlim(1);
-    intensity(intensity > qlim(2)) = qlim(2);
-    intensity = (intensity - min(intensity)) ./ (max(intensity) - min(intensity));
-    
-end
-
-
-%% compute opacity
-
-opacity = returnNumber ./ returnTotal;
-
-
 %% compute metrics
 
-metrics = table;
+metrics = struct();
 
-for j = 1:length(idxn_exec)
+for j = 1:length(L)
     
     if arg.Results.verbose
         
         tic
-        fprintf('computing "%s"...', HS.Nodes.Name{idxn_exec(j)});
+        fprintf('computing "%s"...', G.Nodes.Name{L(j)});
         
     end
     
-    switch HS.Nodes.Name{idxn_exec(j)}
+    switch G.Nodes.Name{L(j)}
         
+        case 'RandomControl'
+            
+            % random control number
+            metrics.RandomControl = rand(n_obs,1);
+            
         case 'UUID'
             
-            metrics.UUID = cell(height(metrics),1);
-            
-            nseg = length(unique(label(label ~= 0)));
-            for k = 1:nseg
+            % universally unique identifier
+            metrics.UUID = cell(n_obs,1);
+            for k = 1:n_obs
                 
-                metrics.UUID{k} = lower(strrep(char(java.util.UUID.randomUUID), '-', ''));
+                metrics.UUID{k} = lower(strcat(dec2hex(randi(16,32,1)-1)'));
                 
             end
             
-        case 'Label'
+        case 'LUID'
             
-            LABEL = splitapply(@(x) {x}, label, label+1);
-            LABEL = LABEL(2:end);
-            
-            metrics.Label = cellfun(@(x) x(1), ...
-                LABEL, ...
-                'UniformOutput', true);
-            
-        case 'IndexTree'
-            
-            IndexTree = splitapply(@(x) {x}, (1:length(label))', label+1);
-            metrics.IndexTree = IndexTree(2:end);
+            % locally unique identifier (label)
+            metrics.LUID = accumarray(label, label, [], @(x) x(1), nan);
             
         case 'NPoints'
             
-            NPoints = splitapply(@(x) numel(x), label, label+1);
-            metrics.NPoints = NPoints(2:end);
+            % number of points
+            metrics.NPoints = accumarray(label, label, [], @numel, {});
             
         case 'XYZ'
             
-            XYZ = splitapply(@(x) {x}, xyz, label+1);
-            metrics.XYZ = XYZ(2:end);
+            % x, y, z coordinates
+            metrics.XYZ = mat2cell(xyz, metrics.NPoints, 3);
             
-        case 'Pos'
+        case 'RGB'
             
-            [z_max, idxn_apex] = cellfun(@(x) max(x(:,3)), ...
-                metrics.XYZ, ...
-                'UniformOutput', false);
+            % red, green, blue triplets
+            metrics.RGB = mat2cell(rgb, metrics.NPoints, 3);
             
-            xyz_apex = cellfun(@(x,k) x(k,:), ...
-                metrics.XYZ, ...
-                idxn_apex, ...
-                'UniformOutput', false);
+        case 'X'
             
-            xyz_root = cellfun(@(x) [x(1:2), F(x(1), x(2))], ...
-                xyz_apex, ...
-                'UniformOutput', false);
+            % x root coordinate
+            metrics.X = xyz_proxy(:,1);
             
-            if arg.Results.heightCorrection
+        case 'Y'
+            
+            % y root coordinate
+            metrics.Y = xyz_proxy(:,2);
+            
+        case 'Z'
+            
+            % z root coordinate
+            metrics.Z = xyz_proxy(:,3);
+            
+        case 'XYH'
+            
+            % normalized point coordinates
+            metrics.XYH = mat2cell(xyh, metrics.NPoints, 3); % xyh
+            
+        case 'UVW'
+            
+            % principal components
+            metrics.UVW = cell(n_obs,1);
+            pc_variance = zeros(n_obs, 3);
+            
+            for k = 1:n_obs
                 
-                z_terr_max = splitapply(@(x) max(x), ...
-                    z_ter, ...
-                    label+1);
-                z_terr_max = z_terr_max(2:end);
-
-                xyz_root_mat = cell2mat(xyz_root);
-                z_diff = xyz_root_mat(:,3) - z_terr_max;
-                
-                z_diff_outlier = median(abs(z_diff)) + 1.5 * iqr(abs(z_diff));
-                idxl_outlier = abs(z_diff) > z_diff_outlier;
-                
-                xyz_root_mat(idxl_outlier,3) = z_terr_max(idxl_outlier);
-                xyz_root = mat2cell(xyz_root_mat, ones(1,size(xyz_root_mat,1)), 3);
-                
-                % height correction flag
-                metrics.HeightCorr = idxl_outlier;
+                % [~, metrics.UVW{k,1}, ~] = pca(metrics.XYH{k,1}); Matlab only
+                [~, metrics.UVW{k,1}, pc_variance(k,:)] = princomp(metrics.XYH{k,1});
                 
             end
             
-            % root coordinates
-            xyz_root_mat = cell2mat(xyz_root);
-            metrics.X = xyz_root_mat(:,1);
-            metrics.Y = xyz_root_mat(:,2);
-            metrics.Z = xyz_root_mat(:,3);
+        case 'PrinCompVar1'
             
-        case 'XYZ0'
+            % spatial coordinates first principal component variance
+            metrics.PrinCompVar1 = pc_variance(:,1);
             
-            % normalized point coordinates
-            metrics.XYZ0 = cellfun(@(x1,x2) bsxfun(@minus, x1, x2), ...
-                metrics.XYZ, ...
-                xyz_root, ...
-                'UniformOutput', false);
+        case 'PrinCompVar2'
+            
+            % spatial coordinates second principal component variance
+            metrics.PrinCompVar2 = pc_variance(:,2);
+            
+        case 'PrinCompVar3'
+            
+            % spatial coordinates third principal component variance  
+            metrics.PrinCompVar3 = pc_variance(:,3); 
+            
+        case 'HeightMean'
+            
+            % mean of point heights
+            metrics.HeightMean = accumarray(label, h_n, [], @mean, nan);
+            
+        case 'HeightMedian'
+            
+            % median of point heights
+            metrics.HeightMedian = accumarray(label, h_n, [], @median, nan);
+            
+        case 'HeightSD'
+            
+            % standard deviation of point heights
+            metrics.HeightSD = accumarray(label, h_n, [], @std, nan);
+            
+        case 'HeightCV'
+            
+            % coefficient of variation of point heights
+            metrics.HeightCV = accumarray(label, h_n, [], @(x) std(x)/mean(x), nan);
+            
+        case 'HeightKurtosis'
+            
+            % kurtosis of point heights
+            metrics.HeightKurtosis = accumarray(label, h_n, [], @kurtosis, nan);
+            
+        case 'HeightSkewness'
+            
+            % skewness of point heights
+            metrics.HeightSkewness = accumarray(label, h_n, [], @skewness, nan);
+            
+        case 'HeightQ25'
+            
+            % 25% quantile of point heights
+            metrics.HeightQ25 = accumarray(label, h_n, [], @(x) quantile(x, 0.25), nan);
+            
+        case 'HeightQ50'
+            
+            % 50% quantile of point heights
+            metrics.HeightQ50 = accumarray(label, h_n, [], @(x) quantile(x, 0.5), nan);
+            
+        case 'HeightQ75'
+            
+            % 75% quantile of point heights
+            metrics.HeightQ75 = accumarray(label, h_n, [], @(x) quantile(x, 0.75), nan);
+            
+        case 'HeightQ90'
+            
+            % 90% quantile of point heights
+            metrics.HeightQ90 = accumarray(label, h_n, [], @(x) quantile(x, 0.9), nan);
             
         case 'TotalHeight'
             
-            % total height (oblique height)
-            metrics.TotalHeight = cellfun(@(x1,x2) norm(x1 - x2), ...
-                xyz_root, ...
-                xyz_apex, ...
-                'UniformOutput', true);
-
+            % total height
+            metrics.TotalHeight = h_tot;
+            
+        case 'ConvexHull2D'
+            
+            % 2D convex alpha shape
+            metrics.ConvexHull2D = cell(n_obs,1);
+            a_convex_2d = nan(n_obs,1);
+            
+            for k = 1:n_obs
+                
+                try
+                    
+                    [metrics.ConvexHull2D{k,1}, a_convex_2d(k,1)] = convhulln(metrics.XYH{k}(:,1:2));
+                    
+                catch
+                    
+                end
+                
+            end
+            
         case 'ConvexHull3D'
             
-            % compute 3D convex alpha shape
-            metrics.ConvexHull3D = cell(height(metrics),1);
+            %  3D convex alpha shape
+            metrics.ConvexHull3D = cell(n_obs,1);
+            v_convex_3d = nan(n_obs,1);
             
-            for k = 1:height(metrics)
+            for k = 1:n_obs
                 
-                metrics.ConvexHull3D{k,1} = alphaShape([metrics.XYZ0{k}; 0,0,0], ...
-                    inf);
+                try
+                    
+                    [metrics.ConvexHull3D{k,1}, v_convex_3d(k,1)] = convhulln(metrics.XYH{k});
+                    
+                catch
+                    
+                    metrics.ConvexHull3D{k,1} = nan;
+                    
+                end
                 
             end
             
         case 'ConcaveHull2D'
             
-            % compute complete 2D alpha shape
-            metrics.ConcaveHull2D = cell(height(metrics),1);
+            % single region 2D alpha shape
+            metrics.ConcaveHull2D = cell(n_obs,1);
             
-            for k = 1:height(metrics)
+            for k = 1:n_obs
                 
-                metrics.ConcaveHull2D{k,1} = alphaShape(metrics.XYZ0{k}(:,1:2), ...
-                    1.5);
+                try
+                    
+                    shp = alphaShape(metrics.XYH{k}(:,1:2), 5);
+                    alpha = criticalAlpha(shp, 'one-region');
+                    metrics.ConcaveHull2D{k,1} = alphaShape(metrics.XYH{k}(:,1:2), ...
+                        alpha, ...
+                        'HoleThreshold', 10^9);
+                    
+                catch
+                    
+                    metrics.ConcaveHull2D{k,1} = nan;
+                    
+                end
+                
                 
             end
             
         case 'ConcaveHull3D'
             
-            % compute 3D concave alpha shape
-            metrics.ConcaveHull3D = cell(height(metrics),1);
+            % single region 3D alpha shape
+            metrics.ConcaveHull3D = cell(n_obs,1);
             
-            for k = 1:height(metrics)
+            for k = 1:n_obs
                 
-                metrics.ConcaveHull3D{k,1} = alphaShape(metrics.XYZ0{k}, ...
-                    min(max([2, 0.1*metrics.TotalHeight(k,1)]), 3));
-                
-            end
-            
-        case 'Area'
-            
-            % total 2D projected area
-            metrics.Area = zeros(height(metrics),1);
-            
-            for k = 1:height(metrics)
-                
-                if size(metrics.ConcaveHull2D{k,1}.Points,1) > 6
+                try
                     
-                    metrics.Area(k,1) = round(cellfun(@(x) area(x,1), metrics.ConcaveHull2D(k,1)), 1);
+                    shp = alphaShape(metrics.XYH{k}, 5);
+                    alpha = criticalAlpha(shp, 'one-region');
+                    metrics.ConcaveHull3D{k,1} = alphaShape(metrics.XYH{k}, alpha);
+                    
+                catch
+                    
+                    metrics.ConcaveHull3D{k,1} = nan;
                     
                 end
                 
             end
             
+        case 'ConcaveArea'
+            
+            % concave area
+            metrics.ConcaveArea = nan(n_obs,1);
+            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.ConcaveHull2D);
+            for k = find(idxl_valid)'
+                
+                metrics.ConcaveArea(k) = area(metrics.ConcaveHull2D{k});
+                
+            end
+
         case 'CrownDiameter'
             
-            % total 2D projected area
-            metrics.CrownDiameter = round(2 * sqrt(metrics.Area ./ pi),1);
+            % crown diameter
+            metrics.CrownDiameter = round(2 * sqrt(metrics.ConvexArea ./ pi),1);
             
-        case 'SurfaceArea'
-            
-            metrics.SurfaceArea = zeros(height(metrics),1);
-            
-            for k = 1:height(metrics)
+        case 'ConcaveSurfaceArea'
+     
+            % concave surface area
+            metrics.ConcaveSurfaceArea = nan(n_obs,1);
+            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.ConcaveHull3D);
+            for k = find(idxl_valid)'
                 
-                if size(metrics.ConcaveHull3D{k,1}.Points,1) > 6
-                    
-                    metrics.SurfaceArea(k,1) = round(cellfun(@(x) surfaceArea(x,1), metrics.ConcaveHull3D(k,1)), 1);
-                    
-                end
+                metrics.ConcaveSurfaceArea(k) = surfaceArea(metrics.ConcaveHull3D{k});
                 
             end
             
-        case 'Volume'
+        case 'ConcaveVolume'
             
-            metrics.Volume = zeros(height(metrics),1);
-            
-            for k = 1:height(metrics)
+            % concave volume
+            metrics.ConcaveVolume = nan(n_obs,1);
+            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.ConcaveHull3D);
+            for k = find(idxl_valid)'
                 
-                if size(metrics.ConcaveHull3D{k,1}.Points,1) > 6
-                    
-                    metrics.Volume(k,1) = round(cellfun(@(x) volume(x), metrics.ConcaveHull3D(k,1)), 1);
-                    
-                end
+                metrics.ConcaveVolume(k) = volume(metrics.ConcaveHull3D{k});
                 
             end
 
-        case 'SpecificSurface'
+        case 'ConcaveSpecificSurface'
             
-            metrics.SpecificSurface = metrics.SurfaceArea ./ metrics.Volume;
-
+            % concave specific surface
+            metrics.ConcaveSpecificSurface = metrics.ConcaveSurfaceArea ./ metrics.ConcaveVolume;
+            
         case 'ConvexSurfaceArea'
             
-            metrics.ConvexSurfaceArea = zeros(height(metrics),1);
-            
-            for k = 1:height(metrics)
+            % convex surface area
+            metrics.ConvexSurfaceArea = nan(n_obs,1);
+            idxl_valid = cellfun(@(x) ~isnan(x(1)), metrics.ConvexHull3D);
+             
+            for k = find(idxl_valid)'
+               
+                P1 = metrics.XYH{k,1}(metrics.ConvexHull3D{k,1}(:,1),:);
+                P2 = metrics.XYH{k,1}(metrics.ConvexHull3D{k,1}(:,2),:);
+                P3 = metrics.XYH{k,1}(metrics.ConvexHull3D{k,1}(:,3),:);
                 
-                if size(metrics.ConvexHull3D{k,1}.Points,1) > 6
-                    
-                    metrics.ConvexSurfaceArea(k,1) = round(cellfun(@(x) surfaceArea(x,1), metrics.ConvexHull3D(k,1)), 1);
-                    
-                end
+                % compute triangle normals
+                v_n = cross(P1-P2, P1-P3, 2);
+                
+                % compute triangle areas (= half the length of normal vectors)
+                metrics.ConvexSurfaceArea(k,1) = sum(0.5 * sqrt(sum(v_n.^2,2)));
                 
             end
+            
+        case 'ConcaveBoundaryFraction'
+            
+            % concave boundary fraction
+            metrics.ConcaveBoundaryFraction = nan(n_obs,1);
+            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.ConcaveHull3D);
+            for k = find(idxl_valid)'
+                
+                [P, ~] = boundaryFacets(metrics.ConcaveHull3D{k});
+                metrics.ConcaveBoundaryFraction(k,1) = size(P,1);
+                
+            end
+            
+            metrics.ConcaveBoundaryFraction = metrics.ConcaveBoundaryFraction ./ metrics.NPoints;
+            
+        case 'ConvexArea'
+            
+            % convex area
+            metrics.ConvexArea = a_convex_2d;
 
         case 'ConvexVolume'
             
-            metrics.ConvexVolume = zeros(height(metrics),1);
-            
-            for k = 1:height(metrics)
-                
-                if size(metrics.ConvexHull3D{k,1}.Points,1) > 6
-                    
-                    metrics.ConvexVolume(k,1) = round(cellfun(@(x) volume(x,1), metrics.ConvexHull3D(k,1)), 1);
-                    
-                end
-                
-            end
+            % convex volume
+            metrics.ConvexVolume = v_convex_3d;
             
         case 'ConvexSpecificSurface'
             
+            % convex specific surface
             metrics.ConvexSpecificSurface = metrics.ConvexSurfaceArea ./ metrics.ConvexVolume;
             
         case 'Convexity'
             
-            metrics.Convexity = metrics.ConvexSurfaceArea ./ metrics.SurfaceArea;
+            % convexity
+            metrics.Convexity = metrics.ConcaveSurfaceArea ./ metrics.ConvexSurfaceArea;
             
         case 'Sphericity'
             
+            % sphericity
             metrics.Sphericity = 3 * sqrt(4*pi) * metrics.Volume ./ (metrics.SurfaceArea .^(3/2));
             
+        case 'AspectRatio'
+            
+            % aspect ratio
+            metrics.AspectRatio = 2*sqrt(metrics.ConvexArea/pi) ./ metrics.TotalHeight;
+            
+        case 'ConvexHullLacunarity'
+            
+            % convex hull lacunarity
+            metrics.ConvexHullLacunarity = (metrics.ConvexVolume - metrics.ConcaveVolume) ./ metrics.ConvexVolume;
+            
+        case 'ConvexBoundaryFraction'
+            
+            % convex boundary fraction
+            metrics.ConvexBoundaryFraction = cellfun(@(x) size(x,1), metrics.ConvexHull3D) ./ metrics.NPoints;
+
         case 'Opacity'
             
-            Opacity = splitapply(@(x) {x}, opacity, label+1);
-            metrics.Opacity = Opacity(2:end);
+            % opacity
+            metrics.Opacity = accumarray(label, opacity, [], @(x) {x}, {nan});
             
         case 'OpacityQ50'
             
-            metrics.OpacityQ50 = cellfun(@(x) quantile(x,0.5), metrics.Opacity);
+            % opacity (50% quantile)
+            metrics.OpacityQ50 = accumarray(label, opacity, [], @(x) quantile(x, 0.5), nan);
+            
+        case 'SingleReturnFraction'
+            
+            % fraction of single returns
+            metrics.SingleReturnFraction = accumarray(label, idxl_single, [], @(x) nnz(x)/length(x), nan);
+            
+        case 'FirstReturnFraction'
+            
+            % fraction of first returns
+            metrics.FirstReturnFraction = accumarray(label, idxl_first, [], @(x) nnz(x)/length(x), nan);
+            
+        case 'LastReturnFraction'
+            
+            % fraction of last returns
+            metrics.LastReturnFraction = accumarray(label, idxl_last, [], @(x) nnz(x)/length(x), nan);
             
         case 'Intensity'
             
-            Intensity = splitapply(@(x) {x}, intensity, label+1);
-            metrics.Intensity = Intensity(2:end);
+            % intensity
+            metrics.Intensity = accumarray(label, intensity, [], @(x) {x}, {nan});
             
         case 'IntensityQ25'
             
-            metrics.IntensityQ25 = cellfun(@(x) quantile(x,0.25), metrics.Intensity);
+            % intensity 25% quantile
+            metrics.IntensityQ25 = accumarray(label, intensity, [], @(x) quantile(x, 0.25), nan);
             
         case 'IntensityQ50'
             
-            metrics.IntensityQ50 = cellfun(@(x) quantile(x,0.5), metrics.Intensity);
+            % intensity 50% quantile
+            metrics.IntensityQ50 = accumarray(label, intensity, [], @(x) quantile(x, 0.5), nan);
             
         case 'IntensityQ75'
             
-            metrics.IntensityQ75 = cellfun(@(x) quantile(x,0.75), metrics.Intensity);
+            % intensity 75% quantile
+            metrics.IntensityQ75 = accumarray(label, intensity, [], @(x) quantile(x, 0.75), nan);
             
-        % Add you own custom metrics here
+        case 'IntensityQ90'
+            
+            % intensity 90% quantile
+            metrics.IntensityQ90 = accumarray(label, intensity, [], @(x) quantile(x, 0.9), nan);
+            
+        case 'IntensityMean'
+            
+            % intensity mean
+            metrics.IntensityMean = accumarray(label, intensity, [], @mean, nan);
+            
+        case 'IntensityMax'
+            
+            % intensity maximum
+            metrics.IntensityMax = accumarray(label, intensity, [], @max, nan); 
+            
+        case 'IntensitySD'
+            
+            % intensity standard deviation
+            metrics.IntensitySD = accumarray(label, intensity, [], @std, nan); 
+            
+        case 'IntensityCV'
+            
+            % intensity coefficient of variation
+            metrics.IntensityCV = accumarray(label, intensity, [], @(x) std(x)/mean(x), nan);
+            
+        case 'IntensityKurtosis'
+            
+            % intensity kurtosis
+            metrics.IntensityKurtosis = accumarray(label, intensity, [], @kurtosis, nan);
+            
+        case 'IntensitySkewness'
+            
+            % intensity skewness
+            metrics.IntensitySkewness = accumarray(label, intensity, [], @skewness, nan);
+            
+        case 'IntensityFirstReturnQ50'
+            
+            % intensity of first returns 50% quantile
+            metrics.IntensityFirstReturnQ50 = accumarray(label, intensity_first, [], @(x) nanmedian([x; nan]), nan); % @(x) median(x(~isnan(x)))
+            
+        case 'IntensityLastReturnQ50'
+            
+            % intensity of last returns 50% quantile
+            metrics.IntensityLastReturnQ50 = accumarray(label, intensity_last, [], @(x) nanmedian([x; nan]), nan);
+            
+        case 'IntensitySingleReturnQ50'
+            
+            % intensity of single returns 50% quantile
+            metrics.IntensitySingleReturnQ50 = accumarray(label, intensity_single, [], @(x) nanmedian([x; nan]), nan); % @(x) median([x(~isnan(x)), nan])
+            
+        case 'ConcavePointDensity'
+            
+            % point density in concave hull
+            metrics.ConcavePointDensity = metrics.NPoints ./ metrics.ConcaveVolume;
+            
+        case 'ConvexPointDensity'
+            
+            % point density in convex hull
+            metrics.ConvexPointDensity = metrics.NPoints ./ metrics.ConvexVolume;
+            
+        case 'Chromaticity'
+            
+            % chromaticity
+            metrics.Chromaticity = mat2cell(rg_chromaticity, metrics.NPoints, 3);
+            
+        case 'ChromaticityRedMedian'
+            
+            % red chromaticity median
+            metrics.ChromaticityRedMedian = accumarray(label, rg_chromaticity(:,1), [], @median, nan);
+            
+        case 'ChromaticityGreenMedian'
+            
+            % green chromaticity median
+            metrics.ChromaticityGreenMedian = accumarray(label, rg_chromaticity(:,2), [], @median, nan);
             
     end
     
@@ -620,5 +1353,19 @@ for j = 1:length(idxn_exec)
         toc
         
     end
+    
+end
+
+% remove dependencies from metrics
+if  ~arg.Results.dependencies
+   
+   metrics = rmfield(metrics, intersect(G.Nodes.Name(L), G.Nodes.Name(~idxl_filter)));
+   
+end
+
+% remove non-scalar metrics
+if arg.Results.scalarOnly
+    
+    metrics = rmfield(metrics, setdiff(fieldnames(metrics), meta.Name(logical(meta.Scalar))));
     
 end
