@@ -1,12 +1,15 @@
 function s = LASclip(points, clipper, varargin)
 %LASCLIP - Clips a LAS file with a polygon
 % LASCLIP(POINTS, CLIPPER, ...) clips the point cloud stored in
-% POINTS with CLIPPER. Optionally writes the clipped point cloud to OUTPUTFILEPATH
+% POINTS with CLIPPER. Optionally writes the clipped point cloud to
+% OUTPUTFILEPATH.
 %
 % Syntax:  LASclip(points, clipper, ...)
 %
 % Inputs:
-%    points - Either a LAS structure or the path to an input LAS file
+%    points - Either a LAS structure, a path to a single LAS file, a cell array 
+%    containing paths to multiple LAS files, a path to a directory
+%    containing LAS files (Matlab only)
 %
 %    clipper - Either a Nx2 matrix containing the x,y coordinates of the
 %    clipper polygon or a string indicating the path to an ESRI shapefile
@@ -26,7 +29,7 @@ function s = LASclip(points, clipper, varargin)
 % Other m-files required: LASread.m, LASwrite.m, LASmerge.m, LASextent.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b
 %
 % See also: LASMERGE
 %
@@ -34,7 +37,7 @@ function s = LASclip(points, clipper, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: October 5, 2017
+% Last revision: March 21, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -51,7 +54,18 @@ addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 parse(arg, points, clipper, varargin{:});
 
 
-%% check clipper is a shapefile or an array of coordinates
+%% load additional packages in Octave
+
+OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system is Matlab or GNU Octave
+
+if OCTAVE_FLAG
+    
+    pkg load statistics
+    pkg load mapping
+
+end
+
+%% check if clipper is a shapefile or an array of coordinates
 
 if arg.Results.verbose
     
@@ -75,8 +89,6 @@ switch class(arg.Results.clipper)
         
         xc = arg.Results.clipper(:,1);
         yc = arg.Results.clipper(:,2);
-        
-    case 'cell'
         
 end
 
@@ -128,7 +140,13 @@ switch class(arg.Results.points)
     
     case 'char'
         
-        if isdir(arg.Results.points) % input is a directory path
+        if isdir(arg.Results.points) % input is a directory path (Matlab only)
+            
+            if OCTAVE_FLAG
+                
+                error('Clipping from a directory is not yet supported in Octave')
+                
+            end
             
             % get intersections between clipper and tile extents
             fileIntersections = getFileIntersections(arg.Results.points, xc, yc);
@@ -152,6 +170,10 @@ switch class(arg.Results.points)
                 r = LASmerge(parts, [], ...
                     'verbose', arg.Results.verbose);
                 
+            else
+                
+                error('The clipper does not intersect the input file(s)')
+                
             end
             
         else % input is a single file path
@@ -164,8 +186,10 @@ switch class(arg.Results.points)
     case 'cell' % input is a cell array of file paths
         
         % get intersections between clipper and tile extents
-        fileIntersections = getFileIntersections(arg.Results.points, xc, yc);
-        n_intersections = height(fileIntersections);
+        %fileIntersections = getFileIntersections(arg.Results.points, xc, yc);
+        %n_intersections = height(fileIntersections);
+        
+        n_intersections = length(arg.Results.points);
         
         if n_intersections >= 1
             
@@ -174,7 +198,8 @@ switch class(arg.Results.points)
             for j = 1:n_intersections
                 
                 % read LAS files
-                s = LASread(fileIntersections.FILEPATH{j}, false, false);
+                %s = LASread(fileIntersections.FILEPATH{j}, false, false);
+                s = LASread(arg.Results.points{j}, false, false);
                 
                 % clip parts
                 parts{j,1} = clip(s);
@@ -263,6 +288,7 @@ end
         % check if clipper intersects LAS file extents
         for k = 1:n_tiles
             
+            % not supported in octave
             [xi, yi] = polybool('intersection', ...
                 xc, ...
                 yc, ...
@@ -301,7 +327,6 @@ end
         pdr_skeys = fieldnames(s.record);
         
         % initialize point cloud structure
-        %r.header = s.header;
         r = s;
         
         for k = 1:length(pdr_skeys)
