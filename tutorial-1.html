@@ -33,7 +33,7 @@
             <br>
             <hr>
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Last update: March 16, 2018 / Matlab r2017b, GNU Octave 4.2.1</b></p>
+            <p style="text-align: center"><b>Last update: March 28, 2018 / Matlab r2017b, GNU Octave 4.2.1</b></p>
             <p> In this tutorial, you will learn about basic point cloud manipulation and visualization. Before starting, you should:</p>
 
             <ol>
@@ -180,7 +180,7 @@ ylabel('z')</code></pre>
                     </tr>
                     <tr>
                         <td>Standard GPS time</td>
-                        <td>The fractional number of seconds since January 6, 1980 00:00h. Since it is not perturbed by leap seconds, Standard GPS time is now ahead of UTC time by several seconds.</td>
+                        <td>The fractional number of seconds since January 6, 1980 00:00h. Since it is not affected by leap seconds, Standard GPS time is now ahead of UTC time by several seconds.</td>
                     </tr>
                     <tr>
                         <td>Adjusted Standard GPS Time</td>
@@ -200,7 +200,7 @@ ylabel('z')</code></pre>
             <p>You'll notice the dataset was acquired on March 10 and 13, 2014.</p>
 
             <h2>
-                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Clipping directly to a LAS file (Matlab only)
+                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Clipping directly to a LAS file
             </h2>
 
 
@@ -220,7 +220,7 @@ ylabel('z')</code></pre>
 
             <pre><code>extent = LASextent('26995_12710.las', ...
     '26995_12710_extent.shp', ...
-    'method', 'concavehull', ...
+    'method', 'convexhull', ...
     'fig', false, ...
     'verbose', true);</code></pre>
 
