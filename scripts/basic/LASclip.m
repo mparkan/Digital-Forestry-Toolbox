@@ -17,6 +17,10 @@ function s = LASclip(points, clipper, varargin)
 %
 %    outputFilepath (optional, default: []) - The path to the clipped output LAS file
 %
+%    UUID (optional, default: auto) - 32 character Univerally Unique
+%    Identifier (e.g. '401db5f076cc277abc4aa217f593c48b').
+%    If not specified a new UUID is automatically assigned.
+%
 %    verbose (optional, default: false) - boolean value, verbosiy switch
 %
 % Example:
@@ -37,7 +41,7 @@ function s = LASclip(points, clipper, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 21, 2018
+% Last revision: March 28, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -49,6 +53,7 @@ arg = inputParser;
 addRequired(arg, 'points', @(x) ischar(x) || isstruct(x) || iscell(x)); % tf = isdir('A') % if exist(Name, 'file') == 2
 addRequired(arg, 'clipper', @(x) (isnumeric(x) && (size(x,2) == 2)) || ischar(x));
 addOptional(arg, 'outputFilepath', [], @(x) ischar(x) || isempty(x));
+addParameter(arg, 'UUID', lower(strcat(dec2hex(randi(16,32,1)-1)')), @(x) ischar(x) && length(x) == 32);
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, points, clipper, varargin{:});
@@ -259,6 +264,7 @@ if ~isempty(arg.Results.outputFilepath) && length(xc) >= 1
     LASwrite(r, outputFilepath, ...
         'version', las_version, ...
         'systemID', 'EXTRACTION', ...
+        'guid', arg.Results.UUID, ...
         'recordFormat', s.header.point_data_format_id, ...
         'verbose', arg.Results.verbose);
 
@@ -337,6 +343,5 @@ end
         
         
     end
-
 
 end
