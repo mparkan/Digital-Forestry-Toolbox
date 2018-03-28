@@ -12,4 +12,4 @@ Please check the [Digital-Forestry-Toolbox website](http://mparkan.github.io/Dig
 
 ## Authors and Contributors
 
-The Digital Forestry Toolbox was developed by Matthew Parkan (GIS Research Laboratory, EPFL) with support from the Swiss Forest and Wood Research Fund (project 2013.18).
+The Digital Forestry Toolbox was developed by Matthew Parkan ([GIS Research Laboratory, EPFL](https://lasig.epfl.ch/)) with support from the Swiss Forest and Wood Research Fund (project 2013.18).
