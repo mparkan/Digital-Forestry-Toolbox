@@ -34,7 +34,7 @@
             <br>
             <hr>
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Last update: March 16, 2018 / Matlab r2017b, GNU Octave 4.2.1</b></p>
+            <p style="text-align: center"><b>Last update: March 28, 2018 / Matlab r2017b, GNU Octave 4.2.1</b></p>
             <p> In this tutorial, you will learn how to detect individual tree crowns from a raster Canopy Height Model (CHM) using marker controlled watershed segmentation. Before starting, you should:</p>
 
             <ol>
@@ -42,7 +42,7 @@
                 <li>Download the <a href="http://maps.zh.ch/download/hoehen/2014/lidar/26995_12710.laz">26995_12710.laz file</a> from the Zürich 2014 airborne laser scanning campaign archive and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
                 <li>Start Matlab/Octave</li>
                 <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
-                <li>Open and run <code>dft_tutorial_2.m</code></li>
+                <li>Open <code>dft_tutorial_2.m</code> (located in the tutorials folder)</li>
             </ol>
 
             <hr>
@@ -52,12 +52,9 @@
                 <a id="step-1" class="anchor" href="step-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 1</b> - Reading the LAS file
             </h2>
 
-            <p>We start by importing the XYZ, classification and intensity attributes from the LAS file using <code>LASread()</code>:</p>
+            <p>We start by reading the LAS file using <code>LASread()</code>:</p>
 
-            <pre><code>pc = LASread('26995_12710.las');
-xyz = [pc.record.x, pc.record.y, pc.record.z];
-classification = pc.record.classification;
-intensity = pc.record.intensity;</code></pre>
+            <pre><code>pc = LASread('26995_12710.las');</code></pre>
 
             <p>Note that the point classification uses the following scheme:</p>
 
@@ -121,14 +118,13 @@ intensity = pc.record.intensity;</code></pre>
 
 
             <pre><code>cellResolution = 0.8;
-[models, refmat] = elevationModels(xyz, ...
-    classification, ...
+[models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
+    pc.record.classification, ...
     'classTerrain', [2], ...
-    'classSurface', [4, 5], ...
+    'classSurface', [4,5], ...
     'cellResolution', cellResolution, ...
-    'maxFillArea', inf, ...
+    'closing', 5, ...
     'smoothingFilter', fspecial('gaussian', [4, 4], 1), ...
-    'alpha', 5, ...
     'outputModels', {'terrain', 'surface', 'height'}, ...
     'fig', true, ...
     'verbose', true);</code></pre>
@@ -173,23 +169,25 @@ intensity = pc.record.intensity;</code></pre>
         </h2>
 
 
-        <p>We first compute a boolean mask to exclude areas located in the 5 meter inner margin of the CHM edge:</p>
+        <p>We first compute a boolean mask to exclude areas located in the 5 pixel inner margin of the CHM edge:</p>
+
 
         <pre><code>borderMargin = 5;
-
-se = strel('disk', ...
-    ceil(borderMargin/cellResolution), ...
-    6);
-mask = imerode(padarray(models.mask, [1 1], false), se);
+r = round(borderMargin / cellResolution);
+SE = bwdist(padarray(true, [r,r])) &lt;= r;
+SE(ceil(size(SE,1)/2), ceil(size(SE,2)/2)) = 0; % set central convolution window value to zero
+mask = imerode(padarray(models.mask, [1 1], false), SE);
 mask = mask(2:end-1,2:end-1);</code></pre>
+
 
 
         <p>Using the previously computed CHM, tree top coordinates and boolean mask, we now compute the marker controlled watershed segmentation with <code>treeWatershed()</code>:</p>
 
-        <pre><code>label_2d = treeWatershed(models.height.values, ...
+        <pre><code>[label_2d, colors] = treeWatershed(models.height.values, ...
     'markers', peaks_crh, ...
     'minHeight', 1, ...
     'mask', mask, ...
+    'seams', false, ...
     'fig', true, ...
     'verbose', true);</code></pre>
 
@@ -198,58 +196,85 @@ mask = mask(2:end-1,2:end-1);</code></pre>
 
 
         <figure>
-            <img src="img/tutorial_1_ima_3.png" alt="" style="width:90%;">
+            <img src="img/dft_tutorial_2_ima_3.png" alt="" style="width:90%;">
             <figcaption>Figure 3 - Marker controlled watershed segmentation 2D labels. Note that the segments located on the edge of the CHM have been excluded due to the boolean mask we specified.</figcaption>
         </figure>
 
 
         <h2>
-            <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Transferring 2D labels to the 3D point cloud
+            <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Computing segment metrics from the label matrix
         </h2>
 
-        <p>The next step is transferring the 2D labels to the 3D point cloud using nearest neighbour analysis, in order to compute 3D segment metrics:</p>
+        <p>From the labelled matrix, it is possible to compute a set of basic features (note that some of the features used below are currently only available in Matlab):</p>
 
-        <pre><code>% convert image to map coordinates, [x y] = [row col 1] * R
-[nrows, ncols] = size(label_2d);
-[col_grid, row_grid] = meshgrid(1:ncols, 1:nrows);
-xy_grid = [row_grid(:), col_grid(:), ones(numel(label_2d),1)] * refmat;
-
-% index vegetation points
-idxl_veg = ismember(classification, [4,5]);
-
-label_vec = label_2d(:);
-idxl_labelled = (label_vec ~=0);
-label_vec = label_vec(idxl_labelled);
-
-% compute nearest neighbours
-[idxn_knn, d_nn] = knnsearch(xy_grid(idxl_labelled,:), ...
-    xyz(idxl_veg, 1:2), ...
-    'K', 1);
-
-label_veg = label_vec(idxn_knn);
-label_veg(d_nn > cellResolution) = 0;
-label_3d = zeros(size(xyz,1),1);
-label_3d(idxl_veg) = label_veg;
-[label_3d(label_3d ~= 0), ~] = grp2idx(label_3d(label_3d ~= 0));</code></pre>
+        <pre><code>metrics_2d = regionprops(label_2d, models.height.values, ...
+    'Area', 'ConvexArea', 'Eccentricity', ...
+    'Perimeter', 'Solidity', 'MinIntensity', ...
+    'MeanIntensity', 'MaxIntensity');</code></pre>
 
 
-        <p>After determining the 3D labels, we can apply topological coloring (<a href="https://academic.oup.com/comjnl/article-lookup/doi/10.1093/comjnl/10.1.85">Welsh and Powell, 1967</a>) to the point cloud by using <code>clusterColor()</code>:</p>
+        <h2>
+            <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Transferring 2D labels to the 3D point cloud
+        </h2>
 
+        <p>The next step is transferring the 2D labels and colors to the 3D point cloud:</p>
 
-        <pre><code>[color, rgb, cmap] = clusterColor(xyz, ...
-    label_3d, ...
-    'adjacency', '2d', ...
-    'buffer', 10, ...
-    'colormap', 'cmap12', ...
-    'unlabelledColor', [0.1, 0.1, 0.1], ...
-    'fig', true, ...
-    'verbose', true);</code></pre>
+        <pre><code>idxn_color = accumarray(label_2d(:)+1, colors(:), [], @(x) mode(x), nan);
+idxl_veg = ismember(pc.record.classification, [4,5]);
 
-        <p>The resulting colored point cloud should look like this:</p>
+RC = ceil([pc.record.x - refmat(3,1), pc.record.y - refmat(3,2)] / refmat(1:2,:));
+RC(:,1) = min(RC(:,1), size(label_2d,1));
+RC(:,2) = min(RC(:,2), size(label_2d,2));
+
+ind = sub2ind(size(label_2d), RC(:,1), RC(:,2));
+
+% transfer the label
+label_3d = label_2d(ind);
+label_3d(~idxl_veg) = 0;
+[label_3d(label_3d ~= 0), ~] = grp2idx(label_3d(label_3d ~= 0));
+
+% transfer the color index
+color_3d = idxn_color(label_3d + 1);</code></pre>
+
+        <h2>
+            <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Plotting the colored points cloud
+        </h2>
+
+        <p>To plot the colored point cloud, use:</p>
+
+        <pre><code>% define a colormap
+cmap = [0,0,0;
+    166,206,227;
+    31,120,180;
+    178,223,138;
+    51,160,44;
+    251,154,153;
+    227,26,28;
+    253,191,111;
+    255,127,0;
+    202,178,214;
+    106,61,154;
+    255,255,153;
+    177,89,40] ./ 255;
+
+figure('Color', [1,1,1])
+scatter3(pc.record.x(idxl_veg), ...
+    pc.record.y(idxl_veg), ...
+    pc.record.z(idxl_veg), ...
+    6, ...
+    color_3d(idxl_veg), ...
+    'Marker', '.')
+axis equal tight
+colormap(cmap)
+xlabel('x')
+ylabel('y')
+zlabel('z')</code></pre>
+
+        <p>The result should look like this:</p>
 
 
         <figure>
-            <img src="img/tutorial_1_ima_4.png" alt="" style="width:90%;">
+            <img src="img/dft_tutorial_2_ima_4.png" alt="" style="width:90%;">
             <figcaption>Figure 4 - Marker controlled watershed segmentation 3D labels. Note that the segments located on the edge of the CHM have been excluded due to the boolean mask.</figcaption>
         </figure>
 
@@ -259,43 +284,44 @@ label_3d(idxl_veg) = label_veg;
         <pre><code>idxl_sample = (label_3d == 42);
 
 figure
-scatter3(xyz(idxl_sample,1), ...
-xyz(idxl_sample,2), ...
-xyz(idxl_sample,3), ...
-8, ...
-intensity(idxl_sample), ...
-'Marker', '.');
+scatter3(pc.record.x(idxl_sample), ...
+    pc.record.y(idxl_sample), ...
+    pc.record.z(idxl_sample), ...
+    12, ...
+    pc.record.intensity(idxl_sample), ...
+    'Marker', '.');
 colorbar
-axis equal tight vis3d
+axis equal tight
 title('Return intensity')
 xlabel('x')
 ylabel('y')
-ylabel('z')
-</code></pre>
+ylabel('z')</code></pre>
 
         <figure>
-            <img src="img/tutorial_1_ima_5.png" alt="" style="width:90%;">
+            <img src="img/dft_tutorial_2_ima_5.png" alt="" style="width:90%;">
             <figcaption>Figure 5 - 3D segment n°42 colored by return intensity.</figcaption>
         </figure>
 
 
         <h2>
-            <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Computing segment metrics
+            <a id="step-8" class="anchor" href="step-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 8</b> - Computing segment metrics from the labelled point cloud
         </h2>
 
-        <p>We now compute descriptive metrics (features) for each segment using <code>treeMetrics()</code>:</p>
+        <p>We now compute descriptive metrics directly from the point cloud for each segment using <code>treeMetrics()</code>:</p>
 
-            <pre><code>metrics = treeMetrics(label_3d, ...
-    xyz, ...
-    classification, ...
-    intensity, ...
-    zeros(size(classification)), ...
-    zeros(size(classification)), ...
+            <pre><code>metrics_3d = treeMetrics(label_3d, ...
+    [pc.record.x, pc.record.y, pc.record.z], ...
+    pc.record.classification, ...
+    pc.record.intensity, ...
+    pc.record.return_number, ...
+    pc.record.number_of_returns, ...
+    zeros(length(pc.record.x), 3), ...
     'metrics', {'all'}, ...
-    'heightCorrection', false, ...
     'intensityScaling', true, ...
-    'fig', false, ...
-    'verbose', true);</code></pre>
+    'dependencies', false, ...
+    'scalarOnly', true, ...
+    'verbose', true);
+</code></pre>
 
         <h2>
             <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Exporting the segment metrics to an ESRI shapefile

@@ -41,7 +41,7 @@
                 <li>Download the <a href="http://maps.zh.ch/download/hoehen/2014/lidar/26995_12710.laz">26995_12710.laz file</a> from the Zürich 2014 airborne laser scanning campaign archive and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
                 <li>Start Matlab/Octave</li>
                 <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
-                <li>Open and run <code>dft_tutorial_1.m</code> (located in the tutorials folder)</li>
+                <li>Open <code>dft_tutorial_1.m</code> (located in the tutorials folder)</li>
             </ol>
 
             <hr>
@@ -51,7 +51,7 @@
                 <a id="step-1" class="anchor" href="step-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 1</b> - Reading the LAS file
             </h2>
 
-            <p>We start by importing the XYZ, classification and intensity attributes from the LAS file using <code>LASread()</code>:</p>
+            <p>We start by reading the LAS file using <code>LASread()</code>:</p>
 
             <pre><code>pc = LASread('26995_12710.las');</code></pre>
 

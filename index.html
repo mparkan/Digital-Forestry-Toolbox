@@ -83,21 +83,20 @@
 
             <p> We then use <code>scatter3()</code> to plot non-noise points colored by return intensity:</p>
 
-            <pre><code>
-            figure
-            scatter3(pc.record.x(~idxl_noise), ...
-            pc.record.y(~idxl_noise), ...
-            pc.record.z(~idxl_noise), ...
-            6, ...
-            pc.record.intensity(~idxl_noise), ...
-            'Marker', '.');
-            colorbar
-            axis equal tight
-            title('Return intensity')
-            xlabel('X')
-            ylabel('Y')
-            ylabel('Z')
-            </code></pre>
+
+<pre><code>figure
+scatter3(pc.record.x(~idxl_noise), ...
+    pc.record.y(~idxl_noise), ...
+    pc.record.z(~idxl_noise), ...
+    6, ...
+    pc.record.intensity(~idxl_noise), ...
+    'Marker', '.');
+colorbar
+axis equal tight
+title('Return intensity')
+xlabel('X')
+ylabel('Y')
+ylabel('Z')</code></pre>
 
             <h2>
                 <a id="tutorials" class="anchor" href="tutorials" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Tutorials
@@ -124,44 +123,6 @@
             </h2>
 
             <p> The Digital Forestry Toolbox was developed by Matthew Parkan (<a href="http://lasig.epfl.ch/">GIS Research Laboratory, EPFL</a>) with support from the Swiss Forest and Wood Research Fund (project 2013.18).</p>
-
-
-
-
-            <!--
-<h2>
-<a id="image" class="anchor" href="#image" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>image</h2>
-
-<p><img src="https://en.wikipedia.org/wiki/Penguin#/media/File:South_Shetland-2016-Deception_Island%E2%80%93Chinstrap_penguin_(Pygoscelis_antarctica)_04.jpg" alt=""></p>
-
-<h2>
-<a id="bold-text" class="anchor" href="#bold-text" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Bold text</h2>
-
-<p><strong>bold text</strong></p>
-
-<h2>
-<a id="italic-text" class="anchor" href="#italic-text" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>italic text</h2>
-
-<p><em>italic text</em></p>
-
-<h2>
-<a id="quote" class="anchor" href="#quote" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Quote</h2>
-
-<blockquote>
-<p>this is my quote</p>
-</blockquote>
-
-<h2>
-<a id="code-block" class="anchor" href="#code-block" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Code block</h2>
-
-<p><code>this is my code</code></p>
-
-<h2>
-<a id="horizontal-rule" class="anchor" href="#horizontal-rule" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Horizontal rule</h2>
-
-<hr>
-
--->
 
             <h2>
                 <a id="contents" class="anchor" href="#contents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function and data list
@@ -440,7 +401,7 @@
                     <tr>
                         <td><code>topoColor()</code></td>
                         <td align="center"><i class="fa fa-check" aria-hidden="true"></i></td>
-                        <td>Topological coloring of 2D or 3D labelled points (i.e. assign distinct colors to adjacent clusters)
+                        <td>Topological coloring (cf. <a href="https://academic.oup.com/comjnl/article-lookup/doi/10.1093/comjnl/10.1.85">Welsh and Powell, 1967</a>) of 2D or 3D labelled points (i.e. assign distinct colors to adjacent clusters)
                         </td>
                     </tr>
                     <tr>
