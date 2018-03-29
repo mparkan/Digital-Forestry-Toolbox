@@ -34,7 +34,7 @@
             <br>
             <hr>
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Last update: March 28, 2018 / Matlab r2017b, GNU Octave 4.2.1</b></p>
+            <p style="text-align: center"><b>Last update: March 29, 2018 / Matlab r2017b, GNU Octave 4.2.1</b></p>
             <p> In this tutorial, you will learn how to detect individual tree crowns from a raster Canopy Height Model (CHM) using marker controlled watershed segmentation. Before starting, you should:</p>
 
             <ol>
@@ -315,7 +315,7 @@ ylabel('z')</code></pre>
     pc.record.intensity, ...
     pc.record.return_number, ...
     pc.record.number_of_returns, ...
-    zeros(length(pc.record.x), 3), ...
+    nan(length(pc.record.x), 3), ...
     'metrics', {'all'}, ...
     'intensityScaling', true, ...
     'dependencies', false, ...
@@ -324,43 +324,120 @@ ylabel('z')</code></pre>
 </code></pre>
 
         <h2>
-            <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Exporting the segment metrics to an ESRI shapefile
+            <a id="step-9" class="anchor" href="step-9" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 9</b> - Exporting the segment metrics to CSV and SHP files
         </h2>
 
-        <p>The following illustrates how to export a subset of the segmentation metrics to an ESRI shapefile:</p>
+        <p>The following illustrates how to export a subset of the segmentation metrics to a Comma Separated Values text file (.csv). You first have to convert the <code>metrics_3d</code> structure to a cell array:</p>
 
-        <pre><code>T = table;
-T.Geometry = repmat({'Point'}, height(metrics), 1);
-T.UUID = metrics.UUID;
-T.X = round(metrics.X,2);
-T.Y = round(metrics.Y,2);
-T.Z = round(metrics.Z,2);
-T.TOTALHEIGHT = round(metrics.TotalHeight, 1);
-T.AREA = round(metrics.Area, 1);
-T.VOLUME = round(metrics.Volume, 1);
-T.INTENSITYQ50 = round(metrics.IntensityQ50, 1);
+        <pre><code>fields = fieldnames(metrics_3d);
+m = length(fields);
+n = length(metrics_3d.(fields{1}));
 
-shapewrite(table2struct(T), '26995_12710_seg_metrics.shp');</code></pre>
+% determine print format
+idxl_num = structfun(@(x) isnumeric(x), metrics_3d);
+fmt = repmat({'%s'}, [1 m]);
+fmt(idxl_num) = {'%.3f'};
+fmt = [strjoin(fmt, ','), '\n'];
 
-        <p>After exporting, you can try opening the shapefile in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
+% convert structure to cell array
+C = cell(m, n);
+for j = 1:m
+
+    if isnumeric(metrics_3d.(fields{j}))
+
+        C(j,:) = num2cell(metrics_3d.(fields{j}));
+
+    else
+
+        C(j,:) = metrics_3d.(fields{j});
+
+    end
+
+end</code></pre>
+
+        <p>You can then write the data to a CSV file with:</p>
+
+                <pre><code>% write cell array to CSV file
+% IMPORTANT: adjust the path to the output CSV file
+fid = fopen('26995_12710_seg_metrics.csv', 'w+'); % open file
+fprintf(fid, '%s\n', strjoin(fields, ',')); % write header line
+fprintf(fid, fmt, C{:}); % write metrics
+fclose(fid); % close file</code></pre>
+
+<p>After exporting the CSV file, you can try opening it in any text editor (e.g. <a href="https://notepad-plus-plus.org/">Notepad++</a>).</p>
+
+<p>To export the segmentation metrics to an ESRI shapefile you first have to convert the cell array <code>C</code> to a non-scalar structure and add a "Geometry" field:</p>
+
+<pre><code>% create a non-scalar structure
+S = cell2struct(C, fields);
+clear C
+
+% add geometry field
+[S.Geometry] = deal('Point');</code></pre>
+
+<p>Then use <code>shapewrite()</code> to write the file:</p>
+
+<pre><code>% write non-scalar structure to SHP file
+% IMPORTANT: adjust the path to the output SHP file
+shapewrite(S, '26995_12710_seg_metrics.shp');</code></pre>
+
+
+        <p>After exporting the SHP file, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
 
         <h2>
-            <a id="step-8" class="anchor" href="step-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 8</b> - Exporting the labelled point cloud to a LAS file
+            <a id="step-10" class="anchor" href="step-10" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 10</b> - Exporting the labelled and colored point cloud to a LAS 1.4 file
         </h2>
 
 
-        <p>Finally, we export the colored point cloud to a LAS file with <code>LASwrite()</code>:</p>
+        <p>Finally, we export the colored point cloud to a LAS 1.4 file with <code>LASwrite()</code>. We start by duplicating the source file and adding the RGB records:</p>
 
 
-<pre><code>% duplicate source file
+<pre><code>% duplicate the source file
 r = pc;
 
-% add RGB color fields
-r.record.red = uint16(rgb(:,1) * 65535);
-r.record.green = uint16(rgb(:,2) * 65535);
-r.record.blue = uint16(rgb(:,3) * 65535);
+% rescale the RGB colors to 16 bit range and add them to the point record
+rgb = uint16(cmap(color_3d+1,:) * 65535);
+r.record.red = rgb(:,1);
+r.record.green = rgb(:,2);
+r.record.blue = rgb(:,3);</code></pre>
 
-% if necessary, adapt output record format to add RGB channel
+     <p>We then add the "label" as an extra 32 bit record and add the metadata for this field in the Variable Length Records (cf. <a href="https://www.asprs.org/a/society/committees/standards/LAS_1_4_r13.pdf">ASPRS LAS 1.4 specification</a> for details about the meaning of the metadata fields):</p>
+
+    <pre><code>% add the "label" field to the point record (as an uint32 field)
+r.record.label = uint32(label_3d);
+
+% add the "label" uint32 field metadata in the variable length records
+% check the ASPRS LAS 1.4 specification for details about the meaning of the fields
+% https://www.asprs.org/a/society/committees/standards/LAS_1_4_r13.pdf
+vlr = struct;
+vlr.value.reserved = 0;
+vlr.value.data_type = 5;
+vlr.value.options.no_data_bit = 0;
+vlr.value.options.min_bit = 0;
+vlr.value.options.max_bit = 0;
+vlr.value.options.scale_bit = 0;
+vlr.value.options.offset_bit = 0;
+vlr.value.name = 'label';
+vlr.value.unused = 0;
+vlr.value.no_data = [0; 0; 0];
+vlr.value.min = [0; 0; 0];
+vlr.value.max = [0; 0; 0];
+vlr.value.scale = [0; 0; 0];
+vlr.value.offset = [0; 0; 0];
+vlr.value.description = 'LABEL';
+
+vlr.reserved = 43707;
+vlr.user_id = 'LASF_Spec';
+vlr.record_id = 4;
+vlr.record_length_after_header = length(vlr.value) * 192;
+vlr.description = 'Extra bytes';
+
+% append the new VLR to the existing VLR
+r.variable_length_records(length(r.variable_length_records)+1) = vlr;</code></pre>
+
+     <p>We also adjust the point data record format in the LAS header to support the RGB fields:</p>
+
+     <pre><code>% if necessary, adapt the output record format to add the RGB channel
 switch pc.header.point_data_format_id
 
     case 1 % 1 -> 3
@@ -383,14 +460,23 @@ switch pc.header.point_data_format_id
 
         recordFormat = pc.header.point_data_format_id;
 
-end
+end</code></pre>
 
+<p>Finally, we write the LAS file with <code>LASwrite()</code> and check that it has been correctly written with <code>LASread()</code>:</p>
+<pre><code>% write the LAS 1.4 file
+% IMPORTANT: adjust the path to the output LAS file
 LASwrite(r, ...
     '26995_12710_ws_seg.las', ...
     'version', 14, ...
+    'guid', lower(strcat(dec2hex(randi(16,32,1)-1)')), ...
     'systemID', 'SEGMENTATION', ...
     'recordFormat', recordFormat, ...
-    'verbose', true);</code></pre>
+    'verbose', true);
+
+% you can optionally read the exported file and check it has the
+% RGB color and label records
+% IMPORTANT: adjust the path to the input LAS file
+r2 = LASread('26995_12710_ws_seg.las');</code></pre>
 
      <p>After exporting, you can try opening the LAS file in any appropriate CAD, GIS or 3D visualization software (e.g. <a href="http://c42f.github.io/displaz/">Displaz</a>, <a href="http://www.danielgm.net/cc/">CloudCompare</a>, <a href="https://www.fugro.com/about-fugro/our-expertise/technology/fugroviewer">FugroViewer</a>).</p>
 
