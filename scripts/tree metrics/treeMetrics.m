@@ -28,9 +28,11 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %    metrics (optional, default: {'all'}) - cell array of strings, list of
 %    metrics to compute for each segment. The list can contain a
 %    combination of individual features (e.g. 'UUID', 'ConvexVolume',
-%    'TotalHeight', 'IntensityMedian'), feature categories (i.e. 'identifier', 'Basic', 
-%    'Spatial point pattern', 'External shape', 'Intensity statistics', 'Opacity statistics', 'Color'), 
-%    or 'all' (compute all features)
+%    'TotalHeight', 'IntensityMedian') or feature categories. Supported
+%    feature categories are: 'Indentifier', 'Basic', 'PointPatternMetrics', 
+%    'IntensityMetrics', 'OpacityMetrics', 'ColorMetrics',
+%    'ExternalShapeMetrics'. If you want to compute all metrics specify
+%    {'all'}.
 %
 %    treePos (optional, default: []) - Mx3 numeric matrix, xyz coordinates of
 %    the tree positions. M is the number of segments (trees). If not specified, 
@@ -63,7 +65,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %         pc.record.return_number, ...
 %         pc.record.number_of_returns, ...
 %         [pc.record.red, pc.record.green, pc.record.blue], ...
-%         'metrics', {'Identifiers', 'Intensity statistics', 'Opacity statistics', 'ConvexVolume', 'ConvexArea'}, ...
+%         'metrics', {'Identifier', 'IntensityMetrics', 'OpacityMetrics', 'ConvexVolume', 'ConvexArea'}, ...
 %         'intensityScaling', true, ...
 %         'scalarOnly', true, ...
 %         'dependencies', true, ...
@@ -81,7 +83,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 27, 2018
+% Last revision: March 29, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -112,6 +114,10 @@ OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system i
 
 nargoutchk(1,2);
 
+void_intensity = all(isnan(intensity));
+void_return_number = all(isnan(returnNumber));
+void_return_total = all(isnan(returnTotal));
+void_rgb = all(isnan(rgb(:)));
 
 %% extract terrain points
 
@@ -151,13 +157,17 @@ rgb = rgb(idxn_sort,:);
 
 %% compute auxiliary variables
 
-opacity = returnNumber ./ returnTotal;
-rg_chromaticity = bsxfun(@rdivide, rgb, sum(rgb,2));
-
 idxl_first = (returnNumber == 1);
 idxl_last = (returnNumber == returnTotal);
 idxl_single = (returnTotal == 1);
 
+% opacity
+opacity = returnNumber ./ returnTotal;
+
+% chromaticity
+rg_chromaticity = bsxfun(@rdivide, rgb, sum(rgb,2));
+
+% intensity
 intensity_first = intensity;
 intensity_first(~idxl_first) = nan;
 
@@ -180,9 +190,7 @@ end
 % position proxy (root, centroid, apex)
 if isempty(arg.Results.treePos)
     
-    proxy = 'apex';
-    % margin = 0.5;
-    
+    proxy = 'apex'; % change to 'root' or 'centroid', if required
     xyz_proxy = zeros(n_obs,3);
     
     switch proxy
@@ -270,485 +278,521 @@ end
 %% list feature dependencies
 
 warning off
-meta = struct;
+M = struct;
 
-meta.Category = {};
-meta.Name = {};
-meta.Dependencies = {};
-meta.Scalar = [];
-meta.Octave = [];
+M.Category = {};
+M.Name = {};
+M.Dependencies = {};
+M.Scalar = [];
+M.Octave = [];
 
 k = 1;
-meta.Category{k} = 'Identifier';
-meta.Name{k} = 'UUID';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'Identifier';
+M.Name{k} = 'UUID';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Identifier';
-meta.Name{k} = 'LUID';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'Identifier';
+M.Name{k} = 'LUID';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'RandomControl';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'RandomControl';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'NPoints';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'NPoints';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'XYZ';
-meta.Dependencies{k} = {'NPoints'};
-meta.Scalar(k) = false;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'XYZ';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'RGB';
-meta.Dependencies{k} = {'NPoints'};
-meta.Scalar(k) = false;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'XYH';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'X';
-meta.Dependencies{k} = {'NPoints'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'UVW';
+M.Dependencies{k} = {'XYH'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'Y';
-meta.Dependencies{k} = {'NPoints'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'X';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'Z';
-meta.Dependencies{k} = {'NPoints'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'Y';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'XYH';
-meta.Dependencies{k} = {'NPoints'};
-meta.Scalar(k) = false;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'Z';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'UVW';
-meta.Dependencies{k} = {'XYH'};
-meta.Scalar(k) = false;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'ConvexHull2D';
+M.Dependencies{k} = {'XYH'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'Opacity';
-meta.Dependencies{k} = {'NPoints'};
-meta.Scalar(k) = false;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'ConvexHull3D';
+M.Dependencies{k} = {'XYH'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'Intensity';
-meta.Dependencies{k} = {'NPoints'};
-meta.Scalar(k) = false;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'ConcaveHull2D';
+M.Dependencies{k} = {'XYH'};
+M.Scalar(k) = false;
+M.Octave(k) = false;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'ConvexHull2D';
-meta.Dependencies{k} = {'XYH'};
-meta.Scalar(k) = false;
-meta.Octave(k) = true;
+M.Category{k} = 'Basic';
+M.Name{k} = 'ConcaveHull3D';
+M.Dependencies{k} = {'XYH'};
+M.Scalar(k) = false;
+M.Octave(k) = false;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'ConvexHull3D';
-meta.Dependencies{k} = {'XYH'};
-meta.Scalar(k) = false;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'HeightMean';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'ConcaveHull2D';
-meta.Dependencies{k} = {'XYH'};
-meta.Scalar(k) = false;
-meta.Octave(k) = false;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'HeightMedian';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Basic';
-meta.Name{k} = 'ConcaveHull3D';
-meta.Dependencies{k} = {'XYH'};
-meta.Scalar(k) = false;
-meta.Octave(k) = false;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'HeightSD';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'TotalHeight';
-meta.Dependencies{k} = {'XYZ', 'X', 'Y', 'Z'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'HeightCV';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'HeightMean';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'HeightKurtosis';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'HeightMedian';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'HeightSkewness';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'HeightSD';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'HeightQ25';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'HeightCV';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'HeightQ50';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'HeightKurtosis';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'HeightQ75';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'HeightSkewness';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'HeightQ90';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'HeightQ25';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'PrinCompVar1';
+M.Dependencies{k} = {'UVW'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'HeightQ50';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'PrinCompVar2';
+M.Dependencies{k} = {'UVW'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'HeightQ75';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'PrinCompVar3';
+M.Dependencies{k} = {'UVW'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'HeightQ90';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'ConcaveBoundaryFraction';
+M.Dependencies{k} = {'ConcaveHull3D'};
+M.Scalar(k) = true;
+M.Octave(k) = false;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'PrinCompVar1';
-meta.Dependencies{k} = {'UVW'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'ConvexBoundaryFraction';
+M.Dependencies{k} = {'ConvexHull3D'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'PrinCompVar2';
-meta.Dependencies{k} = {'UVW'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'ConcavePointDensity';
+M.Dependencies{k} = {'NPoints', 'ConcaveVolume'};
+M.Scalar(k) = true;
+M.Octave(k) = false;
 k = k + 1;
 
-meta.Category{k} = 'Spatial point pattern';
-meta.Name{k} = 'PrinCompVar3';
-meta.Dependencies{k} = {'UVW'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'PointPatternMetrics';
+M.Name{k} = 'ConvexPointDensity';
+M.Dependencies{k} = {'NPoints', 'ConvexVolume'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConcaveArea';
-meta.Dependencies{k} = {'ConcaveHull2D'};
-meta.Scalar(k) = true;
-meta.Octave(k) = false;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'TotalHeight';
+M.Dependencies{k} = {'XYZ', 'X', 'Y', 'Z'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConcaveSurfaceArea';
-meta.Dependencies{k} = {'ConcaveHull3D'};
-meta.Scalar(k) = true;
-meta.Octave(k) = false;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'ConcaveArea';
+M.Dependencies{k} = {'ConcaveHull2D'};
+M.Scalar(k) = true;
+M.Octave(k) = false;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConcaveVolume';
-meta.Dependencies{k} = {'ConcaveHull3D'};
-meta.Scalar(k) = true;
-meta.Octave(k) = false;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'ConcaveSurfaceArea';
+M.Dependencies{k} = {'ConcaveHull3D'};
+M.Scalar(k) = true;
+M.Octave(k) = false;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConcaveSpecificSurface';
-meta.Dependencies{k} = {'ConcaveVolume', 'ConcaveSurfaceArea'};
-meta.Scalar(k) = true;
-meta.Octave(k) = false;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'ConcaveVolume';
+M.Dependencies{k} = {'ConcaveHull3D'};
+M.Scalar(k) = true;
+M.Octave(k) = false;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConcaveBoundaryFraction';
-meta.Dependencies{k} = {'ConcaveHull3D'};
-meta.Scalar(k) = true;
-meta.Octave(k) = false;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'ConcaveSpecificSurface';
+M.Dependencies{k} = {'ConcaveVolume', 'ConcaveSurfaceArea'};
+M.Scalar(k) = true;
+M.Octave(k) = false;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConvexArea';
-meta.Dependencies{k} = {'ConvexHull2D'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'ConvexArea';
+M.Dependencies{k} = {'ConvexHull2D'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'CrownDiameter';
-meta.Dependencies{k} = {'ConvexArea'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'CrownDiameter';
+M.Dependencies{k} = {'ConvexArea'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConvexSurfaceArea';
-meta.Dependencies{k} = {'ConvexHull3D'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'ConvexSurfaceArea';
+M.Dependencies{k} = {'ConvexHull3D'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConvexVolume';
-meta.Dependencies{k} = {'ConvexHull3D'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'ConvexVolume';
+M.Dependencies{k} = {'ConvexHull3D'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'Convexity';
-meta.Dependencies{k} = {'ConvexSurfaceArea', 'ConcaveSurfaceArea'};
-meta.Scalar(k) = true;
-meta.Octave(k) = false;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'Convexity';
+M.Dependencies{k} = {'ConvexSurfaceArea', 'ConcaveSurfaceArea'};
+M.Scalar(k) = true;
+M.Octave(k) = false;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConvexHullLacunarity';
-meta.Dependencies{k} = {'ConvexVolume', 'ConcaveVolume'};
-meta.Scalar(k) = true;
-meta.Octave(k) = false;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'ConvexHullLacunarity';
+M.Dependencies{k} = {'ConvexVolume', 'ConcaveVolume'};
+M.Scalar(k) = true;
+M.Octave(k) = false;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConvexSpecificSurface';
-meta.Dependencies{k} = {'ConvexVolume', 'ConvexSurfaceArea'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'ConvexSpecificSurface';
+M.Dependencies{k} = {'ConvexVolume', 'ConvexSurfaceArea'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConvexBoundaryFraction';
-meta.Dependencies{k} = {'ConvexHull3D'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'AspectRatio';
+M.Dependencies{k} = {'ConvexArea', 'TotalHeight'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'AspectRatio';
-meta.Dependencies{k} = {'ConvexArea', 'TotalHeight'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'OpacityMetrics';
+M.Name{k} = 'Opacity';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConcavePointDensity';
-meta.Dependencies{k} = {'NPoints', 'ConcaveVolume'};
-meta.Scalar(k) = true;
-meta.Octave(k) = false;
+M.Category{k} = 'OpacityMetrics';
+M.Name{k} = 'OpacityQ50';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'External shape';
-meta.Name{k} = 'ConvexPointDensity';
-meta.Dependencies{k} = {'NPoints', 'ConvexVolume'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'OpacityMetrics';
+M.Name{k} = 'SingleReturnFraction';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Opacity statistics';
-meta.Name{k} = 'OpacityQ50';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'OpacityMetrics';
+M.Name{k} = 'FirstReturnFraction';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Opacity statistics';
-meta.Name{k} = 'SingleReturnFraction';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'OpacityMetrics';
+M.Name{k} = 'LastReturnFraction';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Opacity statistics';
-meta.Name{k} = 'FirstReturnFraction';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'Intensity';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Opacity statistics';
-meta.Name{k} = 'LastReturnFraction';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensityQ25';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensityQ25';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensityQ50';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensityQ50';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensityQ75';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensityQ75';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensityQ90';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensityQ90';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensityMean';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensityMean';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensityMax';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensityMax';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensitySD';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensitySD';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensityCV';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensityCV';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensityKurtosis';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensityKurtosis';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensitySkewness';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensitySkewness';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensityFirstReturnQ50';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensityFirstReturnQ50';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensityLastReturnQ50';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensityLastReturnQ50';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'IntensityMetrics';
+M.Name{k} = 'IntensitySingleReturnQ50';
+M.Dependencies{k} = [];
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Intensity statistics';
-meta.Name{k} = 'IntensitySingleReturnQ50';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'ColorMetrics';
+M.Name{k} = 'RGB';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Color';
-meta.Name{k} = 'Chromaticity';
-meta.Dependencies{k} = [];
-meta.Scalar(k) = false;
-meta.Octave(k) = true;
+M.Category{k} = 'ColorMetrics';
+M.Name{k} = 'Chromaticity';
+M.Dependencies{k} = [];
+M.Scalar(k) = false;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Color';
-meta.Name{k} = 'ChromaticityRedMedian';
-meta.Dependencies{k} = {'Chromaticity'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'ColorMetrics';
+M.Name{k} = 'ChromaticityRedMedian';
+M.Dependencies{k} = {'Chromaticity'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
-meta.Category{k} = 'Color';
-meta.Name{k} = 'ChromaticityGreenMedian';
-meta.Dependencies{k} = {'Chromaticity'};
-meta.Scalar(k) = true;
-meta.Octave(k) = true;
+M.Category{k} = 'ColorMetrics';
+M.Name{k} = 'ChromaticityGreenMedian';
+M.Dependencies{k} = {'Chromaticity'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
 k = k + 1;
 
 % Add additional metrics here
+
+
+
+%% list available features
+
+idxl_filter = true(1,length(M.Name));
+
+if OCTAVE_FLAG
+    
+    idxl_filter = idxl_filter & M.Octave;
+    
+end
+
+if void_intensity || void_return_number || void_return_total
+    
+    idxl_filter = idxl_filter & ~ismember([M.Category], 'IntensityMetrics');
+    
+end
+
+if void_return_number || void_return_total
+    
+    idxl_filter = idxl_filter & ~ismember([M.Category], 'OpacityMetrics');
+    
+end
+
+if void_rgb
+    
+    idxl_filter = idxl_filter & ~ismember([M.Category], 'ColorMetrics');
+    
+end
+
+if ~any(idxl_filter)
+    
+    error('none of the specified metrics can be computed');
+    
+end
 
 
 %% build dependency graph
@@ -760,55 +804,14 @@ if arg.Results.verbose
     
 end
 
-if ismember('all', arg.Results.metrics)
-    
-    idxl_filter = true(length(meta.Name),1);
-    
-else
-    
-    idxl_filter = false(length(meta.Name),1);
-    
-    for j = 1:length(meta.Name)
-        
-        if any(ismember([meta.Category(j), meta.Name(j)], arg.Results.metrics))
-            
-            idxl_filter(j) = true;
-            if ~isempty(meta.Dependencies{j})
-                
-                idxl_filter(ismember(meta.Name, meta.Dependencies{j})) = true;
-                
-            end
-            
-        end
-        
-    end
-    
-    idxl_filter = false(length(meta.Name),1);
-    idxl_filter(ismember(meta.Category, arg.Results.metrics)) = true;
-    idxl_filter(ismember(meta.Name, arg.Results.metrics)) = true;
-    
-end
-
-if OCTAVE_FLAG
-    
-    idxl_filter(~meta.Octave) = false;
-    
-end
-
-if ~any(idxl_filter)
-    
-    error('none of the specified metrics can be computed');
-    
-end
-
 % create directed adjacency matrix
-n = length(meta.Name);
+n = length(M.Name);
 A = false(n);
 for j = 1:n
     
-    if ~isempty(meta.Dependencies{j})
+    if ~isempty(M.Dependencies{j})
         
-        A(:, j) = ismember(meta.Name, meta.Dependencies{j});
+        A(:, j) = ismember(M.Name, M.Dependencies{j});
         
     end
     
@@ -818,10 +821,10 @@ end
 G = struct;
 
 % add node names
-G.Nodes.Name = meta.Name;
+G.Nodes.Name = M.Name';
 
 % compute indegree
-G.Nodes.Degree = sum(A,1);
+G.Nodes.Degree = sum(A,1)';
 
 % add edges
 if any(A(:))
@@ -835,14 +838,24 @@ else
     
 end
 
+% mark selected nodes
+if ismember('all', lower(arg.Results.metrics))
+    
+    G.Nodes.Selected = true(n,1);
+    
+else
+    
+    G.Nodes.Selected = ismember(lower(M.Category)', lower(arg.Results.metrics)) | ismember(lower(M.Name)', lower(arg.Results.metrics));
+    
+end
+
 % topological sorting with depth first search
-idxn_start = find(idxl_filter);
-order = idxn_start(1);
+idxn_start = 1:n;
 for j = 1:length(idxn_start)
     
     discovered = false(n,1);
     S = idxn_start(j);
-    order = [order; idxn_start(j)];
+    order = S;
     
     while ~isempty(S) % while S is not empty
         
@@ -852,7 +865,7 @@ for j = 1:length(idxn_start)
         if ~discovered(v)
             
             discovered(v) = true;
-            idxl_adj = G.Edges.EndNodes(:,2) == v;
+            idxl_adj = G.Edges.EndNodes(:,2) == v; % find parent nodes
             S = [S; G.Edges.EndNodes(idxl_adj,1)];
             order = [order; G.Edges.EndNodes(idxl_adj,1)];
             
@@ -860,9 +873,19 @@ for j = 1:length(idxn_start)
         
     end
     
+    % store dependency path
+    G.Nodes.DependencyPath{j,1} = order;
+    
+    % mark selected nodes
+    G.Nodes.Available(j,1) = all(ismember(order, find(idxl_filter)));
+
 end
 
-L = unique(flipud(order), 'first');
+global_order = flipud(cell2mat(G.Nodes.DependencyPath(G.Nodes.Available & G.Nodes.Selected)));
+[~, ia, ~] = unique(global_order, 'first');
+[ia, ~] = sort(ia);
+L = global_order(ia);
+%L = unique(flipud(order), 'stable')'; % Matlab only
 
 if arg.Results.verbose
     
@@ -870,6 +893,12 @@ if arg.Results.verbose
     toc
     
 end
+
+% figure % Matlab only
+% plot(digraph(A), 'NodeLabel', G.Nodes.Name) 
+% 
+% figure % Matlab only
+% plot(digraph(A))
 
 
 %% compute metrics
@@ -1366,6 +1395,6 @@ end
 % remove non-scalar metrics
 if arg.Results.scalarOnly
     
-    metrics = rmfield(metrics, setdiff(fieldnames(metrics), meta.Name(logical(meta.Scalar))));
+    metrics = rmfield(metrics, setdiff(fieldnames(metrics), M.Name(logical(M.Scalar))));
     
 end
