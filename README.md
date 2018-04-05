@@ -14,8 +14,9 @@ Please check the [Digital-Forestry-Toolbox website](http://mparkan.github.io/Dig
 
 The Digital Forestry Toolbox was developed by Matthew Parkan ([GIS Research Laboratory, EPFL](https://lasig.epfl.ch/)) with support from the Swiss Forest and Wood Research Fund (project 2013.18).
 
-If you use this code in your work, please consider including the following acknowledgement: 
-
-Matthew Parkan. (2018). Digital Forestry Toolbox for Matlab/Octave. Available: https://github.com/mparkan/Digital-Forestry-Toolbox/
+If you use this code in your work, please consider including the following citation:
+<blockquote>
+Matthew Parkan. (2018). Digital Forestry Toolbox for Matlab/Octave. DOI: 10.5281/zenodo.1213013. Available: http://mparkan.github.io/Digital-Forestry-Toolbox/.
+</blockquote>
 
 [![DOI](https://zenodo.org/badge/58712667.svg)](https://zenodo.org/badge/latestdoi/58712667)
