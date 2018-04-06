@@ -1,7 +1,7 @@
 function xyh = alt2height(xyz, classification, varargin)
 % ALT2HEIGHT - converts 3D point cloud altitude to height above terrain.
 % XYH = ALT2HEIGHT(XYZ, CLASSIFICATION, ...) computes a 3D terrain model using the interpolation specified
-% with METHOD and subtracts terrain altitude to points.
+% with METHOD and subtracts terrain altitude from the points.
 % 
 % Syntax:  xyh = alt2height(xyz, classification, ...)
 % 
@@ -13,7 +13,7 @@ function xyh = alt2height(xyz, classification, varargin)
 %    classTerrain (optional, default: 2) - integer vector, terrain class numbers
 % 
 %    method (optional, default: 'linear') - string, any of the interpolation methods supported by
-%    griddata ('nearest', 'linear', 'natural', 'cubic', 'v4')
+%    griddata ('nearest', 'linear', 'cubic')
 %
 %    verbose (optional, default: true) - boolean value, verbosiy switch
 %
@@ -24,18 +24,16 @@ function xyh = alt2height(xyz, classification, varargin)
 % Example:
 %
 % pc = LASread('..\data\measurements\vector\als\zh_2014_coniferous.las');
-% xyz = [pc.record.x, pc.record.y, pc.record.z];
-% classification = pc.record.classification;
 %
-% xyh = alt2height(xyz, ...
-%     classification, ...
+% xyh = alt2height([pc.record.x, pc.record.y, pc.record.z], ...
+%     pc.record.classification, ...
 %     'classTerrain', 2, ...
-%     'method', 'natural');
+%     'method', 'linear');
 % 
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2016b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
 % 
 % See also:
 % 
@@ -43,7 +41,7 @@ function xyh = alt2height(xyz, classification, varargin)
 % 
 % Author: Matthew Parkan, EPFL - GIS Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 20, 2017
+% Last revision: April 6, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -59,6 +57,14 @@ addParameter(arg, 'method', 'linear', @(x) ismember(x, {'nearest', 'linear', 'na
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, xyz, classification, varargin{:});
+
+OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system is Matlab or GNU Octave
+
+if OCTAVE_FLAG
+    
+    more off % disable pager
+    
+end
 
 
 %% compute terrain model
@@ -103,10 +109,12 @@ idxl_nan = isnan(z0);
 
 if any(idxl_nan)
     
-    [idxn_nn, ~] = knnsearch(xyz(~idxl_nan,:), ...
-        xyz(idxl_nan,:), ...
-        'K', 1);
-    z0(idxl_nan) = z0(idxn_nn);
+    z0(idxl_nan) = griddata(xyz_ter(:,1), ...
+        xyz_ter(:,2), ...
+        xyz_ter(:,3), ...
+        xyz(idxl_nan,1), ...
+        xyz(idxl_nan,2), ...
+        'nearest');
     
 end
 
