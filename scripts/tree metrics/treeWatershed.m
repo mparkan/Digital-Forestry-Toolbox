@@ -74,7 +74,6 @@ addRequired(arg, 'chm', @isnumeric);
 addParameter(arg, 'markers', [], @isnumeric);
 addParameter(arg, 'minHeight', 1, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'mask', [], @(x) islogical(x) && any(x(:)) && all(size(x) == size(chm)));
-addParameter(arg, 'seams', false, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
@@ -150,13 +149,10 @@ end
 
 %% remove seam lines
 
-if ~arg.Results.seams
-    
-    [d_nn, idxn_nn] = bwdist(label ~= 0);
-    idxl_dist = ((d_nn >= 1) & (d_nn < 2));
-    label(idxl_dist) = label(idxn_nn(idxl_dist));
-    
-end
+[d_nn, idxn_nn] = bwdist(label ~= 0);
+idxl_dist = ((d_nn >= 1) & (d_nn < 2));
+label(idxl_dist) = label(idxn_nn(idxl_dist));
+
 
 %% remove nan values
 
