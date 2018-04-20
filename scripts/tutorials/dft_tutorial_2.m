@@ -1,10 +1,10 @@
 % DIGITAL FORESTRY TOOLBOX - TUTORIAL 2
 %
-% Other m-files required: LASread.m, elevationModels.m, canopyPeaks.m,
+% Other m-files required: LASread.m, rasterize.m, elevationModels.m, canopyPeaks.m,
 % treeWatershed.m, LASwrite.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.2 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 29, 2018
+% Last revision: April 20, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -27,6 +27,7 @@ if OCTAVE_FLAG
     pkg load statistics
     pkg load image
     pkg load mapping
+    more off
     
 end
 
@@ -34,19 +35,19 @@ end
 %% Step 1 - Reading the LAS file
 
 % IMPORTANT: adjust the path to the input LAS file
-%pc = LASread('C:\Users\lasigadmin\Desktop\tutorials\26995_12710.las');
-pc = LASread('C:\Users\lasigadmin\Google Drive\matlab_forestry_toolbox\data\measurements\vector\benchmark\ch1903p_final\ne_2016_boudry20e_ch1903p_survey.las');
+pc = LASread('26995_12710.las');
+
 
 %% Step 2 - Computing a raster Canopy Height Model (CHM)
 
-cellResolution = 0.5; % 0.8
+cellSize = 0.8;
 [models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
     pc.record.classification, ...
     'classTerrain', [2], ...
     'classSurface', [4,5], ...
-    'cellResolution', cellResolution, ...
-    'closing', 5, ...
-    'smoothingFilter', fspecial('gaussian', [4, 4], 1), ...
+    'cellSize', cellSize, ...
+    'closing', inf, ...
+    'smoothingFilter', fspecial('gaussian', [3, 3], 0.8), ...
     'outputModels', {'terrain', 'surface', 'height'}, ...
     'fig', true, ...
     'verbose', true);
@@ -64,19 +65,10 @@ cellResolution = 0.5; % 0.8
 
 %% Step 4 - Marker controlled watershed segmentation
 
-% build a border mask to exclude segments that intersect the border margin
-borderMargin = 5; % 5 pixel border margin
-r = round(borderMargin / cellResolution);
-SE = bwdist(padarray(true, [r,r])) <= r;
-SE(ceil(size(SE,1)/2), ceil(size(SE,2)/2)) = 0; % set central convolution window value to zero
-mask = imerode(padarray(models.mask, [1 1], false), SE);
-mask = mask(2:end-1,2:end-1);
-
-% segmentation
 [label_2d, colors] = treeWatershed(models.height.values, ...
     'markers', peaks_crh, ...
     'minHeight', 1, ...
-    'mask', mask, ...
+    'removeBorder', true, ...
     'fig', true, ...
     'verbose', true);
 
@@ -95,9 +87,10 @@ metrics_2d = regionprops(label_2d, models.height.values, ...
 idxn_color = accumarray(label_2d(:)+1, colors(:), [], @(x) mode(x), nan);
 idxl_veg = ismember(pc.record.classification, [4,5]);
 
-RC = ceil([pc.record.x - refmat(3,1), pc.record.y - refmat(3,2)] / refmat(1:2,:));
-RC(:,1) = min(RC(:,1), size(label_2d,1));
-RC(:,2) = min(RC(:,2), size(label_2d,2));
+% convert map coordinates (x,y) to image coordinates (column, row)
+RC = [pc.record.x - refmat(3,1), pc.record.y - refmat(3,2)] / refmat(1:2,:);
+RC(:,1) = round(RC(:,1)); % row
+RC(:,2) = round(RC(:,2)); % column
 
 ind = sub2ind(size(label_2d), RC(:,1), RC(:,2));
 
@@ -263,7 +256,15 @@ vlr.record_length_after_header = length(vlr.value) * 192;
 vlr.description = 'Extra bytes';
 
 % append the new VLR to the existing VLR
-r.variable_length_records(length(r.variable_length_records)+1) = vlr;
+if isfield(r, 'variable_length_records')
+    
+    r.variable_length_records(length(r.variable_length_records)+1) = vlr;
+    
+else
+    
+    r.variable_length_records = vlr;
+    
+end
 
 % if necessary, adapt the output record format to add the RGB channel
 switch pc.header.point_data_format_id
@@ -293,7 +294,7 @@ end
 % write the LAS 1.4 file
 % IMPORTANT: adjust the path to the output LAS file
 LASwrite(r, ...
-    '26995_12710_ws_seg.las', ...
+    'ne_2016_brevine_ws_seg.las', ...
     'version', 14, ...
     'guid', lower(strcat(dec2hex(randi(16,32,1)-1)')), ...
     'systemID', 'SEGMENTATION', ...
@@ -303,4 +304,4 @@ LASwrite(r, ...
 % you can optionally read the exported file and check it has the 
 % RGB color and label records
 % IMPORTANT: adjust the path to the input LAS file
-r2 = LASread('26995_12710_ws_seg.las');
+r2 = LASread('ne_2016_brevine_ws_seg.las');
