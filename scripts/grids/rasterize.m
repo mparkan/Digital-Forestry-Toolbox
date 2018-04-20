@@ -1,75 +1,66 @@
-function varargout = rasterize(xyz, xv, yv, varargin)
-% RASTERIZE - creates a 2D or 3D raster from scattered 3D points with coordinates XYZ by binning
-% them in the cells defined by edges XV, YV and optionaly ZV, applying the FUN
-% function to the VAL values contained in each grid cell. Cells which do not
-% contain any points are filled with the FILL value.
+function varargout = rasterize(xy, v, varargin)
+% RASTERIZE - creates a 2D raster from scattered points with coordinates XY and values V by
+% aggregating the values in each grid cell with function FUN. Cells which do not
+% contain any points are filled with the FILL value. The dimensions of the
+% raster are determined by the spatial reference matrix REFMAT or the pixel size CELLSIZE.
 %
-% Syntax:  [idxl_in, sub_crl, raster] = rasterize(xyz, xv, yv, ...)
+% Syntax:  [I, refmat] = rasterize(xy, v, ...)
 %
 % Inputs:
-%    xyz - Nx3 numeric matrix, xyz coordinates of the 3D points
+%    xy - Nx3 numeric matrix, xy coordinates of the points
 %
-%    xv - Cx1 numeric vector, containing the ordered x coordinates of the
-%    grid cells column centers
+%    v - Nx1 numeric vector, values which will be aggregated in each cell
 %
-%    yv - Rx1 numeric vector, containing the ordered y coordinates of the grid
-%    cells row centers
+%    cellSize (optional, default: 1) - numeric value, pixel (grid cell) size (in the same units as XY). If only cellSize is provided, 
+%    the upper left xy corner point is used as the center of the first
+%    pixel. The cellSize argument is ignored if refmat is provided.
 %
-%    zv (optional, default: []) - Lx1 numeric vector, containing the ordered z coordinates of the grid
-%    cells level (stack) centers
+%    refmat (optional, default: []) - 3x2 numeric matrix, spatial referencing matrix, such that xy_map = [row, col, ones(nrows,1)] * refmat. 
+%    The cellSize argument is ignored if refmat is provided.
 %
-%    val (optional, default: xyz(:,3)) - Nx1 numeric vector, values which will be
-%    aggregated in each cell (defaults to z)
+%    rasterSize (optional, default: []) - 1x2 numeric vector, target size [nrows, ncols] of the
+%    output raster. Points that fall outside the extent of the raster are ignored. 
 %
-%    fun (Optional) - anonymous function handle, function used to aggregate the values contained in
+%    fun (optional, default: @max) - anonymous function handle, function used to aggregate the values contained in
 %    each grid cell (e.g. max, min, std, mode, etc)
 %
-%    fill (Optional) - numeric value, fill value attributed to cells containing no data
+%    fill (optional, default: nan) - numeric or logical value, fill value attributed to cells containing no data
+%
+%    fig (optional, default: true) - boolean value, switch to plot figures
 %
 % Outputs:
-%    idxl_in - Nx1 boolean vector, flag indicating if each input point is within
-%    the defined grid extent 
+%    I - RxC matrix, rasterized values aggregated with the specified function handle
 %
-%    sub_crl - Nx3 numeric matrix, column, row, level subscripts of each point
-%
-%    raster (optional) - RxC or RxCxL numeric matrix, gridded values aggregated
-%    with the specified function handle
+%    refmat - 3x2 numeric matrix, spatial referencing matrix, such that xy_map = [row, col, ones(nrows,1)] * refmat
 %
 % Example:
 %    pc = LASread('..\data\measurements\vector\als\zh_2014_coniferous.las', false, true);
-%    xyz = [pc.record.x, pc.record.y, pc.record.z];
 %    
-%    dxy = 0.5;
-%    XY = round(xyz(:,1:2) / dxy) * dxy;
-%    xy_min = min(XY, [], 1);
-%    xy_max = max(XY, [], 1);
-%    xv = xy_min(1):dxy:xy_max(1);
-%    yv = xy_min(2):dxy:xy_max(2);
+%    % create a spatial reference matrix
+%    dx = 0.5;
+%    dy = -0.5;
+%    refmat = [0, dy; dx, 0; min(pc.record.x)-dx, max(pc.record.y)-dy];
 %
-%    [~, ~, raster] = rasterize(xyz, ...
-%        xv, ...
-%        yv, ...
-%        [], ...
-%        xyz(:,3), ...
-%        @(x) numel(x));
-%    
-%    figure
-%    imagesc(raster)
-%    colorbar  
-%    axis equal tight
+%    % find the maximum elevation in each 50cm x 50 cm grid cell
+%    z_max = rasterize([pc.record.x, pc.record.y], ...
+%         pc.record.z, ...
+%         'refmat', refmat, ...
+%         'fun', @(x) max(x), ...
+%         'fill', nan, ...
+%         'fig', true);
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.2 (configured for "x86_64-w64-mingw32")
 %
-% See also: rasterize.m
+% See also:
 %
 % This code is part of the Matlab Digital Forestry Toolbox
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 22, 2018
+% Last revision: April 20, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -78,97 +69,79 @@ function varargout = rasterize(xyz, xv, yv, varargin)
 
 arg = inputParser;
 
-addRequired(arg, 'xyz', @(x) (size(x,2) == 3) && isnumeric(x));
-addRequired(arg, 'xv', @(x) ismatrix(x) && isnumeric(x));
-addRequired(arg, 'yv', @(x) ismatrix(x) && isnumeric(x));
-addOptional(arg, 'zv', [], @(x) ismatrix(x) && isnumeric(x));
-addOptional(arg, 'val', [], @(x) isnumeric(x) || islogical(x));
-addOptional(arg, 'fun', [], @(x) isa(x, 'function_handle'));
-addOptional(arg, 'fill', [], @(x) (numel(x) == 1) && (isnumeric(x) || islogical(x)));
+addRequired(arg, 'xy', @(x) (size(x,2) == 2) && isnumeric(x));
+addRequired(arg, 'v', @(x) (size(x,2) == 1) && isnumeric(x));
+addParameter(arg, 'cellSize', 1, @(x) isnumeric(x) & (numel(x) == 1));
+addParameter(arg, 'refmat', [], @(x) (all(size(x) == [3, 2]) && isnumeric(x)) || isempty(x));
+addParameter(arg, 'rasterSize', [], @(x) (isnumeric(x) && (numel(x) == 2) && all(x > 0)) || isempty(x));
+addParameter(arg, 'fun', @max, @(x) isa(x, 'function_handle'));
+addParameter(arg, 'fill', nan, @(x) (isnumeric(x) || islogical(x)) & (numel(x) == 1));
+addParameter(arg, 'fig', false, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
-parse(arg, xyz, xv, yv, varargin{:});
-
-flag_raster = any(~isempty(arg.Results.val) || ~isempty(arg.Results.fun) || ~isempty(arg.Results.fill));
+parse(arg, xy, v, varargin{:});
 
 
-%% reformat input
+%% setup spatial reference matrix
 
-x = xyz(:,1);
-y = xyz(:,2);
-z = xyz(:,3);
-
-dx = abs(xv(2) - xv(1));
-dy = abs(yv(2) - yv(1));
-
-xv = linspace(xv(1)-dx/2, xv(end)+dx/2, length(xv)+1);
-yv = linspace(yv(1)-dy/2, yv(end)+dy/2, length(yv)+1);
-
+if isempty(arg.Results.refmat)
     
+    dx = arg.Results.cellSize;
+    dy = -arg.Results.cellSize;
+    refmat = [0, dy; dx, 0; min(xy(:,1))-dx, max(xy(:,2))-dy];
+
+else
+    
+    refmat = arg.Results.refmat;
+    
+end
+
+
+%% convert map to image coordinates
+
+P = [xy(:,1) - refmat(3,1), xy(:,2) - refmat(3,2)] / refmat(1:2,:); % center of upper left pixel -> [1,1]
+row = round(P(:,1));
+col = round(P(:,2));
+
+if ~isempty(arg.Results.rasterSize)
+    
+    nrows = arg.Results.rasterSize(1);
+    ncols = arg.Results.rasterSize(2);
+    
+else
+    
+    nrows = max(row);
+    ncols = max(col);
+    
+end
+
+
+%% clip values that fall outside the extent of the raster grid
+
+idxl_roi = (row > 0) & (row <= nrows) & (col > 0) & (col <= ncols);
+row = row(idxl_roi);
+col = col(idxl_roi);
+v = v(idxl_roi);
+    
+
 %% rasterize
 
-if isempty(arg.Results.zv) % 2D raster
-    
-    % check if coordinates are located within the grid extent
-    idxl_in = (x >= xv(1)) & (x <= xv(end)) & (y >= yv(1)) & (y <= yv(end));
-    
-    varargout{1} = idxl_in;
-    
-    if ~all(idxl_in)
-        
-        fprintf('\nWarning: %u points are located outside the defined grid extent\n', nnz(~idxl_in));
-        
-    end
-    
-    % pixel correspondance indices
-    [~, ind_col] = histc(x(idxl_in), xv);
-    [~, ind_row] = histc(y(idxl_in), yv);
-    
-    varargout{2} = [ind_col, ind_row];
-    
-    if flag_raster
+varargout{1} = accumarray([row, col], ...
+    v, ...
+    [nrows, ncols], ...
+    arg.Results.fun, ...
+    cast(arg.Results.fill, class(arg.Results.fun(v(1)))));
 
-        ncols = length(xv)-1;
-        nrows = length(yv)-1;
-        varargout{3} = accumarray([ind_row, ind_col], ...
-            arg.Results.val(idxl_in), ...
-            [nrows, ncols], ...
-            arg.Results.fun, ...
-            arg.Results.fill); % raster
-        
-    end
+varargout{2} = refmat;
+
+
+%% plot
+
+if arg.Results.fig
     
-else % 3D raster
-    
-    zv = arg.Results.zv;
-    dz = abs(zv(2) - zv(1));
-    zv = linspace(zv(1)-dz/2, zv(end)+dz/2, length(zv)+1);
-    
-    idxl_in = (x >= xv(1) & x <= xv(end) & y >= yv(1) & y <= yv(end) & z >= zv(1) & z <= zv(end));
-    varargout{1} = idxl_in;
-    
-    if ~all(idxl_in)
-        
-        fprintf('\nWarning: %u points are located outside the defined grid extent\n', nnz(~idxl_in));
-        
-    end
-    
-    [~, ind_col] = histc(x(idxl_in), xv);
-    [~, ind_row] = histc(y(idxl_in), yv);
-    [~, ind_lev] = histc(z(idxl_in), zv);
-    
-    varargout{2} = uint32([ind_col, ind_row, ind_lev]);
-    
-    if flag_raster
-        
-        ncols = length(xv)-1;
-        nrows = length(yv)-1;
-        nlevs = length(zv)-1;
-        varargout{3} = accumarray([ind_row, ind_col, ind_lev], ...
-            arg.Results.val(idxl_in), ...
-            [nrows, ncols, nlevs], ...
-            arg.Results.fun, ...
-            arg.Results.fill); % raster
-        
-    end
+    figure
+    imagesc(varargout{1})
+    colorbar
+    axis equal tight
     
 end
