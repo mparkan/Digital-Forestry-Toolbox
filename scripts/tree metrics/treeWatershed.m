@@ -19,14 +19,16 @@ function varargout = treeWatershed(chm, varargin)
 %    markers (optional, default: []) - Mx3 numeric matrix, images coordinates (col, row) and height
 %    values of markers used in the watershed algorithm
 %
-%    minHeight (optional, default: 1) - numeric value, minimum canopy height, all values
-%    below this threshold are set to zero.
+%    minHeight (optional, default: 1) - numeric value, minimum canopy height, all CHM values
+%    below this threshold are set to zero
 %
-%    mask (optional, default: []) - RxC boolean matrix, any segment that is
-%    not located entirely within the mask is excluded (i.e. label set to
-%    0). By default all segments are included.
+%    mask (optional, default: []) - RxC boolean matrix, labels where mask
+%    is false are set to 0
 %
-%    verbose (optional, default: true) - boolean value, verbosiy switch
+%    removeBorder (optional, default: false) - boolean value, if set to
+%    true, segments that touch the border of the CHM are removed
+%
+%    verbose (optional, default: true) - boolean value, verbosity switch
 %
 %    fig (optional, default: true) - boolean value, switch to plot figures
 %
@@ -53,7 +55,7 @@ function varargout = treeWatershed(chm, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.2 (configured for "x86_64-w64-mingw32")
 %
 % See also: rasterize.m
 %
@@ -61,7 +63,7 @@ function varargout = treeWatershed(chm, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 9, 2018
+% Last revision: April 20, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -74,11 +76,13 @@ addRequired(arg, 'chm', @isnumeric);
 addParameter(arg, 'markers', [], @isnumeric);
 addParameter(arg, 'minHeight', 1, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'mask', [], @(x) islogical(x) && any(x(:)) && all(size(x) == size(chm)));
+addParameter(arg, 'removeBorder', false, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, chm, varargin{:});
 nargoutchk(1, 2);
+
 
 %% apply height threshold
 
@@ -95,6 +99,7 @@ if arg.Results.verbose
     
 end
 
+[nrows, ncols] = size(chm);
 I = -chm;
 
 % impose regional minima in CHM (marker controled watershed)
@@ -133,19 +138,24 @@ if arg.Results.verbose
     
 end
 
+%% remove segments that touch the border of the CHM
+
+if arg.Results.removeBorder
+    
+    B = padarray(false(nrows-2, ncols-2), [1 1], true);
+    label(ismember(label, label(B))) = 0;
+    
+end
+
 
 %% apply mask
 
-label(chm < 1) = 0;
-
-%% remove segments that intersect the inverted mask
-
 if ~isempty(arg.Results.mask)
 
-    idxl_mask = ismember(label, label(~arg.Results.mask));
-    label(idxl_mask) = 0;
+    label(~idxl_mask) = 0;
     
 end
+
 
 %% remove seam lines
 
