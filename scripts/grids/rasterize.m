@@ -33,6 +33,8 @@ function varargout = rasterize(xy, v, varargin)
 %
 %    refmat - 3x2 numeric matrix, spatial referencing matrix, such that xy_map = [row, col, ones(nrows,1)] * refmat
 %
+%    ind - Nx1 numeric vector, pixel index of each xy point
+%
 % Example:
 %    pc = LASread('..\data\measurements\vector\als\zh_2014_coniferous.las', false, true);
 %    
@@ -60,7 +62,7 @@ function varargout = rasterize(xy, v, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: April 20, 2018
+% Last revision: April 21, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -81,6 +83,7 @@ addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, xy, v, varargin{:});
 
+nargoutchk(0, 3);
 
 %% setup spatial reference matrix
 
@@ -122,22 +125,37 @@ idxl_roi = (row > 0) & (row <= nrows) & (col > 0) & (col <= ncols);
 row = row(idxl_roi);
 col = col(idxl_roi);
 v = v(idxl_roi);
-    
+
+ind = nan(size(xy,1),1);
+ind(idxl_roi) = sub2ind([nrows, ncols], row, col);
+
 
 %% rasterize
 
-varargout{1} = accumarray([row, col], ...
-    v, ...
-    [nrows, ncols], ...
-    arg.Results.fun, ...
-    cast(arg.Results.fill, class(arg.Results.fun(v(1)))));
-
-varargout{2} = refmat;
+if any(idxl_roi)
+    
+    varargout{1} = accumarray([row, col], ...
+        v, ...
+        [nrows, ncols], ...
+        arg.Results.fun, ...
+        cast(arg.Results.fill, class(arg.Results.fun(v(1)))));
+    
+    varargout{2} = refmat;
+    varargout{3} = ind;
+    
+else
+    
+    fprintf('\nWarning: all the points are located outside of the defined raster extent\n');
+    varargout{1} = [];
+    varargout{2} = refmat;
+    varargout{3} = ind;
+    
+end
 
 
 %% plot
 
-if arg.Results.fig
+if arg.Results.fig && any(idxl_roi)
     
     figure
     imagesc(varargout{1})
