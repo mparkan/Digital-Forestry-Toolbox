@@ -33,7 +33,7 @@ function s = LASclip(points, clipper, varargin)
 % Other m-files required: LASread.m, LASwrite.m, LASmerge.m, LASextent.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.2 (configured for "x86_64-w64-mingw32")
 %
 % See also: LASMERGE
 %
@@ -41,7 +41,7 @@ function s = LASclip(points, clipper, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 28, 2018
+% Last revision: April 22, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -155,7 +155,7 @@ switch class(arg.Results.points)
             
             % get intersections between clipper and tile extents
             fileIntersections = getFileIntersections(arg.Results.points, xc, yc);
-            n_intersections = height(fileIntersections);
+            n_intersections = length(fileIntersections);
             
             if n_intersections >= 1
                 
@@ -164,7 +164,7 @@ switch class(arg.Results.points)
                 for j = 1:n_intersections
                     
                     % read LAS files
-                    s = LASread(fileIntersections.FILEPATH{j}, false, false);
+                    s = LASread(fileIntersections(j).FILEPATH, false, false);
                     
                     % clip parts
                     parts{j,1} = clip(s);
@@ -288,7 +288,7 @@ end
             'fig', false, ...
             'verbose', false);
         
-        n_tiles = height(extent);
+        n_tiles = length(extent);
         idxl_intersections = false(n_tiles,1);
         
         % check if clipper intersects LAS file extents
@@ -298,11 +298,11 @@ end
             [xi, yi] = polybool('intersection', ...
                 xc, ...
                 yc, ...
-                extent.X{k}, ...
-                extent.Y{k});
+                extent(k).X, ...
+                extent(k).Y);
             
-            extent.XI{k} = xi;
-            extent.YI{k} = yi;
+            extent(k).XI = xi;
+            extent(k).YI = yi;
             
             if ~isempty(xi)
                 
@@ -312,7 +312,7 @@ end
             
         end
         
-        fileExtents = extent(idxl_intersections,:);
+        fileExtents = extent(idxl_intersections);
         
         if arg.Results.verbose
             
