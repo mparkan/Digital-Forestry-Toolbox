@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: April 20, 2018
+% Last revision: April 25, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -75,11 +75,9 @@ cellSize = 0.8;
 
 %% Step 5 - Computing segment metrics from the label matrix
 
-% IMPORTANT: some of the metrics below are currently only available in Matlab
+% IMPORTANT: some of the metrics in regionprops() are currently only available in Matlab
 metrics_2d = regionprops(label_2d, models.height.values, ...
-    'Area', 'ConvexArea', 'Eccentricity', ...
-    'Perimeter', 'Solidity', 'MinIntensity', ...
-    'MeanIntensity', 'MaxIntensity');
+    'Area', 'Centroid', 'MaxIntensity');
 
 
 %% Step 6 - Transferring 2D labels to the 3D point cloud
@@ -120,7 +118,7 @@ cmap = [0,0,0;
     255,255,153;
     177,89,40] ./ 255;
 
-% plot all the segments
+% plot all the segments 
 figure('Color', [1,1,1])
 scatter3(pc.record.x(idxl_veg), ...
     pc.record.y(idxl_veg), ...
