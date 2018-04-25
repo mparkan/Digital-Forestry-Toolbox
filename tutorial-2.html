@@ -192,12 +192,10 @@
             <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Computing segment metrics from the label matrix
         </h2>
 
-        <p>From the labelled matrix, it is possible to compute a set of basic features (note that some of the features used below are currently only available in Matlab):</p>
+        <p>From the labelled matrix, it is possible to compute a set of basic features (note that some of the metrics in regionprops() are currently only available in Matlab):</p>
 
         <pre><code>metrics_2d = regionprops(label_2d, models.height.values, ...
-    'Area', 'ConvexArea', 'Eccentricity', ...
-    'Perimeter', 'Solidity', 'MinIntensity', ...
-    'MeanIntensity', 'MaxIntensity');</code></pre>
+    'Area', 'Centroid', 'MaxIntensity');</code></pre>
 
 
         <h2>
