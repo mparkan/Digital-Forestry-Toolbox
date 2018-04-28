@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: April 25, 2018
+% Last revision: April 28, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -118,36 +118,42 @@ cmap = [0,0,0;
     255,255,153;
     177,89,40] ./ 255;
 
-% plot all the segments 
-figure('Color', [1,1,1])
-scatter3(pc.record.x(idxl_veg), ...
-    pc.record.y(idxl_veg), ...
-    pc.record.z(idxl_veg), ...
-    6, ...
-    color_3d(idxl_veg), ...
-    'Marker', '.')
-axis equal tight
-colormap(cmap)
-xlabel('x')
-ylabel('y')
-zlabel('z')
-
-% plot a single segment
-idxl_sample = (label_3d == 42);
-
-figure
-scatter3(pc.record.x(idxl_sample), ...
-    pc.record.y(idxl_sample), ...
-    pc.record.z(idxl_sample), ...
-    12, ...
-    pc.record.intensity(idxl_sample), ...
-    'Marker', '.');
-colorbar
-axis equal tight
-title('Return intensity')
-xlabel('x')
-ylabel('y')
-ylabel('z')
+% Due to 3D plotting performance issues in Octave, the display of large points
+% clouds is currently discouraged in Octave
+if ~OCTAVE_FLAG
+    
+    % plot all the segments (Matlab only)
+    figure('Color', [1,1,1])
+    scatter3(pc.record.x(idxl_veg), ...
+        pc.record.y(idxl_veg), ...
+        pc.record.z(idxl_veg), ...
+        6, ...
+        color_3d(idxl_veg), ...
+        'Marker', '.')
+    axis equal tight
+    colormap(cmap)
+    xlabel('x')
+    ylabel('y')
+    zlabel('z')
+    
+    % plot a single segment (Matlab only)
+    idxl_sample = (label_3d == 42);
+    
+    figure
+    scatter3(pc.record.x(idxl_sample), ...
+        pc.record.y(idxl_sample), ...
+        pc.record.z(idxl_sample), ...
+        12, ...
+        pc.record.intensity(idxl_sample), ...
+        'Marker', '.');
+    colorbar
+    axis equal tight
+    title('Return intensity')
+    xlabel('x')
+    ylabel('y')
+    ylabel('z')
+    
+end
 
 
 %% Step 8 - Computing segment metrics from the labelled point cloud
