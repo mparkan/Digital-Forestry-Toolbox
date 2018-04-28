@@ -100,9 +100,6 @@ label_3d(~idxl_veg) = 0;
 % transfer the color index
 color_3d = idxn_color(label_3d + 1);
 
-
-%% Step 7 - plot the colored points cloud (vegetation points only)
-
 % define a colormap
 cmap = [0,0,0;
     166,206,227;
@@ -118,7 +115,10 @@ cmap = [0,0,0;
     255,255,153;
     177,89,40] ./ 255;
 
-% Due to 3D plotting performance issues in Octave, the display of large points
+
+%% Step 7 - plot the colored points cloud (vegetation points only)
+
+% Due to 3D plotting performance issues, the display of large points
 % clouds is currently discouraged in Octave
 if ~OCTAVE_FLAG
     
