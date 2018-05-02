@@ -1,5 +1,5 @@
 function ASCwrite(filepath, A, refmat, varargin)
-% ASCWRITE - Writes matrix A to the ARC/INFO ASCII grid file specified with
+% ASCWRITE - Writes matrix A to the ESRI ARC/INFO ASCII grid file specified with
 % FILEPATH. The georeference parameters are specified with REFMAT. 
 %
 % Syntax:  ASCwrite(filepath, A, refmat, ...)
@@ -84,12 +84,6 @@ end
 
 %% write header
 
-if arg.Results.verbose
-   
-    fprintf('writing header to "%s"...', filepath);
-    
-end
-
 [nrows, ncols] = size(A);
 xy_llc = [nrows+0.5, 0.5, 1] * refmat; % lower left corner coordinates
 
@@ -100,17 +94,12 @@ fprintf(fid, 'yllcorner     %.12f\n', xy_llc(2));
 fprintf(fid, 'cellsize      %.12f\n', abs(refmat(2,1)));
 fprintf(fid, 'NODATA_value  %.0f\n', arg.Results.noData);
 
-if arg.Results.verbose
-    
-    fprintf('done!\n');
-    
-end
 
 %% write grid values
 
 if arg.Results.verbose
     
-    fprintf('writing grid values to "%s"...', filepath);
+    fprintf('writing grid to "%s"...', filepath);
     
 end
 
