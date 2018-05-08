@@ -40,7 +40,7 @@ function utc_time = gps2utc(gps_time, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 15, 2018
+% Last revision: May 8, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -78,7 +78,7 @@ leap_dates = [datenum(1980,1,1,0,0,0),...
     datenum(2012,7,1,0,0,0),...
     datenum(2015,7,1,0,0,0),...
     datenum(2017,1,1,0,0,0),...
-    ];
+    inf];
 
 leap_seconds = [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18]';
 
