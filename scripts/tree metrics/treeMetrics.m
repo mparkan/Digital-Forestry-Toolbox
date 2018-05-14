@@ -49,6 +49,9 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %    scalarOnly (optional, default: true) - boolean value, flag indicating
 %    if only scalar values should be returned
 %
+%    fieldAbbreviations (optional, default: true) - boolean value, flag indicating
+%    if field name abbreviations should be used in the output structure
+%
 %    verbose (optional, default: true) - boolean value, verbosiy switch
 %
 % Outputs:
@@ -69,12 +72,13 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %         'intensityScaling', true, ...
 %         'scalarOnly', true, ...
 %         'dependencies', true, ...
+%         'fieldAbbreviations', true, ...
 %         'verbose', true);
 %
 % Other m-files required:
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.0 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -83,7 +87,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 29, 2018
+% Last revision: May 14, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -106,6 +110,7 @@ addParameter(arg, 'treePos', [], @(x) (size(x,2) == 3) && isnumeric(x));
 addParameter(arg, 'intensityScaling', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'dependencies', false, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'scalarOnly', false, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'fieldAbbreviations', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, label, xyz, classification, intensity, returnNumber, returnTotal, rgb, varargin{:});
@@ -285,475 +290,610 @@ M.Name = {};
 M.Dependencies = {};
 M.Scalar = [];
 M.Octave = [];
+M.ScaleDependant = [];
 
 k = 1;
 M.Category{k} = 'Identifier';
 M.Name{k} = 'UUID';
+M.Abbreviation{k} = 'UUID';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Identifier';
 M.Name{k} = 'LUID';
+M.Abbreviation{k} = 'LUID';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'RandomControl';
+M.Abbreviation{k} = 'RandomCtrl';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'NPoints';
+M.Abbreviation{k} = 'NPoints';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'XYZ';
+M.Abbreviation{k} = 'XYZ';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'XYH';
+M.Abbreviation{k} = 'XYH';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'UVW';
+M.Abbreviation{k} = 'UVW';
 M.Dependencies{k} = {'XYH'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'X';
+M.Abbreviation{k} = 'X';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'Y';
+M.Abbreviation{k} = 'Y';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'Z';
+M.Abbreviation{k} = 'Z';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConvexHull2D';
+M.Abbreviation{k} = 'ConvHull2D';
 M.Dependencies{k} = {'XYH'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConvexHull3D';
+M.Abbreviation{k} = 'ConvHull3D';
 M.Dependencies{k} = {'XYH'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConcaveHull2D';
+M.Abbreviation{k} = 'ConcHull2D';
 M.Dependencies{k} = {'XYH'};
 M.Scalar(k) = false;
 M.Octave(k) = false;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConcaveHull3D';
+M.Abbreviation{k} = 'ConcHull3D';
 M.Dependencies{k} = {'XYH'};
 M.Scalar(k) = false;
 M.Octave(k) = false;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightMean';
+M.Abbreviation{k} = 'HeightMean';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightMedian';
+M.Abbreviation{k} = 'HeightMed';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightSD';
+M.Abbreviation{k} = 'HeightSD';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightCV';
+M.Abbreviation{k} = 'HeightCV';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightKurtosis';
+M.Abbreviation{k} = 'HeightKurt';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightSkewness';
+M.Abbreviation{k} = 'HeightSkew';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightQ25';
+M.Abbreviation{k} = 'HeightQ25';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightQ50';
+M.Abbreviation{k} = 'HeightQ50';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightQ75';
+M.Abbreviation{k} = 'HeightQ75';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightQ90';
+M.Abbreviation{k} = 'HeightQ90';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'PrinCompVar1';
+M.Abbreviation{k} = 'PCVar1';
 M.Dependencies{k} = {'UVW'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'PrinCompVar2';
+M.Abbreviation{k} = 'PCVar2';
 M.Dependencies{k} = {'UVW'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'PrinCompVar3';
+M.Abbreviation{k} = 'PCVar3';
 M.Dependencies{k} = {'UVW'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'ConcaveBoundaryFraction';
+M.Abbreviation{k} = 'ConcFrac';
 M.Dependencies{k} = {'ConcaveHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'ConvexBoundaryFraction';
+M.Abbreviation{k} = 'ConvFrac';
 M.Dependencies{k} = {'ConvexHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'ConcavePointDensity';
+M.Abbreviation{k} = 'ConcDens';
 M.Dependencies{k} = {'NPoints', 'ConcaveVolume'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'ConvexPointDensity';
+M.Abbreviation{k} = 'ConvDens';
 M.Dependencies{k} = {'NPoints', 'ConvexVolume'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'TotalHeight';
+M.Abbreviation{k} = 'TotHeight';
 M.Dependencies{k} = {'XYZ', 'X', 'Y', 'Z'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConcaveArea';
+M.Abbreviation{k} = 'ConcArea';
 M.Dependencies{k} = {'ConcaveHull2D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConcaveSurfaceArea';
+M.Abbreviation{k} = 'ConcSuArea';
 M.Dependencies{k} = {'ConcaveHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConcaveVolume';
+M.Abbreviation{k} = 'ConcVol';
 M.Dependencies{k} = {'ConcaveHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConcaveSpecificSurface';
+M.Abbreviation{k} = 'ConcSpSurf';
 M.Dependencies{k} = {'ConcaveVolume', 'ConcaveSurfaceArea'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConvexArea';
+M.Abbreviation{k} = 'ConvArea';
 M.Dependencies{k} = {'ConvexHull2D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'CrownDiameter';
+M.Abbreviation{k} = 'CrownDiam';
 M.Dependencies{k} = {'ConvexArea'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConvexSurfaceArea';
+M.Abbreviation{k} = 'ConvSuArea';
 M.Dependencies{k} = {'ConvexHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConvexVolume';
+M.Abbreviation{k} = 'ConvVol';
 M.Dependencies{k} = {'ConvexHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = true;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'Convexity';
+M.Abbreviation{k} = 'Convexity';
 M.Dependencies{k} = {'ConvexSurfaceArea', 'ConcaveSurfaceArea'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConvexHullLacunarity';
+M.Abbreviation{k} = 'ConvLacuna';
 M.Dependencies{k} = {'ConvexVolume', 'ConcaveVolume'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConvexSpecificSurface';
+M.Abbreviation{k} = 'ConvSpSurf';
 M.Dependencies{k} = {'ConvexVolume', 'ConvexSurfaceArea'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'AspectRatio';
+M.Abbreviation{k} = 'AspRatio';
 M.Dependencies{k} = {'ConvexArea', 'TotalHeight'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'Opacity';
+M.Abbreviation{k} = 'Opacity';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'OpacityQ50';
+M.Abbreviation{k} = 'OpacityQ50';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'SingleReturnFraction';
+M.Abbreviation{k} = 'SRFrac';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'FirstReturnFraction';
+M.Abbreviation{k} = 'FRFrac';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'LastReturnFraction';
+M.Abbreviation{k} = 'LRFrac';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'Intensity';
+M.Abbreviation{k} = 'Intensity';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityQ25';
+M.Abbreviation{k} = 'IntQ25';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityQ50';
+M.Abbreviation{k} = 'IntQ50';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityQ75';
+M.Abbreviation{k} = 'IntQ75';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityQ90';
+M.Abbreviation{k} = 'IntQ90';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityMean';
+M.Abbreviation{k} = 'IntMean';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityMax';
+M.Abbreviation{k} = 'IntMax';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensitySD';
+M.Abbreviation{k} = 'IntSD';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityCV';
+M.Abbreviation{k} = 'IntCV';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityKurtosis';
+M.Abbreviation{k} = 'IntKurt';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensitySkewness';
+M.Abbreviation{k} = 'IntSkew';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityFirstReturnQ50';
+M.Abbreviation{k} = 'IntFRQ50';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityLastReturnQ50';
+M.Abbreviation{k} = 'IntLRQ50';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensitySingleReturnQ50';
+M.Abbreviation{k} = 'IntSRQ50';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
 M.Name{k} = 'RGB';
+M.Abbreviation{k} = 'RGB';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
 M.Name{k} = 'Chromaticity';
+M.Abbreviation{k} = 'Chroma';
 M.Dependencies{k} = [];
 M.Scalar(k) = false;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
 M.Name{k} = 'ChromaticityRedMedian';
+M.Abbreviation{k} = 'CrRedMed';
 M.Dependencies{k} = {'Chromaticity'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
 M.Name{k} = 'ChromaticityGreenMedian';
+M.Abbreviation{k} = 'CrGreenMed';
 M.Dependencies{k} = {'Chromaticity'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
+M.ScaleDependant(k) = false;
 k = k + 1;
 
 % Add additional metrics here
@@ -1397,4 +1537,25 @@ if arg.Results.scalarOnly
     
     metrics = rmfield(metrics, setdiff(fieldnames(metrics), M.Name(logical(M.Scalar))));
     
+end
+
+% use field name abbreviations instead of full names
+if arg.Results.fieldAbbreviations
+    
+    metrics_new = struct;
+    
+    field_names = fieldnames(metrics);
+    [~, idxn_name] = ismember(field_names, M.Name);
+    
+    for j = 1:length(field_names)
+    
+        % add new fields
+        metrics_new.(M.Abbreviation{idxn_name(j)}) = metrics.(field_names{j});
+        
+    end
+    
+    % remove old fields
+    metrics = metrics_new;
+    clear metrics_new
+
 end
