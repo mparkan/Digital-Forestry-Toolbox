@@ -55,7 +55,7 @@ function varargout = treeWatershed(chm, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.2 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.0 (configured for "x86_64-w64-mingw32")
 %
 % See also: rasterize.m
 %
@@ -63,7 +63,7 @@ function varargout = treeWatershed(chm, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: April 20, 2018
+% Last revision: May 14, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -152,7 +152,7 @@ end
 
 if ~isempty(arg.Results.mask)
 
-    label(~idxl_mask) = 0;
+    label(~arg.Results.mask) = 0;
     
 end
 
@@ -237,7 +237,7 @@ end
 if arg.Results.fig
     
     figure
-    imagesc(colors+1)
+    imagesc(colors, [0, size(cmap,1)])
     axis equal tight
     xlabel('col');
     ylabel('row');
