@@ -34,7 +34,7 @@
             <br>
             <hr>
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Last update: April 28, 2018 / Matlab r2017b, GNU Octave 4.2.2</b></p>
+            <p style="text-align: center"><b>Last update: May 15, 2018 / Matlab r2017b, GNU Octave 4.4.0</b></p>
             <p> In this tutorial, you will learn how to detect individual tree crowns from a raster Canopy Height Model (CHM) using marker controlled watershed segmentation. Before starting, you should:</p>
 
             <ol>
@@ -204,14 +204,12 @@
 
         <p>The next step is transferring the 2D labels and colors to the 3D point cloud:</p>
 
-        <pre><code>idxn_color = accumarray(label_2d(:)+1, colors(:), [], @(x) mode(x), nan);
-idxl_veg = ismember(pc.record.classification, [4,5]);
+        <pre><code>idxl_veg = ismember(pc.record.classification, [4,5]);
 
 % convert map coordinates (x,y) to image coordinates (column, row)
 RC = [pc.record.x - refmat(3,1), pc.record.y - refmat(3,2)] / refmat(1:2,:);
 RC(:,1) = round(RC(:,1)); % row
 RC(:,2) = round(RC(:,2)); % column
-
 ind = sub2ind(size(label_2d), RC(:,1), RC(:,2));
 
 % transfer the label
@@ -220,10 +218,11 @@ label_3d(~idxl_veg) = 0;
 [label_3d(label_3d ~= 0), ~] = grp2idx(label_3d(label_3d ~= 0));
 
 % transfer the color index
-color_3d = idxn_color(label_3d + 1);
+color_3d = colors(ind);
+color_3d(~idxl_veg) = 1;
 
 % define a colormap
-cmap = [0,0,0;
+cmap = [0, 0, 0;
     166,206,227;
     31,120,180;
     178,223,138;
@@ -254,6 +253,7 @@ cmap = [0,0,0;
         'Marker', '.')
     axis equal tight
     colormap(cmap)
+    caxis([1, size(cmap,1)])
     xlabel('x')
     ylabel('y')
     zlabel('z')
@@ -313,6 +313,7 @@ end</code></pre>
     'intensityScaling', true, ...
     'dependencies', false, ...
     'scalarOnly', true, ...
+    'fieldAbbreviations', true, ...
     'verbose', true);
 </code></pre>
 
@@ -320,7 +321,7 @@ end</code></pre>
             <a id="step-9" class="anchor" href="step-9" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 9</b> - Exporting the segment metrics to CSV and SHP files
         </h2>
 
-        <p>The following illustrates how to export a subset of the segmentation metrics to a Comma Separated Values text file (.csv). You first have to convert the <code>metrics_3d</code> structure to a cell array:</p>
+        <p>The following illustrates how to export the segmentation metrics to a Comma Separated Values text file (.csv). You first have to convert the <code>metrics_3d</code> structure to a cell array:</p>
 
         <pre><code>fields = fieldnames(metrics_3d);
 m = length(fields);
@@ -389,7 +390,7 @@ shapewrite(S, '26995_12710_seg_metrics.shp');</code></pre>
 r = pc;
 
 % rescale the RGB colors to 16 bit range and add them to the point record
-rgb = uint16(cmap(color_3d+1,:) * 65535);
+rgb = uint16(cmap(color_3d,:) * 65535);
 r.record.red = rgb(:,1);
 r.record.green = rgb(:,2);
 r.record.blue = rgb(:,3);</code></pre>
@@ -426,7 +427,15 @@ vlr.record_length_after_header = length(vlr.value) * 192;
 vlr.description = 'Extra bytes';
 
 % append the new VLR to the existing VLR
-r.variable_length_records(length(r.variable_length_records)+1) = vlr;</code></pre>
+if isfield(r, 'variable_length_records')
+
+    r.variable_length_records(length(r.variable_length_records)+1) = vlr;
+
+else
+
+    r.variable_length_records = vlr;
+
+end</code></pre>
 
      <p>We also adjust the point data record format in the LAS header to support the RGB fields:</p>
 
