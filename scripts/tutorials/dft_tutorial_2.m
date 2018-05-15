@@ -1,10 +1,10 @@
 % DIGITAL FORESTRY TOOLBOX - TUTORIAL 2
 %
-% Other m-files required: LASread.m, rasterize.m, elevationModels.m, canopyPeaks.m,
-% treeWatershed.m, LASwrite.m
+% Other m-files required: LASread.m, LASwrite.m, rasterize.m, elevationModels.m, canopyPeaks.m,
+% treeWatershed.m, topoColor.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.2 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.0 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: April 28, 2018
+% Last revision: May 15, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -82,14 +82,12 @@ metrics_2d = regionprops(label_2d, models.height.values, ...
 
 %% Step 6 - Transferring 2D labels to the 3D point cloud
 
-idxn_color = accumarray(label_2d(:)+1, colors(:), [], @(x) mode(x), nan);
 idxl_veg = ismember(pc.record.classification, [4,5]);
 
 % convert map coordinates (x,y) to image coordinates (column, row)
 RC = [pc.record.x - refmat(3,1), pc.record.y - refmat(3,2)] / refmat(1:2,:);
 RC(:,1) = round(RC(:,1)); % row
 RC(:,2) = round(RC(:,2)); % column
-
 ind = sub2ind(size(label_2d), RC(:,1), RC(:,2));
 
 % transfer the label
@@ -98,10 +96,14 @@ label_3d(~idxl_veg) = 0;
 [label_3d(label_3d ~= 0), ~] = grp2idx(label_3d(label_3d ~= 0));
 
 % transfer the color index
-color_3d = idxn_color(label_3d + 1);
+color_3d = colors(ind);
+color_3d(~idxl_veg) = 1;
+
+
+%% Step 7 - plot the colored points cloud (vegetation points only)
 
 % define a colormap
-cmap = [0,0,0;
+cmap = [0, 0, 0;
     166,206,227;
     31,120,180;
     178,223,138;
@@ -115,8 +117,6 @@ cmap = [0,0,0;
     255,255,153;
     177,89,40] ./ 255;
 
-
-%% Step 7 - plot the colored points cloud (vegetation points only)
 
 % Due to 3D plotting performance issues, the display of large points
 % clouds is currently discouraged in Octave
@@ -132,6 +132,7 @@ if ~OCTAVE_FLAG
         'Marker', '.')
     axis equal tight
     colormap(cmap)
+    caxis([1, size(cmap,1)])
     xlabel('x')
     ylabel('y')
     zlabel('z')
@@ -169,6 +170,7 @@ metrics_3d = treeMetrics(label_3d, ...
     'intensityScaling', true, ...
     'dependencies', false, ...
     'scalarOnly', true, ...
+    'fieldAbbreviations', true, ...
     'verbose', true);
 
 
@@ -225,7 +227,7 @@ shapewrite(S, '26995_12710_seg_metrics.shp');
 r = pc;
 
 % rescale the RGB colors to 16 bit range and add them to the point record
-rgb = uint16(cmap(color_3d+1,:) * 65535);
+rgb = uint16(cmap(color_3d,:) * 65535);
 r.record.red = rgb(:,1);
 r.record.green = rgb(:,2);
 r.record.blue = rgb(:,3);
@@ -298,7 +300,7 @@ end
 % write the LAS 1.4 file
 % IMPORTANT: adjust the path to the output LAS file
 LASwrite(r, ...
-    'ne_2016_brevine_ws_seg.las', ...
+    '26995_12710_ws_seg.las', ...
     'version', 14, ...
     'guid', lower(strcat(dec2hex(randi(16,32,1)-1)')), ...
     'systemID', 'SEGMENTATION', ...
@@ -308,4 +310,4 @@ LASwrite(r, ...
 % you can optionally read the exported file and check it has the 
 % RGB color and label records
 % IMPORTANT: adjust the path to the input LAS file
-r2 = LASread('ne_2016_brevine_ws_seg.las');
+r2 = LASread('26995_12710_ws_seg.las');
