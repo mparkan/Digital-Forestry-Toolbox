@@ -40,7 +40,7 @@ function varargout = LASwrite(s, filepath, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.0 (configured for "x86_64-w64-mingw32")
 %
 % See also: LASREAD
 %
@@ -48,7 +48,7 @@ function varargout = LASwrite(s, filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 13, 2018
+% Last revision: May 15, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -2015,7 +2015,12 @@ for j = 1:length(r.record)
         
         % fill with zeros, if the record values are not specified
         r.record(j).value = cast(zeros(size(s.record.x)), r.record(j).storage_type{:});
-        fprintf('WARNING: the point data record "%s" (%s) was not specified, setting to 0\n', r.record(j).short_name, r.record(j).full_name);
+        
+        if arg.Results.verbose
+        
+            fprintf('WARNING: the point data record "%s" (%s) was not specified, setting to 0\n', r.record(j).short_name, r.record(j).full_name);
+        
+        end
         
     end
     
@@ -2472,7 +2477,12 @@ if ~isempty(arg.Results.filepath)
     % write blob to file
     fseek(fid, r.header(phb_skeys.offset_to_data).value, 'bof');
     fwrite(fid, blob, 'uint8');
-    fprintf('done!\n');
+    
+    if arg.Results.verbose
+        
+        fprintf('done!\n');
+        
+    end
     
     %% write extended variable length records to file
     
@@ -2506,7 +2516,12 @@ if ~isempty(arg.Results.filepath)
                     
                     string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
                     fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing Text area description (optional) EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing Text area description (optional) EVLR\n');
+                        
+                    end
                     
                 case 4 % Extra bytes (optional)
                     
@@ -2531,7 +2546,11 @@ if ~isempty(arg.Results.filepath)
                         
                     end
                     
-                    fprintf('WARNING: writing Extra bytes (optional) EVLR\n');
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing Extra bytes (optional) EVLR\n');
+                        
+                    end
                     
                 case num2cell(100:354) % Waveform Packet descriptor (required when using point formats 4, 5, 9, 10)
                     
@@ -2541,19 +2560,34 @@ if ~isempty(arg.Results.filepath)
                     fwrite(fid, s.extended_variable_length_records(j).value.temporal_sample_spacing, 'uint32', 0, MACHINE_FORMAT); % Temporal Sample Spacing, Unsigned long, 4 bytes, *
                     fwrite(fid, s.extended_variable_length_records(j).value.digitizer_gain, 'double', 0, MACHINE_FORMAT); % Digitizer Gain, double, 8 bytes, *
                     fwrite(fid, s.extended_variable_length_records(j).value.digitizer_offset, 'double', 0, MACHINE_FORMAT); % Digitizer Offset, double, 8 bytes, *
-                    fprintf('WARNING: writing Waveform Packet descriptor EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing Waveform Packet descriptor EVLR\n');
+                        
+                    end
                     
                 case 2111 % OGC Math Transform WKT Record (optional)
                     
                     string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
                     fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing OGC Math Transform WKT Record (optional) EVLR\n');
+                    
+                    if arg.Results.verbose
+                    
+                        fprintf('WARNING: writing OGC Math Transform WKT Record (optional) EVLR\n');
+                    
+                    end
                     
                 case 2112 % OGC Coordinate System WKT Record (optional)
                     
                     string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
                     fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing OGC Coordinate System WKT Record (optional) EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing OGC Coordinate System WKT Record (optional) EVLR\n');
+                        
+                    end
                     
                 case 34735 % GeoKeyDirectoryTag Record (mandatory)
                     
@@ -2576,50 +2610,94 @@ if ~isempty(arg.Results.filepath)
                         
                     end
                     
-                    fprintf('WARNING: writing GeoKeyDirectoryTag Record to EVLR\n');
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing GeoKeyDirectoryTag Record to EVLR\n');
+                        
+                    end
                     
                 case 34736 % GeoDoubleParamsTag Record (optional)
                     
                     fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing GeoDoubleParamsTag Record to EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing GeoDoubleParamsTag Record to EVLR\n');
+                        
+                    end
                     
                 case 34737 % GeoAsciiParamsTag Record (optional)
                     
                     string = horzcat(s.extended_variable_length_records(j).value, char(zeros(1, s.extended_variable_length_records(j).record_length_after_header))); % zero padding % TODO
                     fwrite(fid, string(1:s.extended_variable_length_records(j).record_length_after_header), 'char', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing GeoAsciiParamsTag Record to EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing GeoAsciiParamsTag Record to EVLR\n');
+                        
+                    end
                     
                 case {5013, 5017, 5018, 5043, 5044, 5061, 5063, 5071} % Custom uint8 field (optional)
                     
                     fwrite(fid, s.extended_variable_length_records(j).value, 'uint8', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing Custom uint8 field to EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing Custom uint8 field to EVLR\n');
+                        
+                    end
                     
                 case {5002, 5014, 5015, 5016} % Custom uint16 field (optional)
                     
                     fwrite(fid, s.extended_variable_length_records(j).value, 'uint16', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing Custom uint16 field to EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing Custom uint16 field to EVLR\n');
+                        
+                    end
                     
                 case 5001 % Custom char(32) field (optional) % TEST
                     
                     char32 = char(cellfun(@(x) horzcat(x, char(zeros(1, 32-length(x)))), s.extended_variable_length_records(j).value, 'UniformOutput', false)); % TODO
                     fwrite(fid, char32, 'char', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing Custom char(32) field to EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing Custom char(32) field to EVLR\n');
+                        
+                    end
                     
                 case {5000, 5019, 5020, 5021} % Custom single field (optional)
                     
                     fwrite(fid, s.extended_variable_length_records(j).value, 'single', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing Custom single field to EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing Custom single field to EVLR\n');
+                        
+                    end
                     
                 case {5010, 5011, 5012, 5050, 5062} % Custom double field (optional)
                     
                     fwrite(fid, s.extended_variable_length_records(j).value, 'double', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing Custom double field to EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing Custom double field to EVLR\n');
+                        
+                    end
                     
                 case {5041} % Custom char(12) field (optional)
                     
                     char12 = char(cellfun(@(x) horzcat(x, char(zeros(1, 12-length(x)))), s.extended_variable_length_records(j).value, 'UniformOutput', false)); % TODO
                     fwrite(fid, char12, 'char', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing Custom char(12) field to EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing Custom char(12) field to EVLR\n');
+                        
+                    end
                     
                     % You may add custom records here
                     
@@ -2627,7 +2705,12 @@ if ~isempty(arg.Results.filepath)
                 otherwise % Other
                     
                     fwrite(fid, typecast(s.extended_variable_length_records(j).value, 'uint8'), 'uint8', 0, MACHINE_FORMAT);
-                    fprintf('WARNING: writing Custom uint8 field to EVLR\n');
+                    
+                    if arg.Results.verbose
+                        
+                        fprintf('WARNING: writing Custom uint8 field to EVLR\n');
+                        
+                    end
                     
             end
             
