@@ -209,16 +209,20 @@ fprintf(fid, '%s\n', strjoin(fields, ',')); % write header line
 fprintf(fid, fmt, C{:}); % write metrics
 fclose(fid); % close file
 
-% create a non-scalar structure
-S = cell2struct(C, fields);
-clear C
-
-% add geometry field
-[S.Geometry] = deal('Point');
-
-% write non-scalar structure to SHP file
-% IMPORTANT: adjust the path to the output SHP file
-shapewrite(S, '26995_12710_seg_metrics.shp');
+if ~OCTAVE_FLAG % Export to shapefile is not yet supported in Octave
+    
+    % create a non-scalar structure
+    S = cell2struct(C, fields);
+    clear C
+    
+    % add geometry field
+    [S.Geometry] = deal('Point');
+    
+    % write non-scalar structure to SHP file
+    % IMPORTANT: adjust the path to the output SHP file
+    shapewrite(S, '26995_12710_seg_metrics.shp');
+    
+end
 
 
 %% Step 10 - Exporting the labelled and colored point cloud to a LAS file
