@@ -52,7 +52,7 @@ function varargout = treeWatershed(chm, varargin)
 %        'fig', true, ...
 %        'verbose', true);
 %
-% Other m-files required: none
+% Other m-files required: topoColor.m
 % Subfunctions: none
 % MAT-files required: none
 % Compatibility: tested on Matlab R2017b, GNU Octave 4.4.0 (configured for "x86_64-w64-mingw32")
@@ -63,7 +63,7 @@ function varargout = treeWatershed(chm, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: May 14, 2018
+% Last revision: May 15, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -131,12 +131,17 @@ end
 
 % apply watershed algorithm
 label = single(watershed(I, 8));
+label(chm == 0) = 0;
+
+% relabel connected components
+label = bwlabel(label ~= 0, 8);
 
 if arg.Results.verbose
     
     fprintf('done!\n');
     
 end
+
 
 %% remove segments that touch the border of the CHM
 
@@ -157,16 +162,19 @@ if ~isempty(arg.Results.mask)
 end
 
 
+%% remove nan values
+
+label(isnan(chm)) = 0;
+
+% relabel connected components
+label = bwlabel(label ~= 0, 8);
+
+
 %% remove seam lines
 
 [d_nn, idxn_nn] = bwdist(label ~= 0);
 idxl_dist = ((d_nn >= 1) & (d_nn < 2));
 label(idxl_dist) = label(idxn_nn(idxl_dist));
-
-
-%% remove nan values
-
-label(isnan(chm)) = 0;
 
 
 %% reassign labels
@@ -186,39 +194,19 @@ if arg.Results.fig || (nargout == 2)
         
     end
     
-    % topological coloring
-    cmap = [0, 0, 0;
-        166,206,227;
-        31,120,180;
-        178,223,138;
-        51,160,44;
-        251,154,153;
-        227,26,28;
-        253,191,111;
-        255,127,0;
-        202,178,214;
-        106,61,154;
-        255,255,153;
-        177,89,40] ./ 255;
+    [nrows, ncols] = size(label);
+    [cols, rows] = meshgrid(1:ncols, 1:nrows);
     
-    N = max(label(:));
-    colors = zeros(size(label));
-    n_colors = 100;
+    [idxn_color, ~, cmap] = topoColor([cols(:), rows(:)], ...
+        label(:), ...
+        'adjacency', '2d', ...
+        'buffer', 3, ...
+        'colormap', 'cmap12', ...
+        'unlabelledColor', [0, 0, 0], ...
+        'fig', false, ...
+        'verbose', false);
     
-    for k = 1:N
-        
-        idxn_adj = imdilate(label == k, true(4));
-        
-        % list available colors
-        idxl_color_pool = ~ismember(1:n_colors, colors(idxn_adj));
-        
-        % assign first available color
-        colors(idxn_adj) = find(idxl_color_pool,1);
-        
-    end
-    
-    colors = min(colors, size(cmap,1));
-    colors(label == 0) = 0;
+    colors = reshape(idxn_color, nrows, ncols);
     
     if nargout == 2
         
@@ -241,6 +229,6 @@ if arg.Results.fig
     axis equal tight
     xlabel('col');
     ylabel('row');
-    colormap(cmap);
+    colormap([0, 0, 0; cmap])
     
 end
