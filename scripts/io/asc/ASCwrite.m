@@ -9,8 +9,7 @@ function ASCwrite(filepath, A, refmat, varargin)
 %
 %    A - MxN numeric matrix, grid values
 %
-%    refmat - 3x2 numeric matrix, spatial referencing matrix, such that xy_map = [row, col, ones(nrows,1)] * refmat. 
-%    The cellSize argument is ignored if refmat is provided.
+%    refmat - 3x2 numeric matrix, spatial referencing matrix, such that xy_map = [row, col, ones(nrows,1)] * refmat
 %
 %    precision (optional, default: 2) - number of decimals for the grid values
 %
@@ -28,7 +27,7 @@ function ASCwrite(filepath, A, refmat, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.2 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -36,7 +35,7 @@ function ASCwrite(filepath, A, refmat, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: May 2, 2018
+% Last revision: September 20, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
