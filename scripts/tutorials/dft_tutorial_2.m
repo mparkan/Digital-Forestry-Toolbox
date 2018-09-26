@@ -4,7 +4,7 @@
 % treeWatershed.m, topoColor.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.0 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: May 15, 2018
+% Last revision: September 26, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -46,14 +46,43 @@ cellSize = 0.8;
     'classTerrain', [2], ...
     'classSurface', [4,5], ...
     'cellSize', cellSize, ...
-    'closing', inf, ...
+    'interpolation', 'idw', ... 
+    'searchRadius', inf, ...
+    'weightFunction', @(d) d^-3, ...
     'smoothingFilter', fspecial('gaussian', [3, 3], 0.8), ...
     'outputModels', {'terrain', 'surface', 'height'}, ...
     'fig', true, ...
     'verbose', true);
 
 
-%% Step 3 - Tree top detection
+%% Step 3 - Exporting the elevation models to ARC/INFO ASCII grid file
+
+% export the Digital Terrain Model (DTM) to an ARC/INFO ASCII grid file
+ASCwrite('26995_12710_dtm.asc', ...
+    models.terrain.values, ...
+    refmat, ...
+    'precision', 2, ...
+    'noData', -99999, ...
+    'verbose', true);
+            
+% export the Digital Surface Model (DSM) to an ARC/INFO ASCII grid file
+ASCwrite('26995_12710_dsm.asc', ...
+    models.surface.values, ...
+    refmat, ...
+    'precision', 2, ...
+    'noData', -99999, ...
+    'verbose', true);
+
+% export the Digital Height Model (DHM) to an ARC/INFO ASCII grid file
+ASCwrite('26995_12710_dhm.asc', ...
+    models.height.values, ...
+    refmat, ...
+    'precision', 2, ...
+    'noData', -99999, ...
+    'verbose', true);
+
+
+%% Step 4 - Tree top detection
 
 [peaks_crh, ~] = canopyPeaks(models.height.values, ...
     refmat, ...
@@ -63,7 +92,7 @@ cellSize = 0.8;
     'verbose', true);
 
 
-%% Step 4 - Marker controlled watershed segmentation
+%% Step 5 - Marker controlled watershed segmentation
 
 [label_2d, colors] = treeWatershed(models.height.values, ...
     'markers', peaks_crh, ...
@@ -73,14 +102,14 @@ cellSize = 0.8;
     'verbose', true);
 
 
-%% Step 5 - Computing segment metrics from the label matrix
+%% Step 6 - Computing segment metrics from the label matrix
 
 % IMPORTANT: some of the metrics in regionprops() are currently only available in Matlab
 metrics_2d = regionprops(label_2d, models.height.values, ...
     'Area', 'Centroid', 'MaxIntensity');
 
 
-%% Step 6 - Transferring 2D labels to the 3D point cloud
+%% Step 7 - Transferring 2D labels to the 3D point cloud
 
 idxl_veg = ismember(pc.record.classification, [4,5]);
 
@@ -115,7 +144,7 @@ cmap = [0, 0, 0;
     177,89,40] ./ 255;
 
 
-%% Step 7 - plot the colored points cloud (vegetation points only)
+%% Step 8 - plot the colored points cloud (vegetation points only)
 
 % Due to 3D plotting performance issues, the display of large points
 % clouds is currently discouraged in Octave
@@ -156,7 +185,7 @@ if ~OCTAVE_FLAG
 end
 
 
-%% Step 8 - Computing segment metrics from the labelled point cloud
+%% Step 9 - Computing segment metrics from the labelled point cloud
 
 metrics_3d = treeMetrics(label_3d, ...
     [pc.record.x, pc.record.y, pc.record.z], ...
@@ -173,7 +202,7 @@ metrics_3d = treeMetrics(label_3d, ...
     'verbose', true);
 
 
-%% Step 9 - Exporting the segment metrics to CSV and SHP files
+%% Step 10 - Exporting the segment metrics to CSV and SHP files
 
 fields = fieldnames(metrics_3d);
 m = length(fields);
@@ -224,7 +253,7 @@ if ~OCTAVE_FLAG % Export to shapefile is not yet supported in Octave
 end
 
 
-%% Step 10 - Exporting the labelled and colored point cloud to a LAS file
+%% Step 11 - Exporting the labelled and colored point cloud to a LAS file
 
 % duplicate the source file
 r = pc;
