@@ -52,7 +52,7 @@ function varargout = LASwrite(s, filepath, varargin)
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
-fclose('all'); % close any open files
+% fclose('all'); % close any open files (debugging)
 
 %% setup constants
 
