@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="UTF-8">
+        <title>DFT - Tutorial 3</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" type="image/png" href="img/favicon_dft.png"/>
+        <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+        <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' type='text/css'>
+
+        <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+
+
+    </head>
+
+
+    <body>
+
+        <section class="page-header tutorial">
+            <h1 class="project-name">Digital-Forestry-Toolbox</h1>
+            <br>
+            <!--<h2 class="project-tagline white">A collection of digital forestry tools for Matlab</h2>-->
+            <a href="index.html" class="btn"><i class="fa fa-home" aria-hidden="true"></i> Back to homepage</a>
+        </section>
+
+        <section class="main-content">
+
+            <h1>Tree stem detection</h1>
+
+            <!--<br>-->
+            <!--<hr>-->
+            <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
+            <p style="text-align: center"><b>Published: November 28, 2018, Last updated: November 28, 2018.</b></p>
+            <p style="text-align: center"><b>Tested on Matlab r2017b, GNU Octave 4.4.1</b></p>
+
+            <!--<hr>-->
+
+            <h2>
+                <a id="introduction" class="anchor" href="introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Introduction</b>
+            </h2>
+
+            <p>In this tutorial, you will learn how to detect tree stems in a 3D point cloud acquired with Airborne Laser Scanning (ALS). We will be using data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the Riegl LMS-Q1560 sensor. We will only use a small subset of the data, but the full dataset is freely available from the <a href="https://ge.ch/sitg/donnees">Offical Geoinformation Portal of Geneva</a>. The area of interest (46°17′30″N, 6°08′00″E) is located in a small forest about 10 km to the North of the city of Geneva (see map below). Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
+
+            <div class="map">
+
+                <iframe src='https://map.geo.admin.ch/embed.html?lang=en&topic=ech&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege,KML%7C%7Chttps:%2F%2Fpublic.geo.admin.ch%2FCMWKhVOBRHKft_hOtnzX4Q&layers_visibility=false,false,false,false,true&layers_timestamp=18641231,,,,&E=2499516.27&N=1127611.81&zoom=9' width='100%' height='450' frameborder='0'></iframe>
+
+            </div>
+
+            <br>
+
+
+            The stem detection method used in this tutorial is based on a simple observation: the space in a tree gets more cluttered as you approach the stem. Consequently, considering a homogeneous sampling of the tree structure, ALS point density (i.e. the number of points within a vertical column) tends to be higher near the stem (see figure 1).
+
+            <figure>
+                <img src="img/dft_tutorial_3_im_a.png" alt="" style="width:30%;">
+                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically.</figcaption>
+            </figure>
+
+            Thus, local point density peaks can be a good indicator of probable stem locations. This feature may also subsequently serve as a basis for tree crown delineation, as proposed in Rahman and Gorte (2008) and more recently in Ayrey et al. (2017). The method is an alternative to tree top detection and is likely to perform better on irregularly shaped canopies (in particular if surveyed in leaf-off conditions).
+
+            <!--
+            Depends on several hypothesis:
+            <br>
+            <ul>
+                <li>Stems are approximately vertical</li>
+                <li>Stems are well separated horizontally</li>
+                <li>Last returns occur more frequently on stems and large branches</li>
+                <li>The point density is higher near the center of a tree (ignoring overlap areas)</li>
+            </ul>
+            <br>
+            -->
+
+
+            <h2>
+                <a id="setup" class="anchor" href="setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Setup</b>
+            </h2>
+
+            <ol>
+                <li>Download and uncompress the Digital Forestry Toolbox (DFT) <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master">Zip</a> or <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master">Tar</a> archive</li>
+                <li>Download the <a href="http://maps.zh.ch/download/hoehen/2014/lidar/26995_12710.laz">ge_2017_versoix.laz</a> file from the DFT Zenodo repository and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
+                <li>Start Matlab/Octave</li>
+                <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
+                <li>Delete any previous versions of the toolbox</li>
+                <li>Open <code>dft_tutorial_3.m</code> (located in the tutorials folder)</li>
+            </ol>
+
+            <h2>
+                <a id="step-1" class="anchor" href="step-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 1</b> - Reading the LAS file
+            </h2>
+
+            <p>We start by reading the LAS file using <code>LASread()</code>:</p>
+
+            <pre><code>pc = LASread('26995_12710.las');</code></pre>
+
+            <p>Note that the point classification uses the following scheme:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0</td>
+                        <td>Created, never lassified</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Unclassified</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Terrain</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Low vegetation (&lt; 50 cm)</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>High vegetation (&ge; 50 cm)</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Buildings</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Outliers and incorrect measurements (Low noise)</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Water</td>
+                    </tr>
+
+                    <tr>
+                        <td>13</td>
+                        <td>Bridges</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>Terrain (additional points)</td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>Outliers and incorrect measurements (High noise)</td>
+                    </tr>
+                    <tr>
+                        <td>19</td>
+                        <td>Points measured outside of the area of interest (unclassified)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+
+            <h2>
+                <a id="step-2" class="anchor" href="step-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 2</b> - Normalize the point cloud elevation
+            </h2>
+
+            <p>The stem detection algorithm uses the planimetric coordinates and height of the points above ground as an input. To compute this height, we start by building a 0.5 m resolution raster terrain model from the classified 3D point cloud using <code>elevationModels()</code>:</p>
+
+
+            <pre><code>cellSize = 0.5;
+[models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
+    pc.record.classification, ...
+    'classTerrain', [2, 15], ...
+    'classSurface', [4,5], ...
+    'cellSize', cellSize, ...
+    'closing', 5, ...
+    'interpolation', 'idw', ...
+    'searchRadius', inf, ...
+    'weightFunction', @(d) d^-3, ...
+    'smoothingFilter', fspecial('gaussian', [2, 2], 0.8), ...
+    'outputModels', {'terrain'}, ...
+    'fig', false, ...
+    'verbose', true);</code></pre>
+
+            <p>We then subtract the terrain elevation from the point cloud elevation, to obtain the height of the points above the ground:</p>
+
+            <pre><code>P = round([pc.record.x - refmat(3,1), pc.record.y - refmat(3,2)] / refmat(1:2,:));
+ind = sub2ind([nrows, ncols], P(:,1), P(:,2));
+xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</code></pre>
+
+
+        <h2>
+            <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Filter the points by classification and return number
+        </h2>
+
+        <p>When compared to small branches, stems and primary branches are more likely to fully intercept the laser beam and generate a last return (see figure 2). Since we are only interested in detecting stems, we can apply a filter which reduces the amount of non-stem points and removes terrain points. To do this, we create a logical (boolean) vector:
+
+<!--            to select only points that have the class medium or high vegetation and that are also last returns:</p>-->
+
+        <pre><code>idxl_last = pc.record.return_number == pc.record.number_of_returns;
+idxl_veg = ismember(pc.record.classification, [4, 5]);
+idxl_filter = idxl_veg & idxl_last;</code></pre>
+
+        <p>Note that while using only the last returns may increase the reliability of large stem detections, it may also reduce the detection rate for smaller stems. You can modify this filtering criteria or add new ones (e.g. acquisition date, intensity, colour) to suit your specific needs.</p>
+
+         <figure>
+            <img src="img/dft_tutorial_3_ima_2a.png" alt="" style="width:90%;">
+            <img src="img/dft_tutorial_3_ima_2b.png" alt="" style="width:90%;">
+             <figcaption><b>Figure 2</b> - Cross section of the normalized point cloud. <b>Top</b>: all points. <b>Bottom</b>: only last returns and vegetation classes.</figcaption>
+        </figure>
+
+
+        <h2>
+            <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Detect the stems
+        </h2>
+
+            <p>Using only the filtered points, we can now detect the stems with the <code>treeStems()</code> function:</p>
+
+        <pre><code>[label, xyh_stem] = treeStems(xyh, ...
+    idxl_filter, ...
+    'cellSize', 0.4, ...
+    'bandWidth', 1.5, ...
+    'verticalStep', 0.25, ...
+    'searchRadius', 2, ...
+    'minLength', 5, ...
+    'verbose', true, ...
+    'fig', true);</code></pre>
+
+            <p>By adjusting the parameters values, Depending on you target application, you adjust the tradeoff between precision and recall.</p>
+
+
+        <h2>
+            <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Export the stem attributes to a CSV file
+        </h2>
+
+        <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
+
+                <pre><code>fid = fopen('ge_2017_versoix_stems.csv', 'w+'); % open file
+fprintf(fid, 'X, Y, H\n'); % write header line
+fprintf(fid, '%.2f, %.2f, %.2f\n', xyh_stem'); % write records
+fclose(fid); % close file</code></pre>
+
+<p>After exporting the CSV file, you can try opening it in any text editor (e.g. <a href="https://notepad-plus-plus.org/">Notepad++</a>).</p>
+
+
+        <h2>
+            <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Export the stem attributes to an ESRI shapefile
+        </h2>
+
+            <br>
+            <div class="box">
+
+                <p style="text-align: center"><i class="fa fa-exclamation-triangle fa-2x" aria-hidden="true"></i></p>
+
+                <b>Octave users</b>, please make sure you are using the latest versions of the <b>'io' (2.4.12 or above)</b> and <b>'mapping' (1.4.0 snapshot or above)</b> packages. Previous versions contain critical issues in the shapewrite function.
+
+            </div>
+            <br>
+
+
+            <p>To export the stem attributes to an ESRI shapefile, you first have to format them into a non-scalar structure and add a "Geometry" field:</p>
+
+            <pre><code>S = struct;
+for j = 1:size(xyh_stem,1)
+
+    S(j,1).Geometry = 'Point';
+    S(j,1).BoundingBox = [];
+    S(j,1).ID = j;
+    S(j,1).X = xyh_stem(j,1);
+    S(j,1).Y = xyh_stem(j,2);
+    S(j,1).H = xyh_stem(j,3);
+
+end</code></pre>
+
+            <p>Then use <code>shapewrite()</code> to write the file:</p>
+
+            <pre><code>% write non-scalar structure to SHP file
+% IMPORTANT: adjust the path to the output SHP file
+shapewrite(S, 'ge_2017_versoix_stems.shp');</code></pre>
+
+            <p>After exporting the SHP file, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
+
+
+
+        <h2>
+            <a id="references" class="anchor" href="references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>References</b>
+        </h2>
+
+
+            <ul>
+               <li>Ayrey, E., Fraver, S., Jr, J.A.K., Kenefic, L.S., Hayes, D., Weiskittel, A.R., Roth, B.E., 2017. <a href="https://www.fs.fed.us/nrs/pubs/jrnl/2017/nrs_2017_ayrey_001.pdf">Layer Stacking: A Novel Algorithm for Individual Forest Tree Segmentation from LiDAR Point Clouds</a>. Canadian Journal of Remote Sensing 43, 16–27. https://doi.org/10.1080/07038992.2017.1252907</li>
+
+                <li>Rahman, M.Z.A., Gorte, B., 2008. <a href="http://www.isprs.org/proceedings/xxxviii/4-c1/sessions/Session12/6790_Rahman_Proc.pdf">Individual tree detection based on densities of high points of high resolution airborne LiDAR</a>. GEOBIA 350–355.</li>
+            </ul>
+
+
+        <footer class="site-footer">
+            <span class="site-footer-owner"><a href="https://github.com/mparkan/Digital-Forestry-Toolbox">Digital-forestry-toolbox</a> is maintained by <a href="https://github.com/mparkan">mparkan</a>.</span>
+
+        </footer>
+
+        </section>
+
+    </body>
+
+
+
+</html>
