@@ -80,7 +80,7 @@
                 <a id="getting-started-2" class="anchor" href="getting-started-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Displaying a 3D point cloud
             </h3>
 
-            <p> In order to display all classes except noise points (class 7), we start by creating a logical indexing variable:</p>
+            <p> To display all classes except noise points (class 7), we start by creating a logical indexing variable:</p>
             <p><code>idxl_noise = ismember(pc.record.classification, 7);</code></p>
 
             <p> We then use <code>scatter3()</code> to plot non-noise points colored by return intensity:</p>
