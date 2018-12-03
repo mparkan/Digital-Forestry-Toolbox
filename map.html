@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+    <head>
+        <title>Map</title>
+
+
+
+<!--        <link rel="stylesheet" href="lib/v5.3.0-dist/ol.css" type="text/css">
+        <script src="lib/v5.3.0-dist/ol.js"></script>
+        <script src="lib/proj4js-2.5.0/dist/proj4.js"></script>-->
+
+
+        <link rel="stylesheet" href="lib/v4.3.2-dist/ol.css" type="text/css">
+        <script src="lib/ol-v4.3.2/ol.js"></script>
+        <script src="lib/proj4js-2.5.0/proj4.js"></script>
+
+
+
+
+        <style>
+
+            /*
+            #map {
+            width: 75%;
+            padding-bottom: 20%;
+            background: gold;
+            }
+            */
+
+            #map {
+                width:750px;
+                height:800px;
+                background: white;
+            }
+
+        </style>
+
+
+    </head>
+    <body>
+        <div id="map" class="map"></div>
+
+        <script>
+
+            // define CRS
+
+            if (proj4) {
+                proj4.defs("EPSG:2056", "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs");
+
+            };
+
+
+            var extent = [2499161.3501220699399710, 1127165.0501220701262355, 2499770.9501220700331032,1127808.5501220701262355]; // [minx, miny, maxx, maxy].
+
+            var projection = new ol.proj.Projection({
+                code: 'EPSG:2056',
+                units: 'm',
+                global: false,
+                worldExtent: [5.13521, 45.39757, 11.47680, 48.23070],
+                extent: extent
+            });
+
+
+            /*
+            console.log(proj4);
+            console.log(projection);
+
+            projection.setExtent(extent);
+            projection.setWorldExtent([5.13521, 45.39757, 11.47680, 48.23070]); // [minx, miny, maxx, maxy].
+            projection.setGlobal(false);
+            */
+
+
+
+
+            // define vector layer
+            var vectorLayer = new ol.layer.Vector({
+                source: new ol.source.Vector({
+                    format: new ol.format.GeoJSON(),
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tiges_ge_oct.geojson',
+                    crossOrigin: 'anonymous'
+                }),
+                style: new ol.style.Style({
+                    image: new ol.style.Circle( ({
+                        radius: 2,
+                        fill: new ol.style.Fill({
+                            color: '#ffff00'
+                        })
+                    }))
+                })
+            });
+
+            // define scale bar
+            var scaleLineControl = new ol.control.ScaleLine()
+            /*
+            ({
+                className: 'ol-scale-line'});*/
+
+
+            // define attribution
+            //var attribution = new ol.control.Attribution({
+
+            //});
+
+
+            // initialize map
+            var map = new ol.Map({
+                renderer: 'webgl',
+                controls:  ol.control.defaults({
+                    attributionOptions: ({
+                        collapsible: true,
+                        className: '',
+                    })
+                }).extend([
+                    scaleLineControl
+                ]),
+                layers: [
+                    new ol.layer.Image({
+                        source: new ol.source.ImageStatic({
+                            attributions: '<a href="https://ge.ch/sitg/donnees">SITG</a>',
+                            url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/ORTHOPHOTOS_2016_10cm.jpg',
+                            crossOrigin: 'anonymous',
+                            projection: projection,
+                            imageSize: [6096,6435],
+                            imageExtent: extent
+                        })
+                    }),
+                    vectorLayer
+                ],
+                target: 'map',
+                view: new ol.View({
+                    projection: projection,
+                    center: ol.extent.getCenter(extent),
+                    zoom: 2,
+                    minZoom:2,
+                    maxZoom: 8,
+                    extent: extent
+                })
+            });
+
+        </script>
+    </body>
+</html>
