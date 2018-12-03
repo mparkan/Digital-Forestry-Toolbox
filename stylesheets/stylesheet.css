@@ -32,7 +32,7 @@ a:hover {
 .btn:hover {
     color: rgba(255, 204, 102, 255); /* rgba(255, 255, 255, 0.8); */
     text-decoration: none;
-    background-color: ; rgba(0, 0, 0, 0.55); /* rgba(255, 255, 255, 0.2); */
+    background-color: rgba(0, 0, 0, 0.55); /* rgba(255, 255, 255, 0.2); */
     border-color: rgba(255, 204, 102, 255); } /* rgba(255, 255, 255, 0.3); } */
 
 @media screen and (min-width: 64em) {
@@ -112,7 +112,7 @@ a:hover {
 
 .project-tagline {
     background-color: transparent !important
-    text-shadow: rgba(0, 0, 0, 1) 0px 0px 10px;
+        text-shadow: rgba(0, 0, 0, 1) 0px 0px 10px;
     margin-bottom: 2rem !important;
     font-weight: normal !important;
     opacity: 1; }
@@ -295,15 +295,15 @@ figure figcaption {
 }
 
 .column {
-  float: left;
-  width: 50%;
-  padding: 5px;
+    float: left;
+    width: 50%;
+    padding: 5px;
 }
 
 .row::after {
-  content: "";
-  clear: both;
-  display: table;
+    content: "";
+    clear: both;
+    display: table;
 }
 
 h1 {
@@ -321,38 +321,47 @@ h2 {
 
 /*
 h2 {
-    background-color: rgba(255, 255, 255,255);
-    padding: 0.25em;
-    border-bottom: 3px solid rgba(91, 117, 109,60); //#eff0f1
+background-color: rgba(255, 255, 255,255);
+padding: 0.25em;
+border-bottom: 3px solid rgba(91, 117, 109,60); //#eff0f1
 }
 */
 .box{
-  background-color: rgba(255,215,0,255); /* rgba(255, 204, 102, 255); */
-  border-width: 1px;
-  border-color: rgba(211 211 211,255);
-  border-style: solid;
-  padding: 1em;
-  width: 75%;
-  margin: auto;
-  border-collapse: collapse;
-  border-radius: 0.25em;
-  overflow: hidden;
+    background-color: rgba(255,215,0,255); /* rgba(255, 204, 102, 255); */
+    border-width: 1px;
+    border-color: rgba(211 211 211,255);
+    border-style: solid;
+    padding: 1em;
+    width: 75%;
+    margin: auto;
+    border-collapse: collapse;
+    border-radius: 0.25em;
+    overflow: hidden;
 }
 
 .step{
-  background-color: rgba(255,255,255,255); /* rgba(255, 204, 102, 255); */
-  border-top: 2px solid #eff0f1;
-  border-bottom: 2px solid #eff0f1;
-  padding-top: 1rem;
-  width: 100%;
-  margin: auto;
+    background-color: rgba(255,255,255,255); /* rgba(255, 204, 102, 255); */
+    border-top: 2px solid #eff0f1;
+    border-bottom: 2px solid #eff0f1;
+    padding-top: 1rem;
+    width: 100%;
+    margin: auto;
 }
 
 
-.map{
-  padding: 1em;
-  width: 100%;
-  margin: auto;
-  overflow: hidden;
+#map1{
+    padding: 1em;
+    width: 100%;
+    margin: auto;
+    overflow: hidden;
+}
+
+#map2 {
+    padding: 1em;
+    width:100%;
+    height:auto;
+    overflow: hidden;
+    background: url(map-background.jpg) repeat;
+     background-clip: content-box;
 }
 

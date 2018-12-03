@@ -11,7 +11,11 @@
 
         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+        <link rel="stylesheet" href="lib/ol-v4.3.2/ol.css" type="text/css">
 
+
+        <script src="lib/ol-v4.3.2/ol.js"></script>
+        <script src="lib/proj4js-2.5.0/proj4.js"></script>
 
     </head>
 
@@ -43,7 +47,7 @@
 
             <p>In this tutorial, you will learn how to detect tree stems in a 3D point cloud acquired with Airborne Laser Scanning (ALS). We will be using data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the Riegl LMS-Q1560 sensor. We will only use a small subset of the data, but the full dataset is freely available from the <a href="https://ge.ch/sitg/donnees">Offical Geoinformation Portal of Geneva</a>. The area of interest (46°17′30″N, 6°08′00″E) is located in a small forest about 10 km to the North of the city of Geneva (see map below). Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
 
-            <div class="map">
+            <div id="map1">
 
                 <iframe src='https://map.geo.admin.ch/embed.html?topic=ech&lang=en&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&E=2499604.02&N=1127554.43&zoom=8' width='100%' height='450' frameborder='0'></iframe>
 
@@ -73,10 +77,10 @@
                             </td>
                             <td style="padding:5px;border:none">
                                 <img src="img/dft_tutorial_3_ima_2b.png" alt="" style="width:100%;">
-                             </td>
-                             <td style="padding:5px;border:none">
+                            </td>
+                            <td style="padding:5px;border:none">
                                 <img src="img/dft_tutorial_3_ima_2c.png" alt="" style="width:100%;">
-                             </td>
+                            </td>
                         </tr>
                     </table>
 
@@ -85,16 +89,16 @@
             </figure>
 
             <!--
-            Depends on several hypothesis:
-            <br>
-            <ul>
-                <li>Stems are approximately vertical</li>
-                <li>Stems are well separated horizontally</li>
-                <li>Last returns occur more frequently on stems and large branches</li>
-                <li>The point density is higher near the center of a tree (ignoring overlap areas)</li>
-            </ul>
-            <br>
-            -->
+Depends on several hypothesis:
+<br>
+<ul>
+<li>Stems are approximately vertical</li>
+<li>Stems are well separated horizontally</li>
+<li>Last returns occur more frequently on stems and large branches</li>
+<li>The point density is higher near the center of a tree (ignoring overlap areas)</li>
+</ul>
+<br>
+-->
 
 
             <h2>
@@ -210,34 +214,37 @@ ind = sub2ind([nrows, ncols], P(:,1), P(:,2));
 xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</code></pre>
 
 
-        <h2>
-            <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Filter the points by classification and return number
-        </h2>
+            <h2>
+                <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Filter the points by classification and return number
+            </h2>
 
-        <p>When compared to small branches, stems and primary branches are more likely to fully intercept the laser beam and generate a last return (see figure 2). Since we are only interested in detecting stems, we can apply a filter which reduces the amount of non-stem points and removes terrain points. To do this, we create a logical (boolean) vector:
+            <p>When compared to small branches, stems and primary branches are more likely to fully intercept the laser beam and generate a last return (see figure 2). Since we are only interested in detecting stems, we can apply a filter which reduces the amount of non-stem points and removes terrain points. To do this, we create a logical (boolean) vector:
 
-<!--            to select only points that have the class medium or high vegetation and that are also last returns:</p>-->
+                <!--            to select only points that have the class medium or high vegetation and that are also last returns:</p>-->
 
-        <pre><code>idxl_last = pc.record.return_number == pc.record.number_of_returns;
+            <pre><code>idxl_last = pc.record.return_number == pc.record.number_of_returns;
 idxl_veg = ismember(pc.record.classification, [4, 5]);
 idxl_filter = idxl_veg & idxl_last;</code></pre>
 
-        <p>Note that while using only the last returns may increase the reliability of large stem detections, it may also reduce the detection rate for smaller stems. You can modify this filtering criteria or add new ones (e.g. acquisition date, intensity, colour) to suit your specific needs.</p>
+            <p>Note that while using only the last returns may increase the reliability of large stem detections, it may also reduce the detection rate for smaller stems. You can modify this filtering criteria or add new ones (e.g. acquisition date, intensity, colour) to suit your specific needs.</p>
 
-         <figure>
-            <img src="img/dft_tutorial_3_ima_3a.png" alt="" style="width:90%;">
-            <img src="img/dft_tutorial_3_ima_3b.png" alt="" style="width:90%;">
-             <figcaption><b>Figure 2</b> - Cross section of the normalized point cloud. <b>Top</b>: all points. <b>Bottom</b>: only last returns and vegetation classes.</figcaption>
-        </figure>
+            <figure>
+                <img src="img/dft_tutorial_3_ima_3a.png" alt="" style="width:90%;">
+                <img src="img/dft_tutorial_3_ima_3b.png" alt="" style="width:90%;">
+                <figcaption><b>Figure 2</b> - Cross section of the normalized point cloud. <b>Top</b>: all points. <b>Bottom</b>: only last returns and vegetation classes.</figcaption>
+            </figure>
 
 
-        <h2>
-            <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Detect the stems
-        </h2>
+
+
+
+            <h2>
+                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Detect the stems
+            </h2>
 
             <p>Using only the filtered points, we can now detect the stems with the <code>treeStems()</code> function:</p>
 
-        <pre><code>[label, xyh_stem] = treeStems(xyh, ...
+            <pre><code>[label, xyh_stem] = treeStems(xyh, ...
     idxl_filter, ...
     'cellSize', 0.4, ...
     'bandWidth', 1.5, ...
@@ -259,32 +266,38 @@ idxl_filter = idxl_veg & idxl_last;</code></pre>
 
             <p>By adjusting the parameters values, Depending on you target application, you adjust the tradeoff between precision and recall.</p>
 
-        <div class="row">
-          <div class="column">
-            <img src="img/dft_tutorial_3_ima_3a.png" alt="Snow" style="width:100%">
-          </div>
-          <div class="column">
-            <img src="img/dft_tutorial_3_ima_3a.png" alt="Forest" style="width:100%">
-          </div>
-        </div>
 
-        <h2>
-            <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Export the stem attributes to a CSV file
-        </h2>
+            <div id="map2"></div>
 
-        <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
 
-                <pre><code>fid = fopen('ge_2017_versoix_stems.csv', 'w+'); % open file
+
+<!--            <div class="row">
+                <div class="column">
+                    <img src="img/dft_tutorial_3_ima_3a.png" alt="Snow" style="width:100%">
+                </div>
+                <div class="column">
+                    <img src="img/dft_tutorial_3_ima_3a.png" alt="Forest" style="width:100%">
+                </div>
+            </div>-->
+
+
+            <h2>
+                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Export the stem attributes to a CSV file
+            </h2>
+
+            <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
+
+            <pre><code>fid = fopen('ge_2017_versoix_stems.csv', 'w+'); % open file
 fprintf(fid, 'X, Y, H\n'); % write header line
 fprintf(fid, '%.2f, %.2f, %.2f\n', xyh_stem'); % write records
 fclose(fid); % close file</code></pre>
 
-<p>After exporting the CSV file, you can try opening it in any text editor (e.g. <a href="https://notepad-plus-plus.org/">Notepad++</a>).</p>
+            <p>After exporting the CSV file, you can try opening it in any text editor (e.g. <a href="https://notepad-plus-plus.org/">Notepad++</a>).</p>
 
 
-        <h2>
-            <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Export the stem attributes to an ESRI shapefile
-        </h2>
+            <h2>
+                <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Export the stem attributes to an ESRI shapefile
+            </h2>
 
             <br>
             <div class="box">
@@ -318,27 +331,104 @@ end</code></pre>
 
 
 
-        <h2>
-            <a id="references" class="anchor" href="references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>References</b>
-        </h2>
+            <h2>
+                <a id="references" class="anchor" href="references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>References</b>
+            </h2>
 
 
             <ul>
-               <li>Ayrey, E., Fraver, S., Jr, J.A.K., Kenefic, L.S., Hayes, D., Weiskittel, A.R., Roth, B.E., 2017. <a href="https://www.fs.fed.us/nrs/pubs/jrnl/2017/nrs_2017_ayrey_001.pdf">Layer Stacking: A Novel Algorithm for Individual Forest Tree Segmentation from LiDAR Point Clouds</a>. Canadian Journal of Remote Sensing 43, 16–27. https://doi.org/10.1080/07038992.2017.1252907</li>
+                <li>Ayrey, E., Fraver, S., Jr, J.A.K., Kenefic, L.S., Hayes, D., Weiskittel, A.R., Roth, B.E., 2017. <a href="https://www.fs.fed.us/nrs/pubs/jrnl/2017/nrs_2017_ayrey_001.pdf">Layer Stacking: A Novel Algorithm for Individual Forest Tree Segmentation from LiDAR Point Clouds</a>. Canadian Journal of Remote Sensing 43, 16–27. https://doi.org/10.1080/07038992.2017.1252907</li>
 
                 <li>Rahman, M.Z.A., Gorte, B., 2008. <a href="http://www.isprs.org/proceedings/xxxviii/4-c1/sessions/Session12/6790_Rahman_Proc.pdf">Individual tree detection based on densities of high points of high resolution airborne LiDAR</a>. GEOBIA 350–355.</li>
             </ul>
 
 
-        <footer class="site-footer">
-            <span class="site-footer-owner"><a href="https://github.com/mparkan/Digital-Forestry-Toolbox">Digital-forestry-toolbox</a> is maintained by <a href="https://github.com/mparkan">mparkan</a>.</span>
+            <footer class="site-footer">
+                <span class="site-footer-owner"><a href="https://github.com/mparkan/Digital-Forestry-Toolbox">Digital-forestry-toolbox</a> is maintained by <a href="https://github.com/mparkan">mparkan</a>.</span>
 
-        </footer>
+            </footer>
 
         </section>
 
+
+        <script>
+
+            // define CRS
+
+            if (proj4) {
+                proj4.defs("EPSG:2056", "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs");
+
+            };
+
+            var extent = [2499161.3501220699399710, 1127165.0501220701262355, 2499770.9501220700331032,1127808.5501220701262355]; // [minx, miny, maxx, maxy].
+
+            var projection = new ol.proj.Projection({
+                code: 'EPSG:2056',
+                units: 'm',
+                global: false,
+                worldExtent: [5.13521, 45.39757, 11.47680, 48.23070],
+                extent: extent
+            });
+
+
+            // define vector layer
+            var vectorLayer = new ol.layer.Vector({
+                source: new ol.source.Vector({
+                    format: new ol.format.GeoJSON(),
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/ge_2017_versoix_stems.geojson',
+                    crossOrigin: 'anonymous'
+                }),
+                style: new ol.style.Style({
+                    image: new ol.style.Circle( ({
+                        radius: 2,
+                        fill: new ol.style.Fill({
+                            color: '#ffff00'
+                        })
+                    }))
+                })
+            });
+
+            // define scale bar
+            var scaleLineControl = new ol.control.ScaleLine();
+
+
+            // initialize map
+            var map = new ol.Map({
+                renderer: 'webgl',
+                controls:  ol.control.defaults({
+                    attributionOptions: ({
+                        collapsible: true,
+                        className: '',
+                    })
+                }).extend([
+                    scaleLineControl
+                ]),
+                layers: [
+                    new ol.layer.Image({
+                        source: new ol.source.ImageStatic({
+                            attributions: '<a href="https://ge.ch/sitg/donnees">SITG</a>',
+                            url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/ge_2016_ortho_10cm.jpg',
+                            crossOrigin: 'anonymous',
+                            projection: projection,
+                            imageSize: [6096,6435],
+                            imageExtent: extent
+                        })
+                    }),
+                    vectorLayer
+                ],
+                target: 'map2',
+                view: new ol.View({
+                    projection: projection,
+                    center: ol.extent.getCenter(extent),
+                    zoom: 2,
+                    minZoom:2,
+                    maxZoom: 8,
+                    extent: extent
+                })
+            });
+
+        </script>
+
     </body>
-
-
 
 </html>
