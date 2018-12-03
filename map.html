@@ -3,15 +3,7 @@
 <html>
     <head>
         <title>Map</title>
-
-
-
-<!--        <link rel="stylesheet" href="lib/v5.3.0-dist/ol.css" type="text/css">
-        <script src="lib/v5.3.0-dist/ol.js"></script>
-        <script src="lib/proj4js-2.5.0/dist/proj4.js"></script>-->
-
-
-        <link rel="stylesheet" href="lib/v4.3.2-dist/ol.css" type="text/css">
+        <link rel="stylesheet" href="lib/ol-4.3.2/ol.css" type="text/css">
         <script src="lib/ol-v4.3.2/ol.js"></script>
         <script src="lib/proj4js-2.5.0/proj4.js"></script>
 
@@ -78,7 +70,7 @@
             var vectorLayer = new ol.layer.Vector({
                 source: new ol.source.Vector({
                     format: new ol.format.GeoJSON(),
-                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tiges_ge_oct.geojson',
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/ge_2017_versoix_stems',
                     crossOrigin: 'anonymous'
                 }),
                 style: new ol.style.Style({
@@ -119,7 +111,7 @@
                     new ol.layer.Image({
                         source: new ol.source.ImageStatic({
                             attributions: '<a href="https://ge.ch/sitg/donnees">SITG</a>',
-                            url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/ORTHOPHOTOS_2016_10cm.jpg',
+                            url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/ge_2016_ortho_10cm.jpg',
                             crossOrigin: 'anonymous',
                             projection: projection,
                             imageSize: [6096,6435],
