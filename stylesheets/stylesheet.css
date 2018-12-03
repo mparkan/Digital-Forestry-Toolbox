@@ -358,10 +358,10 @@ border-bottom: 3px solid rgba(91, 117, 109,60); //#eff0f1
 
 #map2 {
     padding: 1em;
-    width:100%;
-    height:auto;
+    width: 100%;
+    height: 600px;
     overflow: hidden;
     background: url(map-background.jpg) repeat;
-     background-clip: content-box;
+    background-clip: content-box;
 }
 
