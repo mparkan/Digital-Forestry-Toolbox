@@ -208,7 +208,7 @@ idxl_filter = idxl_veg & idxl_last;</code></pre>
 
 
             <h2>
-                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Detect the stems
+                <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Detect the stems
             </h2>
 
             <p>Using only the filtered points, we can now detect the stems with the <code>treeStems()</code> function:</p>
@@ -261,12 +261,12 @@ idxl_filter = idxl_veg & idxl_last;</code></pre>
             -->
 
             <h2>
-                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Export the stem attributes to a CSV file
+                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Export the stem attributes to a CSV file
             </h2>
 
             <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
 
-            <pre><code>fid = fopen('ge_2017_versoix_stems.csv', 'w+'); % open file
+            <pre><code>fid = fopen('ge_2017_a_stems.csv', 'w+'); % open file
 fprintf(fid, 'X, Y, H\n'); % write header line
 fprintf(fid, '%.2f, %.2f, %.2f\n', xyh_stem'); % write records
 fclose(fid); % close file</code></pre>
@@ -275,7 +275,7 @@ fclose(fid); % close file</code></pre>
 
 
             <h2>
-                <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Export the stem attributes to an ESRI shapefile
+                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Export the stem attributes to an ESRI shapefile
             </h2>
 
             <br>
@@ -304,7 +304,7 @@ end</code></pre>
 
             <p>Specify the output filepath (by default, the file is created in the current working directory) and use <code>shapewrite()</code> to write the file:</p>
 
-            <pre><code>shapewrite(S, 'ge_2017_versoix_stems.shp');</code></pre>
+            <pre><code>shapewrite(S, 'ge_2017_a_stems.shp');</code></pre>
 
             <p>After exporting the shapefile, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
 
