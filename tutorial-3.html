@@ -44,7 +44,8 @@
                 <a id="introduction" class="anchor" href="introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Introduction</b>
             </h2>
 
-            <p>In this tutorial, you will learn how to detect tree stems in a 3D point cloud acquired with Airborne Laser Scanning (ALS). We will be using data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the Riegl LMS-Q1560 sensor. We will only use a small subset of the data, but the full dataset is freely available from the <a href="https://ge.ch/sitg/donnees">Offical Geoinformation Portal of Geneva</a>. The area of interest (46°17′30″N, 6°08′00″E) is located in a small forest about 10 km to the North of the city of Geneva (see map below). Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
+            <p>In this tutorial, you will learn how to detect tree stems in a 3D point cloud. We will use Airborne Laser Scanning (ALS) data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the Riegl LMS-Q1560 sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>.</p>
+            <p>A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
 
             <div id="map1">
 
@@ -52,37 +53,29 @@
 
             </div>
 
-
-
-            <br>
-
-            The stem detection method used in this tutorial is based on a simple observation: the space in a tree gets more cluttered as you approach the stem. Consequently, considering a homogeneous sampling of the tree structure, ALS point density (i.e. the number of points within a vertical column) tends to be higher near the stem (see figure 1).
+            <p>The stem detection method we will use is based on a simple observation: the space in a tree gets more cluttered as you approach the stem. Consequently, considering a homogeneous point sampling of the tree geometry, the point density (i.e. the number of points within a vertical column) tends to be higher near the stem (see figure 1 left). To reduce the effect of inhomogenous sampling and to simplify the detection of density peaks, we rasterize the point cloud (see figure 1 right).</p>
 
             <figure>
                 <div id="image-table" style="width:100%;margin:auto">
                     <table>
                         <tr>
                             <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_3_im_1a.png" alt="" style="width:90%;">
+                                <img src="img/dft_tutorial_3_im_1a.png" alt="" style="width:80%;">
+                                <!--<figcaption style="width:80%;"><b>(a)</b> Sampling of the tree structure is often non-homogenous in the ALS point cloud.</figcaption>-->
                             </td>
+
                             <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_3_im_1b.png" alt="" style="width:90%;">
+                                <img src="img/dft_tutorial_3_im_1b.png" alt="" style="width:80%;">
+                                <!--<figcaption style="width:80%;"><b>(b)</b> Sampling of the tree structure is often non-homogenous in the ALS point cloud.</figcaption>-->
                             </td>
                         </tr>
                     </table>
-
                 </div>
-                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically. <b>Left</b>: The point density is often non-homogenous. <b>Right</b>: Rasterizing the 3D points mitigates the effect.</figcaption>
+                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically. <b>Left</b>: Sampling of the tree structure is often non-homogenous in the ALS point cloud. <b>Right</b>: Quasi uniform sampling can be obtained by rasterizing the 3D points.</figcaption>
             </figure>
 
 
-<!--            <figure>
-                <img src="img/dft_tutorial_3_im_1a.png" alt="" style="width:30%;">
-                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically.</figcaption>
-            </figure>-->
-
-
-            <p>Since the ALS sampling is usually not homogenous, the density is not directly computed on the point cloud, but on a boolean raster derived fom it. Thus, local point density peaks can be a good indicator of probable stem locations. This feature may also subsequently serve as a basis for tree crown delineation, as proposed in Rahman and Gorte (2008) and more recently in Ayrey et al. (2017). The method is an alternative to tree top detection and is likely to perform better on irregularly shaped canopies (in particular if surveyed in leaf-off conditions).</p>
+            <p>This method is an alternative to tree top detection and is likely to perform better on irregularly shaped canopies (in particular if surveyed in leaf-off conditions). The locations of local density peaks may also subsequently serve as a basis for tree crown delineation, as proposed in Rahman and Gorte (2008) or more recently in Ayrey et al. (2017).</p>
 
 
             <figure>
@@ -113,7 +106,7 @@ Depends on several hypothesis:
 <li>Stems are well separated horizontally</li>
 <li>Last returns occur more frequently on stems and large branches</li>
 <li>The point density is higher near the center of a tree (ignoring overlap areas)</li>
-</ul>
+</ul>  can help reduce false positive detections. Moreover, local density peaks can easily be detected in a raster using a simple morphological filter.
 <br>
 -->
 
@@ -235,9 +228,7 @@ xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</cod
                 <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Filter the points by classification and return number
             </h2>
 
-            <p>When compared to small branches, stems and primary branches are more likely to fully intercept the laser beam and generate a last return (see figure 2). Since we are only interested in detecting stems, we can apply a filter which reduces the amount of non-stem points and removes terrain points. To do this, we create a logical (boolean) vector:
-
-                <!--            to select only points that have the class medium or high vegetation and that are also last returns:</p>-->
+            <p>When compared to small branches, stems and primary branches are more likely to fully intercept the laser beam and generate a last return (see figure 2). Since we are only interested in detecting stems, we can apply a filter which keeps only last returns (and also removes terrain points or other unwanted classes). To do this, we create a logical (boolean) vector:
 
             <pre><code>idxl_last = pc.record.return_number == pc.record.number_of_returns;
 idxl_veg = ismember(pc.record.classification, [4, 5]);
@@ -288,14 +279,14 @@ idxl_filter = idxl_veg & idxl_last;</code></pre>
 
 
 
-<!--            <div class="row">
-                <div class="column">
-                    <img src="img/dft_tutorial_3_ima_3a.png" alt="Snow" style="width:100%">
-                </div>
-                <div class="column">
-                    <img src="img/dft_tutorial_3_ima_3a.png" alt="Forest" style="width:100%">
-                </div>
-            </div>-->
+            <!--            <div class="row">
+<div class="column">
+<img src="img/dft_tutorial_3_ima_3a.png" alt="Snow" style="width:100%">
+</div>
+<div class="column">
+<img src="img/dft_tutorial_3_ima_3a.png" alt="Forest" style="width:100%">
+</div>
+</div>-->
 
 
             <h2>
@@ -371,13 +362,11 @@ end</code></pre>
         <script>
 
             // define CRS
-
             if (proj4) {
                 proj4.defs("EPSG:2056", "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs");
-
             };
 
-            var extent = [2499161.3501220699399710, 1127165.0501220701262355, 2499770.9501220700331032,1127808.5501220701262355]; // [minx, miny, maxx, maxy].
+            var extent = [2499100.0000000000000000,1127220.0000000000000000, 2499780.0000000000000000,1127900.0000000000000000]; // [minx, miny, maxx, maxy].
 
             var projection = new ol.proj.Projection({
                 code: 'EPSG:2056',
@@ -387,12 +376,11 @@ end</code></pre>
                 extent: extent
             });
 
-
             // define vector layer
             var vectorLayer = new ol.layer.Vector({
                 source: new ol.source.Vector({
                     format: new ol.format.GeoJSON(),
-                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/ge_2017_versoix_stems.geojson',
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_3/vector/ge_2017_a_stems.geojson',
                     crossOrigin: 'anonymous'
                 }),
                 style: new ol.style.Style({
@@ -405,13 +393,26 @@ end</code></pre>
                 })
             });
 
+            // define XYZ tiles layer
+            var tileLayer = new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_3/raster/ortho/{z}/{x}/{y}.jpg',
+                    crossOrigin: 'anonymous',
+                    extent: extent,
+                    projection: projection,
+                    opaque: false,
+                    minZoom:0,
+                    maxZoom: 5,
+                }),
+            });
+
             // define scale bar
             var scaleLineControl = new ol.control.ScaleLine();
 
 
             // initialize map
             var map = new ol.Map({
-                renderer: 'webgl',
+                renderer: ['webgl', 'canvas'],
                 controls:  ol.control.defaults({
                     attributionOptions: ({
                         collapsible: true,
@@ -421,16 +422,7 @@ end</code></pre>
                     scaleLineControl
                 ]),
                 layers: [
-                    new ol.layer.Image({
-                        source: new ol.source.ImageStatic({
-                            attributions: '<a href="https://ge.ch/sitg/donnees">SITG</a>',
-                            url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/ge_2016_ortho_10cm.jpg',
-                            crossOrigin: 'anonymous',
-                            projection: projection,
-                            imageSize: [6096,6435],
-                            imageExtent: extent
-                        })
-                    }),
+                    tileLayer,
                     vectorLayer
                 ],
                 target: 'map2',
@@ -438,8 +430,8 @@ end</code></pre>
                     projection: projection,
                     center: ol.extent.getCenter(extent),
                     zoom: 2,
-                    minZoom:2,
-                    maxZoom: 8,
+                    minZoom: 1,
+                    maxZoom: 6,
                     extent: extent
                 })
             });
