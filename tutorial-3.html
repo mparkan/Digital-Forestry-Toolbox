@@ -59,9 +59,27 @@
             The stem detection method used in this tutorial is based on a simple observation: the space in a tree gets more cluttered as you approach the stem. Consequently, considering a homogeneous sampling of the tree structure, ALS point density (i.e. the number of points within a vertical column) tends to be higher near the stem (see figure 1).
 
             <figure>
-                <img src="img/dft_tutorial_3_im_a.png" alt="" style="width:30%;">
-                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically.</figcaption>
+                <div id="image-table" style="width:100%;margin:auto">
+                    <table>
+                        <tr>
+                            <td style="padding:5px;border:none">
+                                <img src="img/dft_tutorial_3_im_1a.png" alt="" style="width:90%;">
+                            </td>
+                            <td style="padding:5px;border:none">
+                                <img src="img/dft_tutorial_3_im_1b.png" alt="" style="width:90%;">
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically. <b>Left</b>: The point density is often non-homogenous. <b>Right</b>: Rasterizing the 3D points mitigates the effect.</figcaption>
             </figure>
+
+
+<!--            <figure>
+                <img src="img/dft_tutorial_3_im_1a.png" alt="" style="width:30%;">
+                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically.</figcaption>
+            </figure>-->
 
 
             <p>Since the ALS sampling is usually not homogenous, the density is not directly computed on the point cloud, but on a boolean raster derived fom it. Thus, local point density peaks can be a good indicator of probable stem locations. This feature may also subsequently serve as a basis for tree crown delineation, as proposed in Rahman and Gorte (2008) and more recently in Ayrey et al. (2017). The method is an alternative to tree top detection and is likely to perform better on irregularly shaped canopies (in particular if surveyed in leaf-off conditions).</p>
@@ -106,10 +124,10 @@ Depends on several hypothesis:
 
             <ol>
                 <li>Download and uncompress the Digital Forestry Toolbox (DFT) <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master">Zip</a> or <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master">Tar</a> archive</li>
-                <li>Download the <a href="http://maps.zh.ch/download/hoehen/2014/lidar/26995_12710.laz">ge_2017_versoix.laz</a> file from the DFT Zenodo repository and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
+                <li>Download the <a href="http://maps.zh.ch/download/hoehen/2014/lidar/26995_12710.laz">ge_2017_a.laz</a> file from the DFT Zenodo repository and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
                 <li>Start Matlab/Octave</li>
-                <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
                 <li>Delete any previous versions of the toolbox</li>
+                <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
                 <li>Open <code>dft_tutorial_3.m</code> (located in the tutorials folder)</li>
             </ol>
 
@@ -119,7 +137,7 @@ Depends on several hypothesis:
 
             <p>We start by reading the LAS file using <code>LASread()</code>:</p>
 
-            <pre><code>pc = LASread('26995_12710.las');</code></pre>
+            <pre><code>pc = LASread('ge_2017_a.las');</code></pre>
 
             <p>Note that the point classification uses the following scheme:</p>
 
@@ -256,11 +274,11 @@ idxl_filter = idxl_veg & idxl_last;</code></pre>
             <p>The following parameters will influence the detection result:</p>
 
             <ul>
-                <li>cellSize</li>
-                <li>bandWidth</li>
-                <li>verticalStep</li>
-                <li>searchRadius</li>
-                <li>minLength</li>
+                <li>cellSize: the size of the raster cells</li>
+                <li>bandWidth: the thickness of each horizontal layer</li>
+                <li>verticalStep: the vertical distance between each horizontal layer</li>
+                <li>searchRadius: search radius for the local density maxima</li>
+                <li>minLength: </li>
             </ul>
 
             <p>By adjusting the parameters values, Depending on you target application, you adjust the tradeoff between precision and recall.</p>
