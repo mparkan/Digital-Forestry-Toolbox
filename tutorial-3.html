@@ -35,7 +35,7 @@
             <!--<br>-->
             <!--<hr>-->
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Published: November 28, 2018, Last updated: November 28, 2018.</b></p>
+            <p style="text-align: center"><b>Published</b>: December 7, 2018 / <b>Last updated</b>: December 7, 2018.</p>
             <p style="text-align: center"><b>Tested on Matlab r2017b, GNU Octave 4.4.1</b></p>
 
             <!--<hr>-->
@@ -44,7 +44,8 @@
                 <a id="introduction" class="anchor" href="introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Introduction</b>
             </h2>
 
-            <p>In this tutorial, you will learn how to detect tree stems in a 3D point cloud. We will use Airborne Laser Scanning (ALS) data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the Riegl LMS-Q1560 sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>.</p>
+            <p>In this tutorial, you will learn how to detect tree stems in a 3D point cloud. Stem detection is an alternative approach to tree top detection and is likely to perform better on irregularly shaped canopies (in particular, if they were surveyed in leaf-off conditions).</p>
+            <p>We will use Airborne Laser Scanning (ALS) data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>.</p>
             <p>A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
 
             <div id="map1">
@@ -53,7 +54,7 @@
 
             </div>
 
-            <p>The stem detection method we will use is based on a simple observation: the space in a tree gets more cluttered as you approach the stem. Consequently, considering a homogeneous point sampling of the tree geometry, the point density (i.e. the number of points within a vertical column) tends to be higher near the stem (see figure 1 left). To reduce the effect of inhomogenous sampling and to simplify the detection of density peaks, we rasterize the point cloud (see figure 1 right).</p>
+            <p>The stem detection method we will apply is based on a simple observation: the space in a tree gets more cluttered as you approach the stem. Consequently, considering a homogeneous point sampling of the tree geometry, the point density (i.e. the number of points within a vertical column) tends to be higher near the stem (see figure 1 left). To reduce the effect of inhomogenous sampling and to simplify the detection of density peaks, the point cloud can be rasterized (see figure 1 right). The locations of local density peaks may subsequently serve as a basis for tree crown delineation, as proposed in <a href="http://www.isprs.org/proceedings/xxxviii/4-c1/sessions/Session12/6790_Rahman_Proc.pdf"> Rahman and Gorte (2008)</a> or more recently in <a href="https://www.fs.fed.us/nrs/pubs/jrnl/2017/nrs_2017_ayrey_001.pdf">Ayrey et al. (2017)</a>.</p>
 
             <figure>
                 <div id="image-table" style="width:100%;margin:auto">
@@ -71,45 +72,8 @@
                         </tr>
                     </table>
                 </div>
-                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically. <b>Left</b>: Sampling of the tree structure is often non-homogenous in the ALS point cloud. <b>Right</b>: Quasi uniform sampling can be obtained by rasterizing the 3D points.</figcaption>
+                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically. <b>Left</b>: Point counts. <b>Right</b>: Raster cell counts.</figcaption>
             </figure>
-
-
-            <p>This method is an alternative to tree top detection and is likely to perform better on irregularly shaped canopies (in particular if surveyed in leaf-off conditions). The locations of local density peaks may also subsequently serve as a basis for tree crown delineation, as proposed in Rahman and Gorte (2008) or more recently in Ayrey et al. (2017).</p>
-
-
-            <figure>
-                <div id="image-table" style="width:100%;margin:auto">
-                    <table>
-                        <tr>
-                            <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_3_ima_2a.png" alt="" style="width:100%;">
-                            </td>
-                            <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_3_ima_2b.png" alt="" style="width:100%;">
-                            </td>
-                            <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_3_ima_2c.png" alt="" style="width:100%;">
-                            </td>
-                        </tr>
-                    </table>
-
-                </div>
-                <figcaption><b>Figure 2</b> - The point density is higher near the stem, for a tree growing vertically.</figcaption>
-            </figure>
-
-            <!--
-Depends on several hypothesis:
-<br>
-<ul>
-<li>Stems are approximately vertical</li>
-<li>Stems are well separated horizontally</li>
-<li>Last returns occur more frequently on stems and large branches</li>
-<li>The point density is higher near the center of a tree (ignoring overlap areas)</li>
-</ul>  can help reduce false positive detections. Moreover, local density peaks can easily be detected in a raster using a simple morphological filter.
-<br>
--->
-
 
             <h2>
                 <a id="setup" class="anchor" href="setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Setup</b>
@@ -117,7 +81,7 @@ Depends on several hypothesis:
 
             <ol>
                 <li>Download and uncompress the Digital Forestry Toolbox (DFT) <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master">Zip</a> or <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master">Tar</a> archive</li>
-                <li>Download the <a href="http://maps.zh.ch/download/hoehen/2014/lidar/26995_12710.laz">ge_2017_a.laz</a> file from the DFT Zenodo repository and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
+                <li>Download the <a href="https://zenodo.org/record/1998192/files/ge_2017_a.laz?download=1">ge_2017_a.laz</a> file from the DFT Zenodo repository and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
                 <li>Start Matlab/Octave</li>
                 <li>Delete any previous versions of the toolbox</li>
                 <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
@@ -132,7 +96,7 @@ Depends on several hypothesis:
 
             <pre><code>pc = LASread('ge_2017_a.las');</code></pre>
 
-            <p>Note that the point classification uses the following scheme:</p>
+            <p>Note that you may have to adjust the file path in the code above, depending on where you are storing the LAS file. Also note that the point classification uses the following scheme:</p>
 
             <table>
                 <thead>
@@ -234,16 +198,13 @@ xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</cod
 idxl_veg = ismember(pc.record.classification, [4, 5]);
 idxl_filter = idxl_veg & idxl_last;</code></pre>
 
-            <p>Note that while using only the last returns may increase the reliability of large stem detections, it may also reduce the detection rate for smaller stems. You can modify this filtering criteria or add new ones (e.g. acquisition date, intensity, colour) to suit your specific needs.</p>
+            <p>Note that while using only the last returns may increase the detection reliability for large stems, it may also reduce the detection rate for smaller stems. You can modify this filtering criteria or add new ones (e.g. acquisition date, intensity, colour) to suit your specific needs.</p>
 
             <figure>
                 <img src="img/dft_tutorial_3_ima_3a.png" alt="" style="width:90%;">
                 <img src="img/dft_tutorial_3_ima_3b.png" alt="" style="width:90%;">
                 <figcaption><b>Figure 2</b> - Cross section of the normalized point cloud. <b>Top</b>: all points. <b>Bottom</b>: only last returns and vegetation classes.</figcaption>
             </figure>
-
-
-
 
 
             <h2>
@@ -262,32 +223,42 @@ idxl_filter = idxl_veg & idxl_last;</code></pre>
     'verbose', true, ...
     'fig', true);</code></pre>
 
-            <p>The following parameters will influence the detection result:</p>
+            <p>The parameters have the following meaning:</p>
 
             <ul>
-                <li>cellSize: the size of the raster cells</li>
-                <li>bandWidth: the thickness of each horizontal layer</li>
-                <li>verticalStep: the vertical distance between each horizontal layer</li>
-                <li>searchRadius: search radius for the local density maxima</li>
-                <li>minLength: </li>
+                <li><b>cellSize</b>: the size of the raster cells</li>
+                <li><b>bandWidth</b>: the thickness of each horizontal raster layer</li>
+                <li><b>verticalStep</b>: the vertical distance between each horizontal raster layer</li>
+                <li><b>searchRadius</b>: the search radius used to detect local density maxima</li>
+                <li><b>minLength</b>: the minimum count for a local maxima to be considered a stem</li>
             </ul>
 
-            <p>By adjusting the parameters values, Depending on you target application, you adjust the tradeoff between precision and recall.</p>
+            <p>By modifing the parameters values, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection. The interactive map below illustrates the detected stem positions.</p>
 
 
             <div id="map2"></div>
 
+            <!--
+            <figure>
+                <div id="image-table" style="width:100%;margin:auto">
+                    <table>
+                        <tr>
+                            <td style="padding:5px;border:none">
+                                <img src="img/dft_tutorial_3_ima_2a.png" alt="" style="width:100%;">
+                            </td>
+                            <td style="padding:5px;border:none">
+                                <img src="img/dft_tutorial_3_ima_2b.png" alt="" style="width:100%;">
+                            </td>
+                            <td style="padding:5px;border:none">
+                                <img src="img/dft_tutorial_3_ima_2c.png" alt="" style="width:100%;">
+                            </td>
+                        </tr>
+                    </table>
 
-
-            <!--            <div class="row">
-<div class="column">
-<img src="img/dft_tutorial_3_ima_3a.png" alt="Snow" style="width:100%">
-</div>
-<div class="column">
-<img src="img/dft_tutorial_3_ima_3a.png" alt="Forest" style="width:100%">
-</div>
-</div>-->
-
+                </div>
+                <figcaption><b>Figure 2</b> - The point density is higher near the stem, for a tree growing vertically.</figcaption>
+            </figure>
+            -->
 
             <h2>
                 <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Export the stem attributes to a CSV file
@@ -337,12 +308,9 @@ end</code></pre>
 
             <p>After exporting the shapefile, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
 
-
-
             <h2>
                 <a id="references" class="anchor" href="references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>References</b>
             </h2>
-
 
             <ul>
                 <li>Ayrey, E., Fraver, S., Jr, J.A.K., Kenefic, L.S., Hayes, D., Weiskittel, A.R., Roth, B.E., 2017. <a href="https://www.fs.fed.us/nrs/pubs/jrnl/2017/nrs_2017_ayrey_001.pdf">Layer Stacking: A Novel Algorithm for Individual Forest Tree Segmentation from LiDAR Point Clouds</a>. Canadian Journal of Remote Sensing 43, 16–27. https://doi.org/10.1080/07038992.2017.1252907</li>
@@ -350,14 +318,12 @@ end</code></pre>
                 <li>Rahman, M.Z.A., Gorte, B., 2008. <a href="http://www.isprs.org/proceedings/xxxviii/4-c1/sessions/Session12/6790_Rahman_Proc.pdf">Individual tree detection based on densities of high points of high resolution airborne LiDAR</a>. GEOBIA 350–355.</li>
             </ul>
 
-
             <footer class="site-footer">
                 <span class="site-footer-owner"><a href="https://github.com/mparkan/Digital-Forestry-Toolbox">Digital-forestry-toolbox</a> is maintained by <a href="https://github.com/mparkan">mparkan</a>.</span>
 
             </footer>
 
         </section>
-
 
         <script>
 
@@ -408,7 +374,6 @@ end</code></pre>
 
             // define scale bar
             var scaleLineControl = new ol.control.ScaleLine();
-
 
             // initialize map
             var map = new ol.Map({
