@@ -4,7 +4,7 @@
 % LASextent.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -34,7 +34,7 @@ end
 %% Step 1 - Reading the LAS file
 
 % IMPORTANT: adjust the path to the input LAS file
-pc = LASread('26995_12710.las');
+pc = LASread('zh_2014_a.las');
 
 
 %% Step 2 - Subsetting
@@ -87,17 +87,17 @@ x_roi = [2699597, 2699584, 2699778, 2699804];
 y_roi = [1271166, 1271307, 1271341, 1271170];
 
 % IMPORTANT: adjust the path to the input SHP file and output LAS file
-LASclip('26995_12710.las', ...
+LASclip('zh_2014_a.las', ...
     [x_roi', y_roi'], ...
-    '26995_12710_clip.las', ...
+    'zh_2014_a_clip.las', ...
     'verbose', true);
 
 
 %% Step 6 - Computing the spatial extent of a LAS file (Matlab only)
 
 % IMPORTANT: adjust the path to the input LAS file and output SHP file
-extent = LASextent('26995_12710.las', ...
-    '26995_12710_extent.shp', ...
+extent = LASextent('zh_2014_a.las', ...
+    'zh_2014_a_extent.shp', ...
     'method', 'convexhull', ...
     'fig', false, ...
     'verbose', true);
