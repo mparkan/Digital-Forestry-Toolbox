@@ -30,22 +30,24 @@
 
             <h1>Basic point cloud manipulation and visualization</h1>
 
-            <br>
-            <hr>
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Last update: March 28, 2018 / Matlab r2017b, GNU Octave 4.2.1</b></p>
-            <p> In this tutorial, you will learn about basic point cloud manipulation and visualization. Before starting, you should:</p>
+            <p style="text-align: center"><b>Published</b>: March 28, 2018 / <b>Last updated</b>: December 7, 2018</p>
+            <p style="text-align: center"><b>Tested on Matlab r2017b, GNU Octave 4.4.1</b></p>
+
+            <!--<p> In this tutorial, you will learn about basic point cloud manipulation and visualization. Before starting, you should:</p>-->
+
+            <h2>
+                <a id="setup" class="anchor" href="setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Setup</b>
+            </h2>
 
             <ol>
                 <li>Download and uncompress the Digital Forestry Toolbox (DFT) <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master">Zip</a> or <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master">Tar</a> archive</li>
-                <li>Download the <a href="http://maps.zh.ch/download/hoehen/2014/lidar/26995_12710.laz">26995_12710.laz file</a> from the Zürich 2014 airborne laser scanning campaign archive and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
+                <li>Download the <a href="https://zenodo.org/record/1998192/files/zh_2014_a.laz?download=1">zh_2014_a.laz</a> file from the DFT Zenodo repository and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
                 <li>Start Matlab/Octave</li>
+                <li>Delete any previous versions of the toolbox</li>
                 <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
                 <li>Open <code>dft_tutorial_1.m</code> (located in the tutorials folder)</li>
             </ol>
-
-            <hr>
-            <br>
 
             <h2>
                 <a id="step-1" class="anchor" href="step-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 1</b> - Reading the LAS file
@@ -53,7 +55,7 @@
 
             <p>We start by reading the LAS file using <code>LASread()</code>:</p>
 
-            <pre><code>pc = LASread('26995_12710.las');</code></pre>
+            <pre><code>pc = LASread('zh_2014_a.las');</code></pre>
 
             <p>Note that the point classification uses the following scheme:</p>
 
@@ -206,9 +208,9 @@ ylabel('z')</code></pre>
 
             <p>You may want to clip a LAS file and directly write it to a new file. You can do this with <code>LASclip()</code>:</p>
 
-            <pre><code>LASclip('26995_12710.las', ...
+            <pre><code>LASclip('zh_2014_a.las', ...
        [x_roi', y_roi'], ...
-       '26995_12710_clip.las', ...
+       'zh_2014_a_clip.las', ...
        'verbose', true);</code></pre>
 
             <h2>
@@ -218,8 +220,8 @@ ylabel('z')</code></pre>
 
             <p>You can compute the spatial extent (bounding box, convex hull or concave hull) of LAS files with <code>LASextent()</code>:</p>
 
-            <pre><code>extent = LASextent('26995_12710.las', ...
-    '26995_12710_extent.shp', ...
+            <pre><code>extent = LASextent('zh_2014_a.las', ...
+    'zh_2014_a_extent.shp', ...
     'method', 'convexhull', ...
     'fig', false, ...
     'verbose', true);</code></pre>
