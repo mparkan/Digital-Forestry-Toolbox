@@ -235,26 +235,26 @@ idxl_filter = idxl_veg & idxl_last;</code></pre>
             <div id="map2"></div>
 
             <!--
-            <figure>
-                <div id="image-table" style="width:100%;margin:auto">
-                    <table>
-                        <tr>
-                            <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_3_ima_2a.png" alt="" style="width:100%;">
-                            </td>
-                            <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_3_ima_2b.png" alt="" style="width:100%;">
-                            </td>
-                            <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_3_ima_2c.png" alt="" style="width:100%;">
-                            </td>
-                        </tr>
-                    </table>
+<figure>
+<div id="image-table" style="width:100%;margin:auto">
+<table>
+<tr>
+<td style="padding:5px;border:none">
+<img src="img/dft_tutorial_3_ima_2a.png" alt="" style="width:100%;">
+</td>
+<td style="padding:5px;border:none">
+<img src="img/dft_tutorial_3_ima_2b.png" alt="" style="width:100%;">
+</td>
+<td style="padding:5px;border:none">
+<img src="img/dft_tutorial_3_ima_2c.png" alt="" style="width:100%;">
+</td>
+</tr>
+</table>
 
-                </div>
-                <figcaption><b>Figure 2</b> - The point density is higher near the stem, for a tree growing vertically.</figcaption>
-            </figure>
-            -->
+</div>
+<figcaption><b>Figure 2</b> - The point density is higher near the stem, for a tree growing vertically.</figcaption>
+</figure>
+-->
 
             <h2>
                 <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Export the stem attributes to a CSV file
@@ -365,22 +365,26 @@ end</code></pre>
                     opaque: false,
                     minZoom:0,
                     maxZoom: 5,
+                    attributions: ['Data courtesy of <a href=https://ge.ch/sitg/donnees>SITG</a>']
                 }),
             });
 
             // define scale bar
             var scaleLineControl = new ol.control.ScaleLine();
 
+            // define attribution
+            var attribution = new ol.control.Attribution({
+                collapsible: true,
+                className: 'ol-attribution'
+            });
+
             // initialize map
             var map = new ol.Map({
                 renderer: ['webgl', 'canvas'],
-                controls:  ol.control.defaults({
-                    attributionOptions: ({
-                        collapsible: true,
-                        className: '',
-                    })
-                }).extend([
-                    scaleLineControl
+                logo: false,
+                controls: ol.control.defaults({attribution: false}).extend([
+                    scaleLineControl,
+                    attribution
                 ]),
                 layers: [
                     tileLayer,
