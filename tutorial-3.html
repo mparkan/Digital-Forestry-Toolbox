@@ -372,11 +372,14 @@ end</code></pre>
             // define scale bar
             var scaleLineControl = new ol.control.ScaleLine();
 
-            // define attribution
-            var attribution = new ol.control.Attribution({
+            // define attribution control
+            var attributionControl = new ol.control.Attribution({
                 collapsible: true,
                 className: 'ol-attribution'
             });
+
+            // define fullscreen control
+            var fullScreenControl = new ol.control.FullScreen();
 
             // initialize map
             var map = new ol.Map({
@@ -384,7 +387,8 @@ end</code></pre>
                 logo: false,
                 controls: ol.control.defaults({attribution: false}).extend([
                     scaleLineControl,
-                    attribution
+                    attributionControl,
+                    fullScreenControl
                 ]),
                 layers: [
                     tileLayer,
