@@ -421,6 +421,7 @@ end</code></pre>
                 ],
                 view: new ol.View({
                     extent: extent,
+                    center: ol.extent.getCenter(extent),
                     projection: ol.proj.get('EPSG:2056'),
                     zoom: 2,
                     minZoom: 1,
@@ -428,7 +429,6 @@ end</code></pre>
                     maxResolution: mapTileGrid.getResolution(minZoom)
                 })
             });
-            map.getView().fit(extent, map.getSize());
 
         </script>
 
