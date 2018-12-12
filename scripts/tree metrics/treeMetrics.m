@@ -78,7 +78,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 % Other m-files required:
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.0 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -87,7 +87,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: May 14, 2018
+% Last revision: December 12, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -202,9 +202,9 @@ if isempty(arg.Results.treePos)
         
         case 'root'
             
-            [~, idxn_sort] = sort(xyz(:,3), 1, 'ascend'); % sort points by elevation
-            [~, idxn_first, ~] = unique(label(idxn_sort));
-            xyz_proxy = xyz(idxn_sort(idxn_first),:);
+            z_min = accumarray(label, xyz(:,3), [n_obs,1], @min, nan);
+            [~, idxn_min] = ismember([(1:n_obs)', z_min], [label, xyz(:,3)], 'rows');
+            xyz_proxy = xyz(idxn_min,:);
             
         case 'centroid'
             
@@ -213,9 +213,9 @@ if isempty(arg.Results.treePos)
             
         case 'apex'
             
-            [~, idxn_sort] = sort(xyz(:,3), 1, 'descend'); % sort points by elevation
-            [~, idxn_first, ~] = unique(label(idxn_sort));
-            xyz_proxy = xyz(idxn_sort(idxn_first),:);
+            z_max = accumarray(label, xyz(:,3), [n_obs,1], @max, nan);
+            [~, idxn_max] = ismember([(1:n_obs)', z_max], [label, xyz(:,3)], 'rows');
+            xyz_proxy = xyz(idxn_max,:);
 
     end
     
