@@ -10,10 +10,29 @@
         <link rel='stylesheet' type='text/css' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' >
         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
-        <link rel="stylesheet" type="text/css" href="lib/ol-v4.3.2/ol.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="lib/ol-v5.3.0/ol.css" media="screen">
 
-        <script src="lib/ol-v4.3.2/ol.js"></script>
+        <script src="lib/ol-v5.3.0/ol.js"></script>
         <script src="lib/proj4js-2.5.0/proj4.js"></script>
+
+        <style>
+            .map:-moz-full-screen {
+                height: 100%;
+            }
+            .map:-webkit-full-screen {
+                height: 100%;
+            }
+            .map:-ms-fullscreen {
+                height: 100%;
+            }
+            .map:fullscreen {
+                height: 100%;
+            }
+            /* position the rotate control lower than usual */
+            .ol-rotate {
+                top: 3em;
+            }
+        </style>
 
     </head>
 
@@ -322,19 +341,25 @@ end</code></pre>
 
         <script>
 
-            // define CRS
+            // add CH1903 and CH1903+ CRS definitions
             if (proj4) {
+                proj4.defs("EPSG:21781","+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=600000 +y_0=200000 +ellps=bessel +towgs84=674.4,15.1,405.3,0,0,0,0 +units=m +no_defs");
                 proj4.defs("EPSG:2056", "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs");
+                ol.proj.proj4.register(proj4);
             };
 
+            // define tile grid
             var extent = [2499100.0000000000000000,1127220.0000000000000000, 2499780.0000000000000000,1127900.0000000000000000]; // [minx, miny, maxx, maxy].
-
-            var projection = new ol.proj.Projection({
-                code: 'EPSG:2056',
-                units: 'm',
-                global: false,
-                worldExtent: [5.13521, 45.39757, 11.47680, 48.23070],
-                extent: extent
+            var minZoom = 0;
+            var maxZoom = 5;
+            var startResolution = (extent[2]-extent[0]) / 256;
+            var pixelResolutions = new Array(maxZoom + 1);
+            for (var i = 0, ii = pixelResolutions.length; i < ii; ++i) {
+                pixelResolutions[i] = startResolution / Math.pow(2, i);
+            }
+            var mapTileGrid = new ol.tilegrid.TileGrid({
+                extent: extent,
+                resolutions: pixelResolutions
             });
 
             // define vector layer
@@ -342,7 +367,8 @@ end</code></pre>
                 source: new ol.source.Vector({
                     format: new ol.format.GeoJSON(),
                     url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_3/vector/ge_2017_a_stems.geojson',
-                    crossOrigin: 'anonymous'
+                    crossOrigin: 'anonymous',
+                    projection: 'EPSG:2056',
                 }),
                 style: new ol.style.Style({
                     image: new ol.style.Circle( ({
@@ -359,11 +385,9 @@ end</code></pre>
                 source: new ol.source.XYZ({
                     url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_3/raster/ortho/{z}/{x}/{y}.jpg',
                     crossOrigin: 'anonymous',
-                    extent: extent,
-                    projection: projection,
+                    tileGrid: mapTileGrid,
+                    projection: 'EPSG:2056',
                     opaque: false,
-                    minZoom:0,
-                    maxZoom: 5,
                     attributions: ['Data courtesy of <a href=https://ge.ch/sitg/donnees>SITG</a>']
                 }),
             });
@@ -382,27 +406,30 @@ end</code></pre>
 
             // initialize map
             var map = new ol.Map({
-                renderer: ['webgl', 'canvas'],
-                logo: false,
+                renderer: ['webgl'],
+                target: 'map2',
                 controls: ol.control.defaults({attribution: false}).extend([
                     scaleLineControl,
                     attributionControl,
                     fullScreenControl
                 ]),
+                interactions: ol.interaction.defaults().extend([
+                    new ol.interaction.DragRotateAndZoom()
+                ]),
                 layers: [
                     tileLayer,
                     vectorLayer
                 ],
-                target: 'map2',
                 view: new ol.View({
-                    projection: projection,
-                    center: ol.extent.getCenter(extent),
+                    extent: extent,
+                    projection: ol.proj.get('EPSG:2056'),
                     zoom: 2,
                     minZoom: 1,
                     maxZoom: 6,
-                    extent: extent
+                    maxResolution: mapTileGrid.getResolution(minZoom)
                 })
             });
+            map.getView().fit(extent, map.getSize());
 
         </script>
 
