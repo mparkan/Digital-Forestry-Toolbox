@@ -405,8 +405,7 @@ end</code></pre>
             var fullScreenControl = new ol.control.FullScreen();
 
             // initialize map
-            var map = new ol.Map({
-                renderer: ['webgl'],
+            var map = new ol.WebGLMap({
                 target: 'map2',
                 controls: ol.control.defaults({attribution: false}).extend([
                     scaleLineControl,
