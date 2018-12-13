@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: September 26, 2018
+% Last revision: December 13, 2018
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -237,20 +237,19 @@ fprintf(fid, '%s\n', strjoin(fields, ',')); % write header line
 fprintf(fid, fmt, C{:}); % write metrics
 fclose(fid); % close file
 
-if ~OCTAVE_FLAG % Export to shapefile is not yet supported in Octave
     
-    % create a non-scalar structure
-    S = cell2struct(C, fields);
-    clear C
-    
-    % add geometry field
-    [S.Geometry] = deal('Point');
-    
-    % write non-scalar structure to SHP file
-    % IMPORTANT: adjust the path to the output SHP file
-    shapewrite(S, 'zh_2014_a_seg_metrics.shp');
-    
-end
+% create a non-scalar structure
+S = cell2struct(C, fields);
+clear C
+
+% add geometry field
+[S.Geometry] = deal('Point');
+
+% write non-scalar structure to SHP file
+% IMPORTANT: Octave users, please make sure you are using the latest versions of 
+% the 'io' (2.4.12 or above) and 'mapping' (1.4.0 or above) packages. 
+% Previous versions contain critical issues in the shapewrite function.
+shapewrite(S, 'zh_2014_a_seg_metrics.shp'); % IMPORTANT: adjust the path to the output SHP file
 
 
 %% Step 11 - Exporting the labelled and colored point cloud to a LAS file
