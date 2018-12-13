@@ -26,6 +26,7 @@ if OCTAVE_FLAG
     
     pkg load statistics
     pkg load image
+    pkg load io
     pkg load mapping
     more off
     
