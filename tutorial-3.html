@@ -402,7 +402,12 @@ end</code></pre>
             });
 
             // define fullscreen control
-            var fullScreenControl = new ol.control.FullScreen();
+            var icon1 = document.createElement("expand_icon");
+            icon1.className = "fa fa-expand";
+
+            var fullScreenControl = new ol.control.FullScreen({
+                label: icon1
+             });
 
             // initialize map
             var map = new ol.WebGLMap({
