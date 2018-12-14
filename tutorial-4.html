@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="UTF-8">
+        <title>DFT - Tutorial 4</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" type="image/png" href="img/favicon_dft.png"/>
+        <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+        <link rel='stylesheet' type='text/css' href='https://fonts.googleapis.com/css?family=Open+Sans:400,700'>
+        <link rel='stylesheet' type='text/css' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' >
+        <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="lib/ol-v5.3.0/ol.css" media="screen">
+
+        <script src="lib/ol-v5.3.0/ol.js"></script>
+        <script src="lib/proj4js-2.5.0/proj4.js"></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+
+        <style>
+            .map:-moz-full-screen {
+                height: 100%;
+            }
+            .map:-webkit-full-screen {
+                height: 100%;
+            }
+            .map:-ms-fullscreen {
+                height: 100%;
+            }
+            .map:fullscreen {
+                height: 100%;
+            }
+            /* position the rotate control lower than usual */
+            .ol-rotate {
+                top: 3em;
+            }
+        </style>
+
+    </head>
+
+    <body>
+
+        <section class="page-header tutorial">
+            <h1 class="project-name">Digital-Forestry-Toolbox</h1>
+            <br>
+            <!--<h2 class="project-tagline white">A collection of digital forestry tools for Matlab</h2>-->
+            <a href="index.html" class="btn"><i class="fa fa-home" aria-hidden="true"></i> Back to homepage</a>
+        </section>
+
+        <section class="main-content">
+
+            <h1>Deciduous/evergreen foliage classification</h1>
+
+            <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
+            <p style="text-align: center"><b>Published</b>: December 20, 2018 / <b>Last updated</b>: December 20, 2018</p>
+            <p style="text-align: center"><b>Tested on Matlab r2017b, GNU Octave 4.4.1</b></p>
+
+            <h2>
+                <a id="introduction" class="anchor" href="introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Introduction</b>
+            </h2>
+
+            <p>In this tutorial, you will learn how to differentiate deciduous and evergreen foliage using Airborne Laser Scanning (ALS) data. Stem detection is an alternative approach to tree top detection and is likely to perform better on irregularly shaped canopies (in particular, if they were surveyed in leaf-off conditions).</p>
+            <p>We will use Airborne Laser Scanning (ALS) data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>.</p>
+
+            <p>It has been repeatedly demonstrated that the return intensity is a very important feature to differentiate tree species.</p>
+
+            <p>This tutorial assumes that:</p>
+            <ol>
+                <li>The data was acquired in leaf-off conditions</li>
+                <li>The return intensity was calibrated and corrected</li>
+            </ol>
+
+            <p>The interaction of the laser with the atmosphere and surface can be modeled by the RaDAR/LiDAR range equation (Vain and Kaasalainen, 2011; Kashani et al., 2015):</p>
+
+
+            $$P_r = \frac{D_{r}^2 \eta_{atm} \eta_{sys} \sigma P_t}{4 \pi R^4 \beta_{t}^2 }$$
+
+            <p>where:</p>
+
+            <ul style="list-style-type:none">
+                <li> \(P_r\) is the received power [W];</li>
+                <li> \(P_t\) is the transmitted power [W];</li>
+                <li> \(D_r\) is the aperture diameter [m];</li>
+                <li> \(\eta_{atm}\) is the atmospheric transmittance;</li>
+                <li> \(\eta_{sys}\) is the system transmittance;</li>
+                <li> \(\sigma\) is the effective target cross-section [m<sup>2</sup>];</li>
+                <li> \(R\) is the range from sensor to target [m];</li>
+                <li> \(\beta_{t}\) is the width of the laser beam [m];</li>
+                <li> \(\Omega\) is the scattering solid angle [sr];</li>
+                <li> \(\rho\) is the reflectance of the target;</li>
+                <li> \(A_t\) is the area of the target [m<sup>2</sup>].</li>
+            </ul>
+
+            <!--Automatic Gain Control (AGC)-->
+
+            <p>Another possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed in <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a>. Other approaches include majority vote or Conditional Random Fields (CRF)</p>
+
+            <p>A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
+
+            <div id="map1">
+
+                <iframe src='https://map.geo.admin.ch/embed.html?topic=ech&lang=fr&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bafu.wrz-wildruhezonen_portal,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&zoom=9&E=2699827.20&N=1271114.60' width='100%' height='450' frameborder='0' style='border:0'></iframe>
+
+            </div>
+
+            <p>The stem detection method we will apply is based on a simple observation: the space in a tree gets more cluttered as you approach the stem. Consequently, considering a homogeneous point sampling of the tree geometry, the point density (i.e. the number of points within a vertical column) tends to be higher near the stem (see figure 1 left). To reduce the effect of inhomogenous sampling and to simplify the detection of density peaks, the point cloud can be rasterized (see figure 1 right). The locations of local density peaks may subsequently serve as a basis for tree crown delineation, as proposed in <a href="http://www.isprs.org/proceedings/xxxviii/4-c1/sessions/Session12/6790_Rahman_Proc.pdf"> Rahman and Gorte (2008)</a> or more recently in <a href="https://www.fs.fed.us/nrs/pubs/jrnl/2017/nrs_2017_ayrey_001.pdf">Ayrey et al. (2017)</a>.</p>
+
+            <figure>
+                <div id="image-table" style="width:100%;margin:auto">
+                    <table>
+                        <tr>
+                            <td style="padding:5px;border:none">
+                                <img src="img/dft_tutorial_3_im_1a.png" alt="" style="width:80%;">
+                                <!--<figcaption style="width:80%;"><b>(a)</b> Sampling of the tree structure is often non-homogenous in the ALS point cloud.</figcaption>-->
+                            </td>
+
+                            <td style="padding:5px;border:none">
+                                <img src="img/dft_tutorial_3_im_1b.png" alt="" style="width:80%;">
+                                <!--<figcaption style="width:80%;"><b>(b)</b> Sampling of the tree structure is often non-homogenous in the ALS point cloud.</figcaption>-->
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically. <b>Left</b>: Point counts. <b>Right</b>: Raster cell counts.</figcaption>
+            </figure>
+
+            <h2>
+                <a id="setup" class="anchor" href="setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Setup</b>
+            </h2>
+
+            <ol>
+                <li>Download and uncompress the Digital Forestry Toolbox (DFT) <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/zipball/master">Zip</a> or <a href="https://github.com/mparkan/Digital-Forestry-Toolbox/tarball/master">Tar</a> archive</li>
+                <li>Download the <a href="https://zenodo.org/record/1998192/files/ge_2017_a.laz?download=1">ge_2017_a.laz</a> file from the DFT Zenodo repository and uncompress it with <a href="http://www.laszip.org/">LASzip</a></li>
+                <li>Start Matlab/Octave</li>
+                <li>Delete any previous versions of the toolbox</li>
+                <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
+                <li>Open <code>dft_tutorial_3.m</code> (located in the tutorials folder)</li>
+            </ol>
+
+            <h2>
+                <a id="step-1" class="anchor" href="step-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 1</b> - Reading the LAS file
+            </h2>
+
+            <p>We start by reading the LAS file using <code>LASread()</code>:</p>
+
+            <pre><code>pc = LASread('ge_2017_a.las');</code></pre>
+
+            <p>Note that you may have to adjust the file path in the code above, depending on where you are storing the LAS file. Also note that the point classification uses the following scheme:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0</td>
+                        <td>Created, never lassified</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Unclassified</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Terrain</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Low vegetation (&lt; 50 cm)</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>High vegetation (&ge; 50 cm)</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Buildings</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Outliers and incorrect measurements (Low noise)</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Water</td>
+                    </tr>
+
+                    <tr>
+                        <td>13</td>
+                        <td>Bridges</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>Terrain (additional points)</td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>Outliers and incorrect measurements (High noise)</td>
+                    </tr>
+                    <tr>
+                        <td>19</td>
+                        <td>Points measured outside of the area of interest (unclassified)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+
+            <h2>
+                <a id="step-2" class="anchor" href="step-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 2</b> - Filter the points by classification and return number
+            </h2>
+
+
+            <p>When compared to small branches, stems and primary branches are more likely to fully intercept the laser beam and generate a last return (see figure 2). Since we are only interested in detecting stems, we can apply a filter which keeps only last returns (and also removes terrain points or other unwanted classes). To do this, we create a logical (boolean) vector:
+
+            <pre><code>idxl_last = pc.record.return_number == pc.record.number_of_returns;
+idxl_veg = ismember(pc.record.classification, [4, 5]);
+idxl_filter = idxl_veg & idxl_last;</code></pre>
+
+            <p>Note that while using only the last returns may increase the detection reliability for large stems, it may also reduce the detection rate for smaller stems. You can modify this filtering criteria or add new ones (e.g. acquisition date, intensity, colour) to suit your specific needs.</p>
+
+            <figure>
+                <img src="img/dft_tutorial_3_ima_3a.png" alt="" style="width:90%;">
+                <img src="img/dft_tutorial_3_ima_3b.png" alt="" style="width:90%;">
+                <figcaption><b>Figure 2</b> - Cross section of the normalized point cloud. <b>Top</b>: all points. <b>Bottom</b>: only last returns and vegetation classes.</figcaption>
+            </figure>
+
+
+            <h2>
+                <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Compute an intensity map
+            </h2>
+
+            <p>The stem detection algorithm uses the planimetric coordinates and height of the points above ground as an input. To compute this height, we start by building a 0.5 m resolution raster terrain model from the classified 3D point cloud using <code>elevationModels()</code>:</p>
+
+
+            <pre><code>cellSize = 0.5;
+[models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
+    pc.record.classification, ...
+    'classTerrain', [2, 15], ...
+    'classSurface', [4,5], ...
+    'cellSize', cellSize, ...
+    'closing', 5, ...
+    'interpolation', 'idw', ...
+    'searchRadius', inf, ...
+    'weightFunction', @(d) d^-3, ...
+    'smoothingFilter', fspecial('gaussian', [2, 2], 0.8), ...
+    'outputModels', {'terrain'}, ...
+    'fig', false, ...
+    'verbose', true);</code></pre>
+
+            <p>We then subtract the terrain elevation from the point cloud elevation, to obtain the height of the points above the ground:</p>
+
+            <pre><code>P = round([pc.record.x - refmat(3,1), pc.record.y - refmat(3,2)] / refmat(1:2,:));
+ind = sub2ind([nrows, ncols], P(:,1), P(:,2));
+xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</code></pre>
+
+
+
+            <h2>
+                <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Detect the stems
+            </h2>
+
+            <p>Using only the filtered points, we can now detect the stems with the <code>treeStems()</code> function:</p>
+
+            <pre><code>[label, xyh_stem] = treeStems(xyh, ...
+    idxl_filter, ...
+    'cellSize', 0.4, ...
+    'bandWidth', 1.5, ...
+    'verticalStep', 0.25, ...
+    'searchRadius', 2, ...
+    'minLength', 5, ...
+    'verbose', true, ...
+    'fig', true);</code></pre>
+
+            <p>The parameters have the following meaning:</p>
+
+            <ul>
+                <li><b>cellSize</b>: the size of the raster cells</li>
+                <li><b>bandWidth</b>: the thickness of each horizontal raster layer</li>
+                <li><b>verticalStep</b>: the vertical distance between each horizontal raster layer</li>
+                <li><b>searchRadius</b>: the search radius used to detect local density maxima</li>
+                <li><b>minLength</b>: the minimum count for a local maxima to be considered a stem</li>
+            </ul>
+
+            <p>By modifing the parameters values, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection. The interactive map below illustrates the detected stem positions.</p>
+
+
+            <div id="map2"></div>
+
+            <!--
+<figure>
+<div id="image-table" style="width:100%;margin:auto">
+<table>
+<tr>
+<td style="padding:5px;border:none">
+<img src="img/dft_tutorial_3_ima_2a.png" alt="" style="width:100%;">
+</td>
+<td style="padding:5px;border:none">
+<img src="img/dft_tutorial_3_ima_2b.png" alt="" style="width:100%;">
+</td>
+<td style="padding:5px;border:none">
+<img src="img/dft_tutorial_3_ima_2c.png" alt="" style="width:100%;">
+</td>
+</tr>
+</table>
+
+</div>
+<figcaption><b>Figure 2</b> - The point density is higher near the stem, for a tree growing vertically.</figcaption>
+</figure>
+-->
+
+            <h2>
+                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Superpixel segmentation
+            </h2>
+
+            <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
+
+            <pre><code>fid = fopen('ge_2017_a_stems.csv', 'w+'); % open file
+fprintf(fid, 'X, Y, H\n'); % write header line
+fprintf(fid, '%.2f, %.2f, %.2f\n', xyh_stem'); % write records
+fclose(fid); % close file</code></pre>
+
+            <p>After exporting the CSV file, you can try opening it in any text editor (e.g. <a href="https://notepad-plus-plus.org/">Notepad++</a>).</p>
+
+
+            <h2>
+                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Export the stem attributes to an ESRI shapefile
+            </h2>
+
+            <br>
+            <div class="box">
+
+                <p style="text-align: center"><i class="fa fa-exclamation-triangle fa-2x" aria-hidden="true"></i></p>
+
+                <b>Octave users</b>, please make sure you are using the latest versions of the <a href="https://sourceforge.net/p/octave/io/ci/default/tree/"><b>'io' (2.4.12 or above)</b></a> and <a href="https://sourceforge.net/p/octave/mapping/ci/default/tree/"> <b>'mapping' (1.4.0 snapshot or above)</b></a> packages. Previous versions contain critical issues in the shapewrite function.
+
+            </div>
+            <br>
+
+            <p>To export the stem attributes to an ESRI shapefile, you first have to format them into a non-scalar structure and add a "Geometry" field:</p>
+
+            <pre><code>S = struct;
+for j = 1:size(xyh_stem,1)
+
+    S(j,1).Geometry = 'Point';
+    S(j,1).BoundingBox = [];
+    S(j,1).ID = j;
+    S(j,1).X = xyh_stem(j,1);
+    S(j,1).Y = xyh_stem(j,2);
+    S(j,1).H = xyh_stem(j,3);
+
+end</code></pre>
+
+            <p>Specify the output filepath (by default, the file is created in the current working directory) and use <code>shapewrite()</code> to write the file:</p>
+
+            <pre><code>shapewrite(S, 'ge_2017_a_stems.shp');</code></pre>
+
+            <p>After exporting the shapefile, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
+
+            <h2>
+                <a id="references" class="anchor" href="references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>References</b>
+            </h2>
+
+            <ul>
+
+                <li>Achanta, R., Shaji, A., Smith, K., Lucchi, A., Fua, P., Süsstrunk, S., 2012. SLIC Superpixels Compared to State-of-the-Art Superpixel Methods. IEEE Transactions on Pattern Analysis and Machine Intelligence 34, 2274–2282. https://doi.org/10.1109/TPAMI.2012.120</li>
+
+                <li>Kashani, A.G., Olsen, M.J., Parrish, C.E., Wilson, N., 2015. A Review of LIDAR Radiometric Processing: From Ad Hoc Intensity Correction to Rigorous Radiometric Calibration. Sensors 15, 28099–28128. https://doi.org/10.3390/s151128099</li>
+
+                <li>Liang, X., Hyyppä, J., Matikainen, L., 2007. Deciduous-coniferous tree classification using difference between first and last pulse laser signatures. International Archives of Photogrammetry, Remote Sensing and Spatial Information Sciences 36, 253–257.</li>
+
+                <li>Luzum, B., Starek, M., Slatton, K.C., 2004. Normalizing ALSM intensities (No. Rep_2004-07-01), Geosensing Engineering and Mapping (GEM) Center. Civil and Coastal Engineering Department, University of Florida, Gainesville, FL, USA.</li>
+
+                <li>Riegl Laser Measurement Systems, 2017. LAS Extrabytes Implementation in RIEGL Software. Riegl Laser Measurement Systems GmbH, Horn, Riedenburgstrasse 48, Austria.</li>
+
+                <li>Vain, A., Kaasalainen, S., 2011. Correcting airborne laser scanning intensity data. INTECH Open Access Publisher.</li>
+
+            </ul>
+
+            <footer class="site-footer">
+                <span class="site-footer-owner"><a href="https://github.com/mparkan/Digital-Forestry-Toolbox">Digital-forestry-toolbox</a> is maintained by <a href="https://github.com/mparkan">mparkan</a>.</span>
+
+            </footer>
+
+        </section>
+
+        <script>
+
+            // add CH1903 and CH1903+ CRS definitions
+            if (proj4) {
+                proj4.defs("EPSG:21781","+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=600000 +y_0=200000 +ellps=bessel +towgs84=674.4,15.1,405.3,0,0,0,0 +units=m +no_defs");
+                proj4.defs("EPSG:2056", "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs");
+                ol.proj.proj4.register(proj4);
+            };
+
+            // define tile grid
+            var extent = [2699499.7000000001862645, 1270999.8000000000465661, 2700000.2000000001862645, 1271500.3000000000465661]; // [minx, miny, maxx, maxy].
+            var minZoom = 0;
+            var maxZoom = 5;
+            var startResolution = (extent[2]-extent[0]) / 256;
+            var pixelResolutions = new Array(maxZoom + 1);
+            for (var i = 0, ii = pixelResolutions.length; i < ii; ++i) {
+                pixelResolutions[i] = startResolution / Math.pow(2, i);
+            }
+            var mapTileGrid = new ol.tilegrid.TileGrid({
+                extent: extent,
+                resolutions: pixelResolutions
+            });
+
+            // define vector layer
+            var vectorLayer = new ol.layer.Vector({
+                source: new ol.source.Vector({
+                    format: new ol.format.GeoJSON(),
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_3/vector/ge_2017_a_stems.geojson',
+                    crossOrigin: 'anonymous',
+                    projection: 'EPSG:2056',
+                }),
+                style: new ol.style.Style({
+                    image: new ol.style.Circle( ({
+                        radius: 2,
+                        fill: new ol.style.Fill({
+                            color: '#ffff00'
+                        })
+                    }))
+                })
+            });
+
+            // define XYZ tiles layer
+            var tileLayer = new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_2/raster/ortho_nir/{z}/{x}/{y}.jpg',
+                    crossOrigin: 'anonymous',
+                    tileGrid: mapTileGrid,
+                    projection: 'EPSG:2056',
+                    opaque: false,
+                    attributions: ['Data courtesy of <a href=https://maps.zh.ch/>Kanton Zürich</a>']
+                }),
+            });
+
+            // define scale bar
+            var scaleLineControl = new ol.control.ScaleLine();
+
+            // define attribution control
+            var attributionControl = new ol.control.Attribution({
+                collapsible: true,
+                className: 'ol-attribution'
+            });
+
+            // define fullscreen control
+            var icon1 = document.createElement("expand_icon");
+            icon1.className = "fa fa-expand";
+
+            var fullScreenControl = new ol.control.FullScreen({
+                label: icon1
+             });
+
+            // initialize map
+            var map = new ol.WebGLMap({
+                target: 'map2',
+                controls: ol.control.defaults({attribution: false}).extend([
+                    scaleLineControl,
+                    attributionControl,
+                    fullScreenControl
+                ]),
+                interactions: ol.interaction.defaults().extend([
+                    new ol.interaction.DragRotateAndZoom()
+                ]),
+                layers: [
+                    tileLayer,
+                    vectorLayer
+                ],
+                view: new ol.View({
+                    extent: extent,
+                    center: ol.extent.getCenter(extent),
+                    projection: ol.proj.get('EPSG:2056'),
+                    zoom: 2,
+                    minZoom: 1,
+                    maxZoom: 6,
+                    maxResolution: mapTileGrid.getResolution(minZoom)
+                })
+            });
+            //map.getView().fit(extent, map.getSize());
+
+        </script>
+
+    </body>
+
+</html>
