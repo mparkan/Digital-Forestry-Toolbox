@@ -243,7 +243,17 @@ cmap = [0, 0, 0;
             <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Plotting the colored points cloud
         </h2>
 
-        <p><b>Due to 3D plotting performance issues, the display of large points clouds is currently discouraged in Octave.</b> To plot the complete colored point cloud, use:</p>
+        <br>
+        <div class="box">
+
+            <p style="text-align: center"><i class="fa fa-exclamation-triangle fa-2x" aria-hidden="true"></i></p>
+
+            <b>Octave users</b>, due to 3D plotting performance issues, the display of large points clouds is currently discouraged.
+
+        </div>
+        <br>
+
+        <p>To plot the complete colored point cloud, use:</p>
 
         <pre><code>if ~OCTAVE_FLAG
 
@@ -495,6 +505,21 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
 
         <p>After exporting, you can try opening the LAS file in any appropriate CAD, GIS or 3D visualization software (e.g. <a href="http://c42f.github.io/displaz/">Displaz</a>, <a href="http://www.danielgm.net/cc/">CloudCompare</a>, <a href="https://www.fugro.com/about-fugro/our-expertise/technology/fugroviewer">FugroViewer</a>).</p>
 
+
+        <h2>
+            <a id="references" class="anchor" href="references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>References</b>
+        </h2>
+
+        <ul>
+            <li>Chen, Q., Baldocchi, D., Gong, P., Kelly, M., 2006. <a href="https://www.ingentaconnect.com/content/asprs/pers/2006/00000072/00000008/art00003?crawler=true&mimetype=application/pdf">Isolating Individual Trees in a Savanna Woodland Using Small Footprint Lidar Data</a>. Photogrammetric Engineering and Remote Sensing 72, 923–932. https://doi.org/10.14358/PERS.72.8.923</li>
+
+            <li>Kwak, D.-A., Lee, W.-K., Lee, J.-H., Biging, G.S., Gong, P., 2007. <a href="https://www.tandfonline.com/doi/abs/10.1007/s10310-007-0041-9">Detection of individual trees and estimation of tree height using LiDAR data</a>. Journal of Forest Research 12, 425–434. https://doi.org/10.1007/s10310-007-0041-9</li>
+
+            <li>Pitkänen, J., Maltamo, M., Hyyppä, J., Yu, X., 2004. <a href="http://www.isprs.org/proceedings/XXXVI/8-W2/PITKAENEN.pdf">Adaptive methods for individual tree detection on airborne laser based canopy height model</a>. International Archives of Photogrammetry, Remote Sensing and Spatial Information Sciences 36, 187–191.</li>
+
+            <li>Popescu, S.C., Wynne, R.H., 2004. <a href="https://www.ingentaconnect.com/content/asprs/pers/2004/00000070/00000005/art00003">Seeing the trees in the forest: Using lidar and multispectral data fusion with local filtering and variable window size for estimating tree height</a>. Photogrammetric Engineering and Remote Sensing 70, 589–604.</li>
+
+        </ul>
 
         <footer class="site-footer">
             <span class="site-footer-owner"><a href="https://github.com/mparkan/Digital-Forestry-Toolbox">Digital-forestry-toolbox</a> is maintained by <a href="https://github.com/mparkan">mparkan</a>.</span>
