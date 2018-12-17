@@ -428,6 +428,8 @@ end</code></pre>
 
             // define XYZ tiles layer
             var tileLayer = new ol.layer.Tile({
+                title: 'Near infrared image',
+                type: 'base',
                 source: new ol.source.XYZ({
                     url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_2/raster/ortho_nir/{z}/{x}/{y}.jpg',
                     crossOrigin: 'anonymous',
@@ -435,8 +437,24 @@ end</code></pre>
                     projection: 'EPSG:2056',
                     opaque: false,
                     attributions: ['Data courtesy of <a href=https://maps.zh.ch/>Kanton Zürich</a>']
-                }),
+                })
             });
+
+
+            // define static image layer
+            var staticRasterLayer1 = new ol.layer.Image({
+                title: 'Canopy Height',
+                type: 'base',
+                source: new ol.source.ImageStatic({
+                    crossOrigin: 'anonymous',
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_2/raster/dhm/zh_2014_a_dhm.jpg',
+                    projection: 'EPSG:2056',
+                    imageSize: [626,626],
+                    imageExtent: extent,
+                    attributions: 'Data courtesy of <a href=https://maps.zh.ch/>Kanton Zürich</a>'
+                })
+            });
+
 
             // define scale bar
             var scaleLineControl = new ol.control.ScaleLine();
@@ -468,7 +486,7 @@ end</code></pre>
                 ]),
                 layers: [
                     tileLayer,
-                    vectorLayer
+                    staticRasterLayer1
                 ],
                 view: new ol.View({
                     extent: extent,
