@@ -11,9 +11,13 @@
         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
         <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
         <link rel="stylesheet" type="text/css" href="lib/ol-v5.3.0/ol.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="lib/ol-layerswitcher/ol-layerswitcher.css">
 
+        <!--     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+-->
         <script src="lib/ol-v5.3.0/ol.js"></script>
         <script src="lib/proj4js-2.5.0/proj4.js"></script>
+        <script src="lib/ol-layerswitcher/ol-layerswitcher.js"></script>
         <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
 
         <style>
@@ -409,10 +413,12 @@ end</code></pre>
             });
 
             // define vector layer
-            var vectorLayer = new ol.layer.Vector({
+            var vectorLayer1 = new ol.layer.Vector({
+                title: 'Tree tops',
+                type: 'overlay',
                 source: new ol.source.Vector({
                     format: new ol.format.GeoJSON(),
-                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_3/vector/ge_2017_a_stems.geojson',
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_2/vector/zh_2014_a_peaks.geojson',
                     crossOrigin: 'anonymous',
                     projection: 'EPSG:2056',
                 }),
@@ -427,7 +433,7 @@ end</code></pre>
             });
 
             // define XYZ tiles layer
-            var tileLayer = new ol.layer.Tile({
+            var rasterTileLayer1 = new ol.layer.Tile({
                 title: 'Near infrared image',
                 type: 'base',
                 source: new ol.source.XYZ({
@@ -442,12 +448,12 @@ end</code></pre>
 
 
             // define static image layer
-            var staticRasterLayer1 = new ol.layer.Image({
+            var rasterStaticLayer1 = new ol.layer.Image({
                 title: 'Canopy Height',
                 type: 'base',
                 source: new ol.source.ImageStatic({
-                    crossOrigin: 'anonymous',
                     url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_2/raster/dhm/zh_2014_a_dhm.jpg',
+                    crossOrigin: 'anonymous',
                     projection: 'EPSG:2056',
                     imageSize: [626,626],
                     imageExtent: extent,
@@ -456,7 +462,7 @@ end</code></pre>
             });
 
 
-            // define scale bar
+            // define scale bar control
             var scaleLineControl = new ol.control.ScaleLine();
 
             // define attribution control
@@ -471,7 +477,12 @@ end</code></pre>
 
             var fullScreenControl = new ol.control.FullScreen({
                 label: icon1
-             });
+            });
+
+            // layer switcher control
+            var layerSwitcherControl = new ol.control.LayerSwitcher({
+                tipLabel: 'Layers'
+            });
 
             // initialize map
             var map = new ol.WebGLMap({
@@ -479,14 +490,16 @@ end</code></pre>
                 controls: ol.control.defaults({attribution: false}).extend([
                     scaleLineControl,
                     attributionControl,
-                    fullScreenControl
+                    fullScreenControl,
+                    layerSwitcherControl
                 ]),
                 interactions: ol.interaction.defaults().extend([
                     new ol.interaction.DragRotateAndZoom()
                 ]),
                 layers: [
-                    tileLayer,
-                    staticRasterLayer1
+                    rasterTileLayer1,
+                    rasterStaticLayer1,
+                    vectorLayer1
                 ],
                 view: new ol.View({
                     extent: extent,
@@ -498,7 +511,7 @@ end</code></pre>
                     maxResolution: mapTileGrid.getResolution(minZoom)
                 })
             });
-            //map.getView().fit(extent, map.getSize());
+
 
         </script>
 
