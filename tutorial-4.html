@@ -62,10 +62,12 @@
                 <a id="introduction" class="anchor" href="introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Introduction</b>
             </h2>
 
-            <p>In this tutorial, you will learn how to differentiate deciduous and evergreen foliage using Airborne Laser Scanning (ALS) data. Stem detection is an alternative approach to tree top detection and is likely to perform better on irregularly shaped canopies (in particular, if they were surveyed in leaf-off conditions).</p>
-            <p>We will use Airborne Laser Scanning (ALS) data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>.</p>
+            <p>This tutorial presents a simple approach to differentiate deciduous and evergreen foliage using the corrected return intensity of Airborne Laser Scanning (ALS) data. Foliage persitance maps can for example be useful to improve stem diameter prediction (by applying deciduous/evergreen specific allometric models) and for habitat modelling. We will use Airborne Laser Scanning (ALS) data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>.</p>
 
             <p>It has been repeatedly demonstrated that the return intensity is a very important feature to differentiate tree species.</p>
+
+            Dense foliage has a higher probability of completely intercepting the laser beam and generating single high intensity returns. Moreover, most LiDAR systems employ infrared light (e.g. 1064 nm for the Riegl LMS-Q1560) which is strongly reflected by live foliage.
+
 
             <p>This tutorial assumes that:</p>
             <ol>
@@ -73,7 +75,7 @@
                 <li>The return intensity was calibrated and corrected</li>
             </ol>
 
-            <p>The interaction of the laser with the atmosphere and surface can be modeled by the RaDAR/LiDAR range equation (Vain and Kaasalainen, 2011; Kashani et al., 2015):</p>
+            <p>The range between the sensor and the target surface has a large influence on the measured intensity, as shown in the RaDAR/LiDAR range equation below:</p>
 
 
             $$P_r = \frac{D_{r}^2 \eta_{atm} \eta_{sys} \sigma P_t}{4 \pi R^4 \beta_{t}^2 }$$
@@ -94,7 +96,11 @@
                 <li> \(A_t\) is the area of the target [m<sup>2</sup>].</li>
             </ul>
 
+            <p>Thus, raw ALS intensity cannot be used directly as a classification feature; it must first be calibrated/corrected (Vain and Kaasalainen, 2011; Kashani et al., 2015). A range correction can easily be applied, if the trajectory and timing are known, following for example the guidelines provided in Luzum et al. (2004).</p>
+
             <!--Automatic Gain Control (AGC)-->
+
+
 
             <p>Another possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed in <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a>. Other approaches include majority vote or Conditional Random Fields (CRF)</p>
 
@@ -329,7 +335,7 @@ fclose(fid); % close file</code></pre>
 
 
             <h2>
-                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Export the stem attributes to an ESRI shapefile
+                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Export the classification map to an ARC/INFO ASCII grid
             </h2>
 
             <br>
@@ -368,17 +374,17 @@ end</code></pre>
 
             <ul>
 
-                <li>Achanta, R., Shaji, A., Smith, K., Lucchi, A., Fua, P., Süsstrunk, S., 2012. SLIC Superpixels Compared to State-of-the-Art Superpixel Methods. IEEE Transactions on Pattern Analysis and Machine Intelligence 34, 2274–2282. https://doi.org/10.1109/TPAMI.2012.120</li>
+                <li>Achanta, R., Shaji, A., Smith, K., Lucchi, A., Fua, P., Süsstrunk, S., 2012. <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">SLIC Superpixels Compared to State-of-the-Art Superpixel Methods</a>. IEEE Transactions on Pattern Analysis and Machine Intelligence 34, 2274–2282. https://doi.org/10.1109/TPAMI.2012.120</li>
 
-                <li>Kashani, A.G., Olsen, M.J., Parrish, C.E., Wilson, N., 2015. A Review of LIDAR Radiometric Processing: From Ad Hoc Intensity Correction to Rigorous Radiometric Calibration. Sensors 15, 28099–28128. https://doi.org/10.3390/s151128099</li>
+                <li>Kashani, A.G., Olsen, M.J., Parrish, C.E., Wilson, N., 2015. <a href="https://www.mdpi.com/1424-8220/15/11/28099">A Review of LIDAR Radiometric Processing: From Ad Hoc Intensity Correction to Rigorous Radiometric Calibration</a>. Sensors 15, 28099–28128. https://doi.org/10.3390/s151128099</li>
 
-                <li>Liang, X., Hyyppä, J., Matikainen, L., 2007. Deciduous-coniferous tree classification using difference between first and last pulse laser signatures. International Archives of Photogrammetry, Remote Sensing and Spatial Information Sciences 36, 253–257.</li>
+                <li>Liang, X., Hyyppä, J., Matikainen, L., 2007. <a href="http://www.isprs.org/proceedings/XXXVI/3-W52/final_papers/Liang_2007.pdf">Deciduous-coniferous tree classification using difference between first and last pulse laser signatures</a>. International Archives of Photogrammetry, Remote Sensing and Spatial Information Sciences 36, 253–257.</li>
 
-                <li>Luzum, B., Starek, M., Slatton, K.C., 2004. Normalizing ALSM intensities (No. Rep_2004-07-01), Geosensing Engineering and Mapping (GEM) Center. Civil and Coastal Engineering Department, University of Florida, Gainesville, FL, USA.</li>
+                <li>Luzum, B., Starek, M., Slatton, K.C., 2004. <a href="https://www.researchgate.net/publication/266228111_Normalizing_ALSM_Intensities">Normalizing ALSM intensities (No. Rep_2004-07-01)</a>, Geosensing Engineering and Mapping (GEM) Center. Civil and Coastal Engineering Department, University of Florida, Gainesville, FL, USA.</li>
 
-                <li>Riegl Laser Measurement Systems, 2017. LAS Extrabytes Implementation in RIEGL Software. Riegl Laser Measurement Systems GmbH, Horn, Riedenburgstrasse 48, Austria.</li>
+                <li>Riegl Laser Measurement Systems, 2017. <a href="http://www.riegl.com/uploads/tx_pxpriegldownloads/Whitepaper_LASextrabytes_implementation_in-RIEGLSoftware_2017-12-04.pdf">LAS Extrabytes Implementation in RIEGL Software</a>. Riegl Laser Measurement Systems GmbH, Horn, Riedenburgstrasse 48, Austria.</li>
 
-                <li>Vain, A., Kaasalainen, S., 2011. Correcting airborne laser scanning intensity data. INTECH Open Access Publisher.</li>
+                <li>Vain, A., Kaasalainen, S., 2011. <a href="http://cdn.intechopen.com/pdfs/15799/InTech-Correcting_airborne_laser_scanning_intensity_data.pdf">Correcting airborne laser scanning intensity data</a>. INTECH Open Access Publisher.</li>
 
             </ul>
 
