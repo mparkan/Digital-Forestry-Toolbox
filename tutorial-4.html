@@ -62,7 +62,7 @@
                 <a id="introduction" class="anchor" href="introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Introduction</b>
             </h2>
 
-            <p>This tutorial presents a simple approach to differentiate deciduous and evergreen foliage using the corrected return intensity of Airborne Laser Scanning (ALS) data. Foliage persitance maps can for example be useful to improve stem diameter prediction (by applying deciduous/evergreen specific allometric models) and for habitat modelling. We will use Airborne Laser Scanning (ALS) data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>.</p>
+            <p>This tutorial presents a simple approach to differentiate deciduous and evergreen foliage using the calibrated/corrected return intensity of Airborne Laser Scanning (ALS) data. Foliage persitance maps can for example be useful to improve stem diameter prediction (by applying deciduous/evergreen specific allometric models) and for habitat modelling. We will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>.</p>
 
             <p>A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
 
@@ -108,8 +108,6 @@
             <p>Thus, raw ALS intensity cannot be used directly as a classification feature; it must first be calibrated/corrected (Vain and Kaasalainen, 2011; Kashani et al., 2015). A range correction can easily be applied, if the trajectory and timing are known, following for example the guidelines provided in Luzum et al. (2004).</p>
 
             <!--Automatic Gain Control (AGC)-->
-
-
 
             <p>Another possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed in <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a>. Other approaches include majority vote or Conditional Random Fields (CRF)</p>
 
@@ -370,6 +368,13 @@ end</code></pre>
             <pre><code>shapewrite(S, 'ge_2017_a_stems.shp');</code></pre>
 
             <p>After exporting the shapefile, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
+
+
+            <h2>
+                <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Validate the results
+            </h2>
+
+
 
             <h2>
                 <a id="references" class="anchor" href="references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>References</b>
