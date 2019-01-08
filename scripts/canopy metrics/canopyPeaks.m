@@ -3,12 +3,10 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %
 % [CRH, XYH] = CANOPYPEAKS(CHM, REFMAT, METHOD, ...) computes candidate
 % tree top coordinates in the image (CRH) and map (XYH) reference systems
-% using the specified METHOD. Three methods are implemented:
-% 1. Fixed size circular window convolution. The optional parameter 'windowRadius' can be 
-% specified to set the window radius.
-% 2. Variable size circular window (based on allometry) convolution, see
+% using the specified METHOD. Two methods are implemented:
+% 1. Search within a fixed or variable size circular window (based on allometry) convolution, see
 % Popescu et al. (2004) [1] and Chen et al. (2006) [2].
-% 3. H-maxima transform, see Kwak et al. (2007) [3]
+% 2. H-maxima transform, see Kwak et al. (2007) [3]
 %
 % [1] S. C. Popescu and R. H. Wynne, "Seeing the trees in the forest: Using lidar and 
 % multispectral data fusion with local filtering and variable window size for estimating tree height,"
@@ -30,22 +28,27 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %
 %    refmat - 3x2 numeric matrix, spatial referencing matrix such that [map_x map_y] = [row col 1] * refmat
 %
-%    method (optional, default: 'fixedRadius') - string, peak detection method: 'fixedRadius', 'allometricRadius' or 'hMaxima'.
+%    smoothingFilter (optional, default: []) - numeric matrix, two-dimensional smoothing
+%    filter applied to the height model, e.g. fspecial('gaussian', [4 4], 1)
 %
-%    minPeakHeight (optional, default: 2) - numeric value, minimum tree top height
+%    method (optional, default: 'default') - string, peak detection method: 'default' or 'hMaxima'.
 %
-%    windowRadius (optional, default: 4) - numeric value, fixed circular window radius in map units
-%    used to detect local maxima when method is set to 'fixedRadius'.
+%    minTreeHeight (optional, default: 2) - numeric value, minimum tree top height
 %
-%    allometry (optional, default: @(h) 0.5 + 0.25*log(max(h,1))) - anonymous function handle of the form @(h) = ...,
-%    specifying the allometric relation between tree height and crown
-%    radius in map units when method is set to 'allometric radius'.
-%     examples:
-%     @(h) (3.09632 + 0.00895 * h.^2)/2; % deciduous forest (Popescu et al, 2004)
-%     @(h) (3.75105 - 0.17919 * h + 0.01241 * h.^2)/2; % coniferous forests (Popescu et al, 2004)
-%     @(h) (2.51503 + 0.00901 * h.^2)/2; % mixed forests (Popescu et al, 2004)
-%     @(h) (1.7425 * h.^0.5566)/2; % mixed forests (Chen et al., 2006)
+%    searchRadius (optional, default: @(h) 1 - anonymous function handle of the form @(h) = ...,
+%    specifying the radius (as a function of height) for the circular convolution window used to detect local maxima. 
+%    Use '@(h) c' where c is arbitrary constant radius, if you do not want to vary the search radius as a function of height.
+%
+%    mergeRadius (optional, default: @(h) 0.28 * h^0.59 - anonymous function handle of the form @(h) = ...,
+%    specifying the merge radius as a function of tree height. Tree tops are sorted by descending height and
+%    trees located within the merge radius of a higher tree are eliminated. 
+%    Example models:
+%     @(h) (3.09632 + 0.00895 * h^2)/2; % deciduous forest (Popescu et al, 2004)
+%     @(h) (3.75105 - 0.17919 * h + 0.01241 * h^2)/2; % coniferous forests (Popescu et al, 2004)
+%     @(h) (2.51503 + 0.00901 * h^2)/2; % mixed forests (Popescu et al, 2004)
+%     @(h) (1.7425 * h^0.5566)/2; % mixed forests (Chen et al., 2006)
 %     @(h) (1.2 + 0.16 * h)/2; % mixed forests (Pitkänen et al., 2004)
+%    Use '@(h) c' where c is an arbitrary constant radius, if you do not want to vary the search radius as a function of height.
 %
 %    minHeightDifference (optional, default: 0.1) - numeric value, threshold
 %    height difference below which the H-maxima transform suppresses all local maxima (only when method is set to 'hMaxima')
@@ -63,15 +66,16 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %    
 %    [crh, xyh] = canopyPeaks(double(chm), ...
 %        refmat, ...
-%        'method', 'allometricRadius', ...
-%        'allometry', @(h) 0.5 + 0.25*log(max(h,1)), ...
+%        'minTreeHeight', 2, ...
+%        'searchRadius', @(h) 1, ...
+%        'mergeRadius', @(h) 0.28 * h^0.59, ...
 %        'fig', true, ...
 %        'verbose', true);
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
 %
 % See also: rasterize.m
 %
@@ -79,7 +83,7 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 8, 2018
+% Last revision: January 8, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -90,10 +94,11 @@ arg = inputParser;
 
 addRequired(arg, 'chm', @isnumeric);
 addRequired(arg, 'refmat', @isnumeric);
-addParameter(arg, 'method', 'fixedRadius', @(x) any(validatestring(x, {'fixedRadius', 'allometricRadius', 'hMaxima'})));
-addParameter(arg, 'minPeakHeight', 2, @(x) isnumeric(x) && (numel(x) == 1));
-addParameter(arg, 'windowRadius', 4, @(x) isnumeric(x) && (numel(x) == 1));
-addParameter(arg, 'allometry', @(h) 1 + 0.5*log(max(h,1)), @(x) strfind(func2str(x),'@(h)') == 1);
+addParameter(arg, 'smoothingFilter', [], @isnumeric);
+addParameter(arg, 'method', 'default', @(x) any(validatestring(x, {'default', 'hMaxima'})));
+addParameter(arg, 'minTreeHeight', 2, @(x) isnumeric(x) && (numel(x) == 1));
+addParameter(arg, 'searchRadius', @(h) 1, @(x) strfind(func2str(x),'@(h)') == 1);
+addParameter(arg, 'mergeRadius', @(h) 0.28 * h^0.59, @(x) strfind(func2str(x),'@(h)') == 1);
 addParameter(arg, 'minHeightDifference', 0.1, @isnumeric);
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', false, @(x) islogical(x) && (numel(x) == 1));
@@ -101,6 +106,27 @@ addParameter(arg, 'verbose', false, @(x) islogical(x) && (numel(x) == 1));
 parse(arg, chm, refmat, varargin{:});
 
 OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system is Matlab or GNU Octave
+
+
+%% apply smoothing to the canopy height model
+
+if ~isempty(arg.Results.smoothingFilter)
+    
+    if arg.Results.verbose
+        
+        fprintf('smoothing CHM...');
+        
+    end
+    
+    chm = imfilter(chm, arg.Results.smoothingFilter, 'replicate', 'same');
+    
+    if arg.Results.verbose
+        
+        fprintf('done!\n');
+        
+    end
+
+end
 
 
 %% find tree tops
@@ -117,37 +143,29 @@ chm(isnan(chm)) = 0;
 chm = double(chm);
 
 switch arg.Results.method
-    
-    case 'fixedRadius'
-        
-        r = round(arg.Results.windowRadius / gridResolution);
-        SE = bwdist(padarray(true, [r,r])) <= r;
-        SE(ceil(size(SE,1)/2), ceil(size(SE,2)/2)) = 0; % set central convolution window value to zero
-        idxl_lm = chm > imdilate(chm, SE);
-        val_lm = chm(idxl_lm);
-        [row_lm, col_lm] = ind2sub(size(idxl_lm), find(idxl_lm));
-        
-    case 'allometricRadius'
+     
+    case 'default'
         
         % determine convolution window size for each pixel
-        crown_radius = arg.Results.allometry(chm);
+        crown_radius = arrayfun(arg.Results.searchRadius, chm, 'UniformOutput', true);
         window_radius = max(round(crown_radius ./ gridResolution),1);
         unique_window_radius = unique(window_radius);
         n_radius = length(unique_window_radius);
+
+        idxl_lm = false(size(chm));
         
-        idxn_lm = cell(n_radius,1);
-   
         for j = 1:n_radius
             
             r = unique_window_radius(j);
             SE = bwdist(padarray(true, [r,r])) <= r;
             SE(ceil(size(SE,1)/2), ceil(size(SE,2)/2)) = 0;
-            idxn_lm{j,1} = find((chm > imdilate(chm, SE)) & (window_radius == r));
+            
+            idxl_lm = idxl_lm | ((chm >= imdilate(chm, SE)) & (window_radius == r));
             
         end
         
-        [row_lm, col_lm] = ind2sub(size(window_radius), cell2mat(idxn_lm));
-        val_lm = chm(sub2ind(size(chm), row_lm, col_lm));
+        [row_lm, col_lm] = ind2sub(size(chm), find(idxl_lm));
+        h_lm = chm(idxl_lm);
         
     case 'hMaxima'    
         
@@ -161,14 +179,14 @@ switch arg.Results.method
         cr_centroid = ceil(cell2mat({stats.Centroid}'));
         row_lm = cr_centroid(:,2);
         col_lm = cr_centroid(:,1);
-        val_lm = chm(sub2ind(size(chm), row_lm, col_lm));
+        h_lm = chm(sub2ind(size(chm), row_lm, col_lm));
 
 end
 
 % transform image to map coordinates
 xy = [row_lm, col_lm, ones(size(row_lm))] * refmat;
-crh = [col_lm, row_lm, val_lm];
-xyh = [xy, val_lm];
+crh = [col_lm, row_lm, h_lm];
+xyh = [xy, h_lm];
 
 if arg.Results.verbose
     
@@ -181,11 +199,11 @@ end
 
 if arg.Results.verbose
    
-    fprintf('filtering peaks...');
+    fprintf('filtering low peaks...');
     
 end
 
-idxl_height_filter = (val_lm >= arg.Results.minPeakHeight);
+idxl_height_filter = (h_lm >= arg.Results.minTreeHeight);
 
 crh = crh(idxl_height_filter,:);
 xyh = xyh(idxl_height_filter,:);
@@ -194,6 +212,39 @@ xyh = xyh(idxl_height_filter,:);
 [~, idxn_sort] = sort(xyh(:,3), 1, 'descend');
 xyh = xyh(idxn_sort,:);
 crh = crh(idxn_sort,:);
+
+if arg.Results.verbose
+    
+    fprintf('done!\n');
+    
+end
+
+
+%% remove duplicate peaks within merge radius
+
+if arg.Results.verbose
+   
+    fprintf('removing duplicate peaks...');
+    
+end
+
+r_m = arrayfun(arg.Results.mergeRadius, xyh(:,3), 'UniformOutput', true);
+theta = linspace(0, 2*pi, 16);
+
+idxn = (1:size(xyh,1))';
+idxl_nan = false(size(xyh,1),1);
+
+for j = 1:size(xyh,1)
+    
+    x_roi = xyh(j,1) + r_m(j) * cos(theta);
+    y_roi = xyh(j,2) + r_m(j) * sin(theta);
+    idxl_filter = inpolygon(xyh(:,1), xyh(:,2), x_roi, y_roi) & (xyh(:,3) <= xyh(j,3)) & (idxn ~= j) ;
+    idxl_nan(idxl_filter,1) = true;
+    
+end
+
+crh = crh(~idxl_nan,:);
+xyh = xyh(~idxl_nan,:);
 
 if arg.Results.verbose
     
@@ -212,7 +263,8 @@ if arg.Results.fig
     hold on
     plot(crh(:,1), crh(:,2), 'rx', 'MarkerSize', 3);
     axis equal tight
-    caxis(quantile(chm(:), [0.01, 0.99]))
+    % caxis(quantile(chm(:), [0.01, 0.99]))
+    colorbar
     xlabel('col');
     ylabel('row');
     
