@@ -67,7 +67,7 @@ function [label, varargout] = treeStems(xyh, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: November 27, 2018
+% Last revision: January 17, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -201,13 +201,14 @@ if nargout == 2
     
     label = L(ind);
     idxl_lab = (label ~= 0);
-    label = grp2idx(label(idxl_lab));
     
-    N = length(unique(label));
+    label(idxl_lab) = grp2idx(label(idxl_lab));
+    
+    N = length(unique(label(idxl_lab)));
 
     xyh_proxy = zeros(N,3);
-    xyh_proxy(:,1) = accumarray(label, xyh(idxl_lab,1), [N, 1], @mean, nan);
-    xyh_proxy(:,2) = accumarray(label, xyh(idxl_lab,2), [N, 1], @mean, nan);
+    xyh_proxy(:,1) = accumarray(label(idxl_lab), xyh(idxl_lab,1), [N, 1], @mean, nan);
+    xyh_proxy(:,2) = accumarray(label(idxl_lab), xyh(idxl_lab,2), [N, 1], @mean, nan);
     
     rc_proxy = round([xyh_proxy(:,1) - refmat(3,1), xyh_proxy(:,2) - refmat(3,2)] / refmat(1:2,:));
     ind_proxy = sub2ind([nrows, ncols], rc_proxy(:,1), rc_proxy(:,2));
