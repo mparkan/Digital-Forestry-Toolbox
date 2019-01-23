@@ -29,7 +29,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %    metrics to compute for each segment. The list can contain a
 %    combination of individual features (e.g. 'UUID', 'ConvexVolume',
 %    'TotalHeight', 'IntensityMedian') or feature categories. Supported
-%    feature categories are: 'Indentifier', 'Basic', 'PointPatternMetrics', 
+%    feature categories are: 'Identifier', 'Basic', 'PointPatternMetrics', 
 %    'IntensityMetrics', 'OpacityMetrics', 'ColorMetrics',
 %    'ExternalShapeMetrics'. If you want to compute all metrics specify
 %    {'all'}.
@@ -75,10 +75,10 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %         'fieldAbbreviations', true, ...
 %         'verbose', true);
 %
-% Other m-files required:
+% Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2018b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -87,7 +87,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: December 12, 2018
+% Last revision: January 23, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -201,7 +201,7 @@ if isempty(arg.Results.treePos)
     switch proxy
         
         case 'root'
-            
+           
             z_min = accumarray(label, xyz(:,3), [n_obs,1], @min, nan);
             [~, idxn_min] = ismember([(1:n_obs)', z_min], [label, xyz(:,3)], 'rows');
             xyz_proxy = xyz(idxn_min,:);
@@ -512,7 +512,7 @@ k = k + 1;
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'PrinCompVar1';
 M.Abbreviation{k} = 'PCVar1';
-M.Dependencies{k} = {'UVW'};
+M.Dependencies{k} = {'UVW', 'NPoints'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -521,7 +521,7 @@ k = k + 1;
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'PrinCompVar2';
 M.Abbreviation{k} = 'PCVar2';
-M.Dependencies{k} = {'UVW'};
+M.Dependencies{k} = {'UVW', 'NPoints'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -530,7 +530,7 @@ k = k + 1;
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'PrinCompVar3';
 M.Abbreviation{k} = 'PCVar3';
-M.Dependencies{k} = {'UVW'};
+M.Dependencies{k} = {'UVW', 'NPoints'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -896,6 +896,7 @@ M.Octave(k) = true;
 M.ScaleDependant(k) = false;
 k = k + 1;
 
+
 % Add additional metrics here
 
 
@@ -1117,11 +1118,18 @@ for j = 1:length(L)
             metrics.UVW = cell(n_obs,1);
             pc_variance = zeros(n_obs, 3);
             
-            for k = 1:n_obs
-                
-                % [~, metrics.UVW{k,1}, ~] = pca(metrics.XYH{k,1}); Matlab only
-                [~, metrics.UVW{k,1}, pc_variance(k,:)] = princomp(metrics.XYH{k,1});
-                
+            if OCTAVE_FLAG
+                for k = find(metrics.NPoints > 3)'
+                    
+                    [~, metrics.UVW{k,1}, pc_variance(k,:)] = princomp(metrics.XYH{k,1});
+                    
+                end
+            else
+                for k = find(metrics.NPoints > 3)'
+                    
+                    [~, metrics.UVW{k,1}, pc_variance(k,:)] = pca(metrics.XYH{k,1});
+                    
+                end
             end
             
         case 'PrinCompVar1'
@@ -1513,7 +1521,7 @@ for j = 1:length(L)
             
             % green chromaticity median
             metrics.ChromaticityGreenMedian = accumarray(label, rg_chromaticity(:,2), [], @median, nan);
-            
+             
     end
     
     if arg.Results.verbose
