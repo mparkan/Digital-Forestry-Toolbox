@@ -41,8 +41,9 @@ function varargout = treeWatershed(chm, varargin)
 %
 %    [crh, xyh] = canopyPeaks(double(chm), ...
 %        refmat, ...
-%        'method', 'allometricRadius', ...
-%        'allometry', @(h) 0.5 + 0.25*log(max(h,1)), ....
+%        'minTreeHeight', 2, ...
+%        'searchRadius', @(h) 1, ...
+%        'mergeRadius', @(h) 0.28 * h^0.59, ...
 %        'fig', true, ...
 %        'verbose', true);
 %
@@ -55,7 +56,7 @@ function varargout = treeWatershed(chm, varargin)
 % Other m-files required: topoColor.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.0 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
 %
 % See also: rasterize.m
 %
@@ -63,7 +64,7 @@ function varargout = treeWatershed(chm, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: May 15, 2018
+% Last revision: January 23, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -108,25 +109,9 @@ if ~isempty(arg.Results.markers)
     ind_peaks = sub2ind(size(chm), arg.Results.markers(:,2), arg.Results.markers(:,1));
     marker = false(size(chm));
     marker(ind_peaks) = 1;
-    
-    I_range = max(I(:)) - min(I(:));
-    
-    if I_range == 0
-        
-        h0 = 0.1;
-        
-    else
-        
-        h0 = 0.0001 * I_range;
-        
-    end
-    
-    E = inf(size(chm));
-    E(marker) = -Inf;
-    
-    J = imreconstruct(imcomplement(E), imcomplement(min(I + h0, E)), 8);
-    I = imcomplement(J);
-    
+
+    I = imimposemin(I, marker);
+
 end
 
 % apply watershed algorithm
@@ -135,6 +120,9 @@ label(chm == 0) = 0;
 
 % relabel connected components
 label = bwlabel(label ~= 0, 8);
+label(~ismember(label, label(marker))) = 0;
+% label(label ~= 0) = grp2idx(label(label ~= 0));
+[label(label ~= 0), ~] = grp2idx(label(label ~= 0));
 
 if arg.Results.verbose
     
