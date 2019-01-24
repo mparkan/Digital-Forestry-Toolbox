@@ -203,8 +203,7 @@ metrics_3d = treeMetrics(label_3d, ...
     'scalarOnly', true, ...
     'verbose', true);
                 
-                
-                
+
 %% Step 10 - Exporting the segment metrics to CSV and SHP files
 
 fields = fieldnames(metrics_3d);
