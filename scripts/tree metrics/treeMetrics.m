@@ -1,17 +1,15 @@
-function [metrics, varargout] = treeMetrics(label, xyz, classification, intensity, returnNumber, returnTotal, rgb, varargin)
+function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber, returnTotal, rgb, dtm, refmat, varargin)
 % TREEMETRICS - computes segment metrics
 %
-% [LABEL, ...] = TREEMETRICS(LABEL, XYZ, CLASSIFICATION, INTENSITY, RETURNNUMBER, RETURNTOTAL, RGB, ...) computes various
+% [LABEL, ...] = TREEMETRICS(LABEL, XYZ, INTENSITY, RETURNNUMBER, RETURNTOTAL, RGB, DTM, REFMAT ...) computes various
 % segment metrics based on geometry, intensity, opacity (pulse return) and color characteristics
 %
-% Syntax:  metrics = treeMetrics(label, xyz, classification, intensity, returnNumber, returnTotal, rgb, ...)
+% Syntax:  metrics = treeMetrics(label, xyz, intensity, returnNumber, returnTotal, rgb, dtm, refmat ...)
 %
 % Inputs:
 %    label - Nx1 integer vector, point label (individual tree label)
 %
 %    xyz - Nx3 numeric matrix, point cloud coordinates [x y z]
-%
-%    classification - Nx1 integer vector, classification
 %
 %    intensity - Nx1 numeric vector, intensity
 %
@@ -22,8 +20,9 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %    rgb - Nx3 numeric vector, [red, green, blue] triplets. Set to
 %    zeros(N,3) if the point cloud has no color.
 % 
-%    classTerrain (optional, default: 2) - integer vector, terrain class
-%    number(s)
+%    dtm - numeric matrix, terrain elevation model
+% 
+%    refmat - 3x2 numeric matrix, spatial referencing matrix of the terrain model, such that xy_map = [row, col, ones(nrows,1)] * refmat
 %
 %    metrics (optional, default: {'all'}) - cell array of strings, list of
 %    metrics to compute for each segment. The list can contain a
@@ -63,11 +62,12 @@ function [metrics, varargout] = treeMetrics(label, xyz, classification, intensit
 %
 %    metrics = treeMetrics(label_3d, ...
 %         [pc.record.x, pc.record.y, pc.record.z], ...
-%         pc.record.classification, ...
 %         pc.record.intensity, ...
 %         pc.record.return_number, ...
 %         pc.record.number_of_returns, ...
 %         [pc.record.red, pc.record.green, pc.record.blue], ...
+%         models.terrain.values, ...
+%         refmat, ...
 %         'metrics', {'Identifier', 'IntensityMetrics', 'OpacityMetrics', 'ConvexVolume', 'ConvexArea'}, ...
 %         'intensityScaling', true, ...
 %         'scalarOnly', true, ...
@@ -99,12 +99,12 @@ arg = inputParser;
 
 addRequired(arg, 'label', @(x) (size(x,2) == 1) && isnumeric(x) && any(x ~= 0));
 addRequired(arg, 'xyz', @(x) (size(x,2) == 3) && isnumeric(x));
-addRequired(arg, 'classification', @(x) (size(x,2) == 1) && isnumeric(x));
 addRequired(arg, 'intensity', @(x) (size(x,2) == 1) && isnumeric(x));
 addRequired(arg, 'returnNumber', @(x) (size(x,2) == 1) && isnumeric(x));
 addRequired(arg, 'returnTotal', @(x) (size(x,2) == 1) && isnumeric(x));
 addRequired(arg, 'rgb', @(x) (size(x,2) == 3) && isnumeric(x));
-addParameter(arg, 'classTerrain', 2, @(x) isnumeric(x));
+addRequired(arg, 'dtm', @(x) isnumeric(x));
+addRequired(arg, 'refmat', @(x) all(size(x) == [3,2]));
 addParameter(arg, 'metrics', {'all'}, @(x) iscell(x) && ~isempty(x));
 addParameter(arg, 'treePos', [], @(x) (size(x,2) == 3) && isnumeric(x));
 addParameter(arg, 'intensityScaling', true, @(x) islogical(x) && (numel(x) == 1));
@@ -113,7 +113,7 @@ addParameter(arg, 'scalarOnly', false, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'fieldAbbreviations', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
-parse(arg, label, xyz, classification, intensity, returnNumber, returnTotal, rgb, varargin{:});
+parse(arg, label, xyz, intensity, returnNumber, returnTotal, rgb, dtm, refmat, varargin{:});
 
 OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system is Matlab or GNU Octave
 
@@ -123,12 +123,6 @@ void_intensity = all(isnan(intensity));
 void_return_number = all(isnan(returnNumber));
 void_return_total = all(isnan(returnTotal));
 void_rgb = all(isnan(rgb(:)));
-
-%% extract terrain points
-
-idxl_ter = ismember(classification, arg.Results.classTerrain);
-xyz_ter = unique(xyz(idxl_ter,:), 'rows');
-
 
 %% filter points
 
@@ -192,6 +186,8 @@ if arg.Results.verbose
     
 end
 
+
+     
 % position proxy (root, centroid, apex)
 if isempty(arg.Results.treePos)
     
@@ -204,7 +200,7 @@ if isempty(arg.Results.treePos)
            
             z_min = accumarray(label, xyz(:,3), [n_obs,1], @min, nan);
             [~, idxn_min] = ismember([(1:n_obs)', z_min], [label, xyz(:,3)], 'rows');
-            xyz_proxy = xyz(idxn_min,:);
+            xyz_proxy(:,1:2) = xyz(idxn_min,1:2);
             
         case 'centroid'
             
@@ -215,32 +211,31 @@ if isempty(arg.Results.treePos)
             
             z_max = accumarray(label, xyz(:,3), [n_obs,1], @max, nan);
             [~, idxn_max] = ismember([(1:n_obs)', z_max], [label, xyz(:,3)], 'rows');
-            xyz_proxy = xyz(idxn_max,:);
+            xyz_proxy(:,1:2) = xyz(idxn_max,1:2);
 
     end
     
-    xyz_proxy(:,3) = griddata(xyz_ter(:,1), ...
-        xyz_ter(:,2), ...
-        xyz_ter(:,3), ...
-        xyz_proxy(:,1), ...
-        xyz_proxy(:,2), ...
-        'linear');
-    idxl_nan = isnan(xyz_proxy(:,3));
-    xyz_proxy(idxl_nan,3) = griddata(xyz_ter(:,1), ...
-        xyz_ter(:,2), ...
-        xyz_ter(:,3), ...
-        xyz_proxy(idxl_nan,1), ...
-        xyz_proxy(idxl_nan,2), ...
-        'nearest');
-    clear xyz_ter
+     % convert map coordinates (x,y) to image coordinates (column, row)
+     RC = round([xyz_proxy(:,1) - refmat(3,1), xyz_proxy(:,2) - refmat(3,2)] / refmat(1:2,:));
+     ind = sub2ind(size(dtm), RC(:,1), RC(:,2));
+     
+     % find terrain elevation at tree proxy coordinates
+     xyz_proxy(:,3) = dtm(ind);
     
 else
     
     xyz_proxy = arg.Results.treePos;
     
+    % convert map coordinates (x,y) to image coordinates (column, row)
+    RC = round([xyz_proxy(:,1) - refmat(3,1), xyz_proxy(:,2) - refmat(3,2)] / refmat(1:2,:));
+    ind = sub2ind(size(dtm), RC(:,1), RC(:,2));
+     
+    % find terrain elevation at tree proxy coordinates
+    xyz_proxy(:,3) = dtm(ind);
+    
 end
 
-xyh = xyz - xyz_proxy(label,:);
+xyh = xyz(:,1:3) - xyz_proxy(label,:);
 h_tot = accumarray(label, xyh(:,3), [], @max, nan);
 
 % normalized height
@@ -386,7 +381,7 @@ k = k + 1;
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConvexHull2D';
 M.Abbreviation{k} = 'ConvHull2D';
-M.Dependencies{k} = {'XYH'};
+M.Dependencies{k} = {'XYH', 'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -395,7 +390,7 @@ k = k + 1;
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConvexHull3D';
 M.Abbreviation{k} = 'ConvHull3D';
-M.Dependencies{k} = {'XYH'};
+M.Dependencies{k} = {'XYH', 'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -404,7 +399,7 @@ k = k + 1;
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConcaveHull2D';
 M.Abbreviation{k} = 'ConcHull2D';
-M.Dependencies{k} = {'XYH'};
+M.Dependencies{k} = {'XYH', 'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
@@ -413,7 +408,7 @@ k = k + 1;
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConcaveHull3D';
 M.Abbreviation{k} = 'ConcHull3D';
-M.Dependencies{k} = {'XYH'};
+M.Dependencies{k} = {'XYH', 'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
@@ -900,7 +895,6 @@ k = k + 1;
 % Add additional metrics here
 
 
-
 %% list available features
 
 idxl_filter = true(1,length(M.Name));
@@ -1065,7 +1059,7 @@ for j = 1:length(L)
         case 'UUID'
             
             % universally unique identifier
-            metrics.UUID = cell(n_obs,1);
+            metrics.UUID = repmat({nan}, n_obs, 1); % cell(n_obs,1);
             for k = 1:n_obs
                 
                 metrics.UUID{k} = lower(strcat(dec2hex(randi(16,32,1)-1)'));
@@ -1115,7 +1109,7 @@ for j = 1:length(L)
         case 'UVW'
             
             % principal components
-            metrics.UVW = cell(n_obs,1);
+            metrics.UVW = repmat({nan}, n_obs, 1); % cell(n_obs,1);
             pc_variance = zeros(n_obs, 3);
             
             if OCTAVE_FLAG
@@ -1205,10 +1199,10 @@ for j = 1:length(L)
         case 'ConvexHull2D'
             
             % 2D convex alpha shape
-            metrics.ConvexHull2D = cell(n_obs,1);
+            metrics.ConvexHull2D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
             a_convex_2d = nan(n_obs,1);
             
-            for k = 1:n_obs
+            for k = find(metrics.NPoints > 2)' %1:n_obs
                 
                 try
                     
@@ -1223,10 +1217,10 @@ for j = 1:length(L)
         case 'ConvexHull3D'
             
             %  3D convex alpha shape
-            metrics.ConvexHull3D = cell(n_obs,1);
+            metrics.ConvexHull3D = repmat({nan}, n_obs, 1); %cell(n_obs,1);
             v_convex_3d = nan(n_obs,1);
             
-            for k = 1:n_obs
+            for k = find(metrics.NPoints > 3)' %1:n_obs
                 
                 try
                     
@@ -1243,9 +1237,9 @@ for j = 1:length(L)
         case 'ConcaveHull2D'
             
             % single region 2D alpha shape
-            metrics.ConcaveHull2D = cell(n_obs,1);
+            metrics.ConcaveHull2D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
             
-            for k = 1:n_obs
+            for k = find(metrics.NPoints > 2) %1:n_obs
                 
                 try
                     
@@ -1267,9 +1261,9 @@ for j = 1:length(L)
         case 'ConcaveHull3D'
             
             % single region 3D alpha shape
-            metrics.ConcaveHull3D = cell(n_obs,1);
+            metrics.ConcaveHull3D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
             
-            for k = 1:n_obs
+            for k = find(metrics.NPoints > 3) %1:n_obs
                 
                 try
                     
@@ -1521,7 +1515,8 @@ for j = 1:length(L)
             
             % green chromaticity median
             metrics.ChromaticityGreenMedian = accumarray(label, rg_chromaticity(:,2), [], @median, nan);
-             
+            
+    
     end
     
     if arg.Results.verbose
