@@ -21,11 +21,20 @@ function varargout = LASwrite(s, filepath, varargin)
 %
 % Inputs:
 %    s - structure containing the fixed and variable length headers and point data records
+%
 %    filepath - string, path to the output LAS file
+%
 %    version (optional, default: 14) - integer value [10, 11, 12, 13 or 14], output LAS version (see LAS specification for details)
+%
 %    systemID (optional, default: 'OTHER') - 32 character string, system Identifier (see LAS specification for details)
+%
 %    guid (optional, default: '0000000000000000000000') - 32 character string, Globally Unique Identifier (e.g. '270DBE859CF44302AB0C35E0F25A0942') 
+%
 %    recordFormat (optional, default: 3) - integer value [0-10], output LAS point record format (see LAS specification for details)
+%
+%    precision (optional, default: 3) - 1x3 double vector, precision of the x, y, z coordinates. If not provided explicitly, the function will
+%    look if the scale factors are available in the header structure (s.header.x_scale_factor, s.header.y_scale_factor, etc...) and will default to 10^-6 if not.
+%
 %    verbose (optional, default: true) - boolean value, verbosiy switch
 %
 % Example:
@@ -35,12 +44,13 @@ function varargout = LASwrite(s, filepath, varargin)
 %        'systemID', 'MODIFICATION', ...
 %        'guid', '270DBE859CF44302AB0C35E0F25A0942', ...
 %        'recordFormat', 6, ...
+%        'precision', [0.01, 0.01, 0.01], ...
 %        'verbose', false);
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.0 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
 %
 % See also: LASREAD
 %
@@ -48,11 +58,11 @@ function varargout = LASwrite(s, filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: May 15, 2018
+% Last revision: February 1, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
-% fclose('all'); % close any open files (debugging)
+fclose('all'); % close any open files
 
 %% setup constants
 
@@ -76,6 +86,7 @@ addParameter(arg, 'version', 14, @(x) (ismember(x, AUTH_LAS_VERSIONS) && numel(x
 addParameter(arg, 'systemID', 'OTHER', @(x) ischar(x) && (length(x) <= 32));
 addParameter(arg, 'guid', [], @(x) ischar(x) && (length(strrep(x, '-', '')) == 32));
 addParameter(arg, 'recordFormat', 3, @(x) (ismember(x, AUTH_RECORD_FORMAT_ID) && numel(x) == 1));
+addParameter(arg, 'precision', [], @(x) isnumeric(x) & (length(x) == 3) & all(x > 0));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, s, filepath, varargin{:});
@@ -110,6 +121,55 @@ else
     
 end
 
+
+%% adjust point coordinate precision
+
+if isempty(arg.Results.precision) && all(isfield(s.header, {'x_scale_factor', 'y_scale_factor', 'z_scale_factor'}))
+    
+    if ~isempty(s.header.x_scale_factor)
+        
+         x_scale_factor = s.header.x_scale_factor;
+         
+    else
+        
+        x_scale_factor = 10^-6;
+         
+    end
+    
+    if ~isempty(s.header.x_scale_factor)
+        
+        y_scale_factor = s.header.y_scale_factor;
+        
+    else
+        
+        y_scale_factor = 10^-6;
+    
+    end
+    
+    if ~isempty(s.header.x_scale_factor)
+        
+        z_scale_factor = s.header.z_scale_factor;
+        
+    else 
+        
+        z_scale_factor = 10^-6;
+        
+    end
+    
+else
+    
+    x_scale_factor = double(arg.Results.precision(1));
+    y_scale_factor = double(arg.Results.precision(2));
+    z_scale_factor = double(arg.Results.precision(3));
+    
+end
+
+
+s.record.x = round(s.record.x / x_scale_factor) * x_scale_factor;
+s.record.y = round(s.record.y / y_scale_factor) * y_scale_factor;
+s.record.z = round(s.record.z / z_scale_factor) * z_scale_factor;
+
+
 %% compute spatial extent
 
 x_min = min(s.record.x);
@@ -118,6 +178,11 @@ y_min = min(s.record.y);
 y_max = max(s.record.y);
 z_min = min(s.record.z);
 z_max = max(s.record.z);
+
+
+%% compute number of point records
+
+n_point_records = length(s.record.x);
 
 
 %% public header block format definition
@@ -600,7 +665,11 @@ r.header(k).byte_length = [4, 4, 4, 4, 4];
 r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%u', '%u', '%u', '%u', '%u'};
-r.header(k).default_value = length(s.record.x);
+if las_version < 14
+    r.header(k).default_value = n_point_records;
+else
+    r.header(k).default_value = 0;
+end
 r.header(k).value = r.header(k).default_value;
 r.header(k).validation = [];
 r.header(k).error_id = [];
@@ -636,8 +705,8 @@ r.header(k).byte_length = [8, 8, 8, 8, 8];
 r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%g', '%g', '%g', '%g', '%g'};
-r.header(k).default_value = 0.001;
-r.header(k).value = [];
+r.header(k).default_value = x_scale_factor;
+r.header(k).value = r.header(k).default_value;
 r.header(k).validation = @(x) isa(x, 'double') && (x <= 1) && (x > 0) && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
@@ -654,8 +723,8 @@ r.header(k).byte_length = [8, 8, 8, 8, 8];
 r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%g', '%g', '%g', '%g', '%g'};
-r.header(k).default_value = 0.001;
-r.header(k).value = [];
+r.header(k).default_value = y_scale_factor;
+r.header(k).value = r.header(k).default_value;
 r.header(k).validation = @(x) isa(x, 'double') && (x <= 1) && (x > 0) && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
@@ -672,8 +741,8 @@ r.header(k).byte_length = [8, 8, 8, 8, 8];
 r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%g', '%g', '%g', '%g', '%g'};
-r.header(k).default_value = 0.001;
-r.header(k).value = [];
+r.header(k).default_value = z_scale_factor;
+r.header(k).value = r.header(k).default_value;
 r.header(k).validation = @(x) isa(x, 'double') && (x <= 1) && (x > 0) && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
@@ -691,7 +760,7 @@ r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%3.3f', '%3.3f', '%3.3f', '%3.3f', '%3.3f'};
 r.header(k).default_value = floor(x_min);
-r.header(k).value = [];
+r.header(k).value = r.header(k).default_value; % [];
 r.header(k).validation = @(x) isa(x, 'double') && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
@@ -709,7 +778,7 @@ r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%3.3f', '%3.3f', '%3.3f', '%3.3f', '%3.3f'};
 r.header(k).default_value = floor(y_min);
-r.header(k).value = [];
+r.header(k).value = r.header(k).default_value; % [];
 r.header(k).validation = @(x) isa(x, 'double') && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
@@ -727,7 +796,7 @@ r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%3.3f', '%3.3f', '%3.3f', '%3.3f', '%3.3f'};
 r.header(k).default_value = floor(z_min);
-r.header(k).value = [];
+r.header(k).value = r.header(k).default_value; % [];
 r.header(k).validation = @(x) isa(x, 'double') && (numel(x) == 1);
 r.header(k).error_id = [];
 r.header(k).error_message = [];
@@ -762,7 +831,7 @@ r.header(k).byte_length = [8, 8, 8, 8, 8];
 r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%3.3f', '%3.3f', '%3.3f', '%3.3f', '%3.3f'};
-r.header(k).default_value = x_min;
+r.header(k).default_value = x_min; % []
 r.header(k).value = r.header(k).default_value;
 r.header(k).validation = [];
 r.header(k).error_id = [];
@@ -780,7 +849,7 @@ r.header(k).byte_length = [8, 8, 8, 8, 8];
 r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%3.3f', '%3.3f', '%3.3f', '%3.3f', '%3.3f'};
-r.header(k).default_value = y_max;
+r.header(k).default_value = y_max; % [];
 r.header(k).value = r.header(k).default_value;
 r.header(k).validation = [];
 r.header(k).error_id = [];
@@ -798,7 +867,7 @@ r.header(k).byte_length = [8, 8, 8, 8, 8];
 r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%3.3f', '%3.3f', '%3.3f', '%3.3f', '%3.3f'};
-r.header(k).default_value = y_min;
+r.header(k).default_value = y_min; %[];
 r.header(k).value = r.header(k).default_value;
 r.header(k).validation = [];
 r.header(k).error_id = [];
@@ -816,7 +885,7 @@ r.header(k).byte_length = [8, 8, 8, 8, 8];
 r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%3.3f', '%3.3f', '%3.3f', '%3.3f', '%3.3f'};
-r.header(k).default_value = z_max;
+r.header(k).default_value = z_max; % [];
 r.header(k).value = r.header(k).default_value;
 r.header(k).validation = [];
 r.header(k).error_id = [];
@@ -834,7 +903,7 @@ r.header(k).byte_length = [8, 8, 8, 8, 8];
 r.header(k).n_values = [1, 1, 1, 1, 1];
 r.header(k).flag_bit_field = [false, false, false, false, false];
 r.header(k).print_format = {'%3.3f', '%3.3f', '%3.3f', '%3.3f', '%3.3f'};
-r.header(k).default_value = z_min;
+r.header(k).default_value = z_min; % [];
 r.header(k).value = r.header(k).default_value;
 r.header(k).validation = [];
 r.header(k).error_id = [];
@@ -906,7 +975,7 @@ r.header(k).byte_length = [8];
 r.header(k).n_values = [1];
 r.header(k).flag_bit_field = [false];
 r.header(k).print_format = {'%u'};
-r.header(k).default_value = length(s.record.x);
+r.header(k).default_value = n_point_records;
 r.header(k).value = r.header(k).default_value;
 r.header(k).validation = [];
 r.header(k).error_id = [];
@@ -2000,8 +2069,6 @@ for j = 1:length(r.record)
     
 end
 
-%pdr_keys = fieldnames(r.record);
-
 
 %% populate point data records
 
@@ -2060,7 +2127,7 @@ end
 for j = 1:length(r.header)
     
     switch r.header(j).short_name
-        
+            
         case 'n_variable_length_records'
             
             try
@@ -2102,13 +2169,21 @@ for j = 1:length(r.header)
             point_data_format_size = sum([r.record.byte_length]); % ADD EXTRA BYTES
             r.header(j).value = point_data_format_size; % Point Data Record Length, unsigned short, 2 bytes, *
             
-        case {'n_points_by_return', 'n_points_by_return_extended'}
+        case {'n_points_by_return'}
             
-            for k = 1:r.header(j).n_values
+            if las_version < 14
                 
-                r.header(j).value(k) = sum(r.record(pdr_skeys.return_number).value == k); % Number of points by return N
+                r.header(j).value = histc(r.record(pdr_skeys.return_number).value, 1:5); % Number of points by return N
+                
+            else
+                
+                r.header(j).value = zeros(5,1);  % Number of points by return N
                 
             end
+
+        case {'n_points_by_return_extended'}
+            
+            r.header(j).value = histc(r.record(pdr_skeys.return_number).value, 1:15); 
             
     end
     
@@ -2124,7 +2199,7 @@ if flag_evlr
             
             case 'offset_to_evlr'
                 
-                r.header(j).value = r.header(phb_skeys.offset_to_data).value + r.header(phb_skeys.point_data_record_length).value * r.header(phb_skeys.n_point_records).value;
+                r.header(j).value = r.header(phb_skeys.offset_to_data).value + r.header(phb_skeys.point_data_record_length).value * n_point_records;
                 
             case 'number_of_evlr'
                 
@@ -2152,8 +2227,7 @@ r.record(pdr_skeys.z).offset = r.header(phb_skeys.z_offset).value;
 for j = 1:length(r.record)
     
     if any([r.record(j).scale ~= 1,  r.record(j).offset ~= 0])
-        %if r.record(j).flag_transform
-        
+
         r.record(j).value = cast((r.record(j).value - r.record(j).offset) / r.record(j).scale, r.record(j).type{:});
         
     end
@@ -2436,10 +2510,10 @@ if ~isempty(arg.Results.filepath)
     end
     
     % create blob
-    n_bytes = r.header(phb_skeys.n_point_records).value * r.header(phb_skeys.point_data_record_length).value;
+    n_bytes = n_point_records * r.header(phb_skeys.point_data_record_length).value;
     blob = zeros(n_bytes, 1, 'uint8');
     
-    byte = zeros(r.header(phb_skeys.n_point_records).value, 1, 'uint8');
+    byte = zeros(n_point_records, 1, 'uint8');
     bit_count = 0;
     
     for j = 1:size(r.record,2)
@@ -2456,14 +2530,14 @@ if ~isempty(arg.Results.filepath)
                 
                 blob(ind_byte) = typecast(cast(byte, 'uint8'), 'uint8'); % add values to blob part when byte is full
                 bit_count = 0; % reinitialize bit count
-                byte = zeros(r.header(phb_skeys.n_point_records).value, 1, 'uint8'); % reinitialize byte to zero
+                byte = zeros(n_point_records, 1, 'uint8'); % reinitialize byte to zero
                 
             end
             
         else
             
             seq = (r.record(j).byte_position + 1:r.header(phb_skeys.point_data_record_length).value:n_bytes)';
-            ind_byte = (seq * ones(1, r.record(j).byte_length) + repmat(0:r.record(j).byte_length-1, r.header(phb_skeys.n_point_records).value, 1))';
+            ind_byte = (seq * ones(1, r.record(j).byte_length) + repmat(0:r.record(j).byte_length-1, n_point_records, 1))';
             ind_byte = ind_byte(:);
             
             blob(ind_byte) = typecast(cast(reshape(r.record(j).value',[],1), r.record(j).type{:}), 'uint8');
@@ -2668,7 +2742,7 @@ if ~isempty(arg.Results.filepath)
                         
                     end
                     
-                case {5000, 5019, 5020, 5021} % Custom single field (optional)
+                case {5000, 5019, 5020, 5021, 5064} % Custom single field (optional)
                     
                     fwrite(fid, s.extended_variable_length_records(j).value, 'single', 0, MACHINE_FORMAT);
                     
@@ -2730,7 +2804,7 @@ if ~isempty(arg.Results.filepath)
         tElapsed = toc; % stop timer
         
         fprintf('File successfully written to "%s"...\n', arg.Results.filepath);
-        fprintf('%u point records written in %s\n', r.header(phb_skeys.n_point_records).value, datestr(tElapsed/(24*3600), 'HH:MM:SS.FFF'));
+        fprintf('%u point records written in %s\n', n_point_records, datestr(tElapsed/(24*3600), 'HH:MM:SS.FFF'));
         
     end
     
