@@ -16,8 +16,8 @@ function varargout = treeWatershed(chm, varargin)
 % Inputs:
 %    chm - RxC numeric matrix, raster Canopy Height Model (CHM) with R rows and C columns
 %
-%    markers (optional, default: []) - Mx3 numeric matrix, images coordinates (col, row) and height
-%    values of markers used in the watershed algorithm
+%    markers (optional, default: []) - Mx2 numeric matrix, images coordinates (col, row)
+%    of markers used in the watershed algorithm
 %
 %    minHeight (optional, default: 1) - numeric value, minimum canopy height, all CHM values
 %    below this threshold are set to zero
@@ -34,7 +34,13 @@ function varargout = treeWatershed(chm, varargin)
 %
 % Outputs:
 %    label - RxC numeric matrix, individual tree crown labels
+%
 %    colors - Nx1 numeric matrix, topological color indices
+%
+%    markers - Rx2 numeric matrix, images coordinates (col, row)
+%    of markers that were used in the watershed algorithm (after
+%    filtering). The marker coordinates are sorted according to their associated labelled
+%    regions (e.g. first marker has label 1, second marker has label 2, etc...).
 %
 % Example:
 %    [chm, refmat, ~] = geotiffread('..\data\measurements\raster\chm\so_2014_woodland_pasture.tif');
@@ -48,7 +54,7 @@ function varargout = treeWatershed(chm, varargin)
 %        'verbose', true);
 %
 %    label = treeWatershed(chm, ...
-%        'markers', crh, ...
+%        'markers', crh(:,1:2), ...
 %        'minHeight', 1, ...
 %        'fig', true, ...
 %        'verbose', true);
@@ -64,7 +70,7 @@ function varargout = treeWatershed(chm, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: January 23, 2019
+% Last revision: February 7, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -74,7 +80,7 @@ function varargout = treeWatershed(chm, varargin)
 arg = inputParser;
 
 addRequired(arg, 'chm', @isnumeric);
-addParameter(arg, 'markers', [], @isnumeric);
+addParameter(arg, 'markers', [], @(x) isnumeric(x) && (size(x,2) == 2));
 addParameter(arg, 'minHeight', 1, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'mask', [], @(x) islogical(x) && any(x(:)) && all(size(x) == size(chm)));
 addParameter(arg, 'removeBorder', false, @(x) islogical(x) && (numel(x) == 1));
@@ -82,13 +88,13 @@ addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, chm, varargin{:});
-nargoutchk(1, 2);
+nargoutchk(1, 3);
 
 
 %% apply height threshold
 
 chm = double(chm);
-chm(chm <= arg.Results.minHeight) = 0;
+chm(chm < arg.Results.minHeight) = 0;
 
 
 %% compute watershed transform
@@ -109,7 +115,19 @@ if ~isempty(arg.Results.markers)
     ind_peaks = sub2ind(size(chm), arg.Results.markers(:,2), arg.Results.markers(:,1));
     marker = false(size(chm));
     marker(ind_peaks) = 1;
-
+    marker = marker & (chm >= arg.Results.minHeight);
+    
+    % find connected components in the marker image
+    [L_marker, ~] = bwlabel(marker);
+    
+    % if marker pixels are adjacent keep the highest marker pixel in the group
+    chm_v = chm + rand(nrows,ncols).*(chm/1000);
+    props = accumarray(L_marker(L_marker~=0), chm_v(L_marker~=0), [], @max, nan);
+    h_max = zeros(nrows, ncols);
+    h_max(L_marker~=0) = props(L_marker(L_marker~=0));
+    
+    marker = (h_max == chm_v) & (L_marker~=0);
+    
     I = imimposemin(I, marker);
 
 end
@@ -121,7 +139,6 @@ label(chm == 0) = 0;
 % relabel connected components
 label = bwlabel(label ~= 0, 8);
 label(~ismember(label, label(marker))) = 0;
-% label(label ~= 0) = grp2idx(label(label ~= 0));
 [label(label ~= 0), ~] = grp2idx(label(label ~= 0));
 
 if arg.Results.verbose
@@ -171,9 +188,28 @@ label(idxl_dist) = label(idxn_nn(idxl_dist));
 varargout{1} = label;
 
 
+%% filter markers 
+
+if ~isempty(arg.Results.markers)
+    
+    marker = marker & (label ~= 0);
+    ind_marker = find(marker);
+    [row_marker, col_marker] = ind2sub([nrows,ncols], ind_marker);
+    [~, idxn_sort] = sort(label(ind_marker), 'ascend');
+    varargout{3} = [col_marker(idxn_sort), row_marker(idxn_sort)];
+    
+    if (length(ind_marker) ~= size(arg.Results.markers,1)) && arg.Results.verbose
+        
+        fprintf('Warning: %.0f markers were removed\n', size(arg.Results.markers,1)-length(ind_marker));
+        
+    end
+    
+end
+
+
 %% plot results
 
-if arg.Results.fig || (nargout == 2)
+if arg.Results.fig || (nargout >= 2)
     
     if arg.Results.verbose
         
@@ -196,7 +232,7 @@ if arg.Results.fig || (nargout == 2)
     
     colors = reshape(idxn_color, nrows, ncols);
     
-    if nargout == 2
+    if nargout >= 2
         
         varargout{2} = colors;
         
