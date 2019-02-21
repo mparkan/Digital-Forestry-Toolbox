@@ -87,7 +87,7 @@ function [models, refmat] = elevationModels(xyz, classification, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: September 20, 2018
+% Last revision: February 21, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -246,8 +246,6 @@ if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}))
     
     if any(idxl_terrain)
         
-
-        %[nrows, ncols] = size(mask);
         [col_grid, row_grid] = meshgrid(1:ncols, 1:nrows);
         t = [row_grid(:), col_grid(:)] * refmat(1:2,:);
         x_grid = reshape(t(:,1) + refmat(3,1), nrows, ncols);
@@ -334,6 +332,10 @@ if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}))
                 
         end
         
+        % extrapolation (nearest neighbour only)
+        [~, idxn_nn] = bwdist(~isnan(dtm));
+        dtm = dtm(idxn_nn);
+    
         % smooth terrain model values
         if ~isempty(arg.Results.smoothingFilter)
             
