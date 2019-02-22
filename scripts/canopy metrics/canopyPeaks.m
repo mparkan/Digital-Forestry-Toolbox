@@ -35,13 +35,9 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %
 %    minTreeHeight (optional, default: 2) - numeric value, minimum tree top height
 %
-%    searchRadius (optional, default: @(h) 1 - anonymous function handle of the form @(h) = ...,
+%    searchRadius (optional, default: @(h) 0.28 * h^0.5 - anonymous function handle of the form @(h) = ...,
 %    specifying the radius (as a function of height) for the circular convolution window used to detect local maxima. 
 %    Use '@(h) c' where c is arbitrary constant radius, if you do not want to vary the search radius as a function of height.
-%
-%    mergeRadius (optional, default: @(h) 0.28 * h^0.59 - anonymous function handle of the form @(h) = ...,
-%    specifying the merge radius as a function of tree height. Tree tops are sorted by descending height and
-%    trees located within the merge radius of a higher tree are eliminated. 
 %    Example models:
 %     @(h) (3.09632 + 0.00895 * h^2)/2; % deciduous forest (Popescu et al, 2004)
 %     @(h) (3.75105 - 0.17919 * h + 0.01241 * h^2)/2; % coniferous forests (Popescu et al, 2004)
@@ -67,8 +63,7 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %    [crh, xyh] = canopyPeaks(double(chm), ...
 %        refmat, ...
 %        'minTreeHeight', 2, ...
-%        'searchRadius', @(h) 1, ...
-%        'mergeRadius', @(h) 0.28 * h^0.59, ...
+%        'searchRadius', @(h) 2, ...
 %        'fig', true, ...
 %        'verbose', true);
 %
@@ -83,7 +78,7 @@ function [crh, xyh] = canopyPeaks(chm, refmat, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: January 8, 2019
+% Last revision: February 22, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -98,7 +93,6 @@ addParameter(arg, 'smoothingFilter', [], @isnumeric);
 addParameter(arg, 'method', 'default', @(x) any(validatestring(x, {'default', 'hMaxima'})));
 addParameter(arg, 'minTreeHeight', 2, @(x) isnumeric(x) && (numel(x) == 1));
 addParameter(arg, 'searchRadius', @(h) 1, @(x) strfind(func2str(x),'@(h)') == 1);
-addParameter(arg, 'mergeRadius', @(h) 0.28 * h^0.59, @(x) strfind(func2str(x),'@(h)') == 1);
 addParameter(arg, 'minHeightDifference', 0.1, @isnumeric);
 addParameter(arg, 'fig', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'verbose', false, @(x) islogical(x) && (numel(x) == 1));
@@ -109,6 +103,8 @@ OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system i
 
 
 %% apply smoothing to the canopy height model
+
+[nrows, ncols] = size(chm);
 
 if ~isempty(arg.Results.smoothingFilter)
     
@@ -149,21 +145,26 @@ switch arg.Results.method
         % determine convolution window size for each pixel
         crown_radius = arrayfun(arg.Results.searchRadius, chm, 'UniformOutput', true);
         window_radius = max(round(crown_radius ./ gridResolution),1);
-        unique_window_radius = unique(window_radius);
+        unique_window_radius = sort(unique(window_radius), 'descend');
         n_radius = length(unique_window_radius);
 
-        idxl_lm = false(size(chm));
+        idxl_lm = false(nrows,ncols,n_radius);
+        
+        M = true(nrows, ncols);
         
         for j = 1:n_radius
             
+            % create structuring element
             r = unique_window_radius(j);
             SE = bwdist(padarray(true, [r,r])) <= r;
             SE(ceil(size(SE,1)/2), ceil(size(SE,2)/2)) = 0;
             
-            idxl_lm = idxl_lm | ((chm >= imdilate(chm, SE)) & (window_radius == r));
+            idxl_lm(:,:,j) = (chm >= imdilate(chm, SE)) & (window_radius == r) & M;
+            M = M & ~(bwdist(idxl_lm(:,:,j)) <= r);
             
         end
         
+        idxl_lm = any(idxl_lm,3);
         [row_lm, col_lm] = ind2sub(size(chm), find(idxl_lm));
         h_lm = chm(idxl_lm);
         
@@ -212,39 +213,6 @@ xyh = xyh(idxl_height_filter,:);
 [~, idxn_sort] = sort(xyh(:,3), 1, 'descend');
 xyh = xyh(idxn_sort,:);
 crh = crh(idxn_sort,:);
-
-if arg.Results.verbose
-    
-    fprintf('done!\n');
-    
-end
-
-
-%% remove duplicate peaks within merge radius
-
-if arg.Results.verbose
-   
-    fprintf('removing duplicate peaks...');
-    
-end
-
-r_m = arrayfun(arg.Results.mergeRadius, xyh(:,3), 'UniformOutput', true);
-theta = linspace(0, 2*pi, 16);
-
-idxn = (1:size(xyh,1))';
-idxl_nan = false(size(xyh,1),1);
-
-for j = 1:size(xyh,1)
-    
-    x_roi = xyh(j,1) + r_m(j) * cos(theta);
-    y_roi = xyh(j,2) + r_m(j) * sin(theta);
-    idxl_filter = inpolygon(xyh(:,1), xyh(:,2), x_roi, y_roi) & (xyh(:,3) <= xyh(j,3)) & (idxn ~= j) ;
-    idxl_nan(idxl_filter,1) = true;
-    
-end
-
-crh = crh(~idxl_nan,:);
-xyh = xyh(~idxl_nan,:);
 
 if arg.Results.verbose
     
