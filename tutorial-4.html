@@ -318,7 +318,7 @@ xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</cod
                 <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Superpixel segmentation
             </h2>
 
-            <p>One possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a> is a well suited for this purpose. Other approaches include majority voting or Conditional Random Fields (CRF). SLIC works by computing local K-means clusters, where the relative importance of spatial and color distance can be controlled with a compacity parameter.</p>
+            <p>One possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a> is a well suited for this purpose. Other approaches include majority voting or <a href="https://en.wikipedia.org/wiki/Conditional_random_field">Conditional Random Fields (CRF)</a>. SLIC works by computing local K-means clusters, where the relative importance of spatial and color distance can be controlled with a compacity parameter.</p>
 
             
             <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
@@ -464,7 +464,7 @@ end</code></pre>
             
             // define static image layer
             var rasterStaticLayer1 = new ol.layer.Image({
-                title: 'Canopy Height',
+                title: 'First return intensity',
                 type: 'base',
                 source: new ol.source.ImageStatic({
                     url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_intensity.png',
@@ -472,7 +472,7 @@ end</code></pre>
                     projection: 'EPSG:2056',
                     imageSize: [681,681],
                     imageExtent: extent,
-                    attributions: 'Data courtesy of <a href=https://maps.zh.ch/>Kanton Zürich</a>'
+                    attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
                 })
             });
             
@@ -525,12 +525,12 @@ end</code></pre>
             });
 
 
-            var layerGroup2 = new ol.layer.Group({
+/*            var layerGroup2 = new ol.layer.Group({
                 title: 'Overlays',
                 layers: [
                     vectorLayer1
                 ]
-            });
+            });*/
 
 
             // initialize map
