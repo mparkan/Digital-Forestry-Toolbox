@@ -73,11 +73,16 @@
             </div>
 
 
-            <p>It has been repeatedly demonstrated that the return intensity is a very important feature to differentiate tree species.</p>
+            <p>It has been repeatedly demonstrated that the return intensity and echo ranking distributions are important feature to differentiate tree species (<a href="#references">Liang et al., 2007; Shi et al., 2018)</a>.</p>
 
-            Dense foliage has a higher probability of completely intercepting the laser beam and generating single high intensity returns. Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage.
+            Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns. Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions is useful to differentiate deciduous and evergreen foliage.  
+            
 
-
+            <figure>
+                <img src="img/dft_tutorial_4_ima_1a.png" alt="" style="width:80%;">
+                <figcaption><b>Figure 1</b> - Conceptual example of the opacity difference (under leaf-off conditions) between birch (left) and spruce (right) trees. Low structural opacity will typically result in multiple low intensity echoes. On the contrary, high structural opacity will tend to result in fewer high intensity echoes.</figcaption>
+            </figure>
+            
             <p>This tutorial assumes that:</p>
             <ol>
                 <li>The data was acquired in leaf-off conditions</li>
@@ -111,9 +116,6 @@
 
             <p>Another possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed in <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a>. Other approaches include majority vote or Conditional Random Fields (CRF)</p>
 
-
-
-            <p>The stem detection method we will apply is based on a simple observation: the space in a tree gets more cluttered as you approach the stem. Consequently, considering a homogeneous point sampling of the tree geometry, the point density (i.e. the number of points within a vertical column) tends to be higher near the stem (see figure 1 left). To reduce the effect of inhomogenous sampling and to simplify the detection of density peaks, the point cloud can be rasterized (see figure 1 right). The locations of local density peaks may subsequently serve as a basis for tree crown delineation, as proposed in <a href="http://www.isprs.org/proceedings/xxxviii/4-c1/sessions/Session12/6790_Rahman_Proc.pdf"> Rahman and Gorte (2008)</a> or more recently in <a href="https://www.fs.fed.us/nrs/pubs/jrnl/2017/nrs_2017_ayrey_001.pdf">Ayrey et al. (2017)</a>.</p>
 
             <figure>
                 <div id="image-table" style="width:100%;margin:auto">
@@ -392,6 +394,8 @@ end</code></pre>
 
                 <li>Riegl Laser Measurement Systems, 2017. <a href="http://www.riegl.com/uploads/tx_pxpriegldownloads/Whitepaper_LASextrabytes_implementation_in-RIEGLSoftware_2017-12-04.pdf">LAS Extrabytes Implementation in RIEGL Software</a>. Riegl Laser Measurement Systems GmbH, Horn, Riedenburgstrasse 48, Austria.</li>
 
+                <li>Shi, Y., Wang, T., Skidmore, A. K., Heurich, M., Mar. 2018b. <a href="https://www.sciencedirect.com/science/article/abs/pii/S0924271618300315">Important LiDAR metrics for discriminating forest tree species in Central Europe</a>. ISPRS Journal of Photogrammetry and Remote Sensing 137, 163–174.</li>
+                
                 <li>Vain, A., Kaasalainen, S., 2011. <a href="http://cdn.intechopen.com/pdfs/15799/InTech-Correcting_airborne_laser_scanning_intensity_data.pdf">Correcting airborne laser scanning intensity data</a>. INTECH Open Access Publisher.</li>
 
             </ul>
