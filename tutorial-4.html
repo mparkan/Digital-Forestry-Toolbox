@@ -73,7 +73,7 @@
             </div>
 
 
-            <p>It has been repeatedly demonstrated that the return intensity and echo ranking distributions are important feature to differentiate tree species (<a href="#references">Liang et al., 2007; Shi et al., 2018)</a>.</p>
+            <p>It has been repeatedly demonstrated that the return intensity and echo ranking distributions are important feature to differentiate tree species (<a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018)</a>.</p>
 
             Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns. Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions is useful to differentiate deciduous and evergreen foliage.  
             
@@ -114,7 +114,6 @@
 
             <!--Automatic Gain Control (AGC)-->
 
-            <p>Another possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed in <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a>. Other approaches include majority vote or Conditional Random Fields (CRF)</p>
 
 
             <figure>
@@ -146,7 +145,7 @@
                 <li>Start Matlab/Octave</li>
                 <li>Delete any previous versions of the toolbox</li>
                 <li>Add the DFT folders to the Matlab/Octave search path using <code>addpath(genpath('path to DFT main folder'))</code></li>
-                <li>Open <code>dft_tutorial_3.m</code> (located in the tutorials folder)</li>
+                <li>Open <code>dft_tutorial_4.m</code> (located in the tutorials folder)</li>
             </ol>
 
             <h2>
@@ -327,6 +326,9 @@ xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</cod
                 <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Superpixel segmentation
             </h2>
 
+            <p>Another possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a> is a popular option. Other approaches include majority vote or Conditional Random Fields (CRF)</p>
+
+            
             <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
 
             <pre><code>fid = fopen('ge_2017_a_stems.csv', 'w+'); % open file
@@ -392,6 +394,8 @@ end</code></pre>
 
                 <li>Luzum, B., Starek, M., Slatton, K.C., 2004. <a href="https://www.researchgate.net/publication/266228111_Normalizing_ALSM_Intensities">Normalizing ALSM intensities (No. Rep_2004-07-01)</a>, Geosensing Engineering and Mapping (GEM) Center. Civil and Coastal Engineering Department, University of Florida, Gainesville, FL, USA.</li>
 
+                <li>Ørka, H. O., Næsset, E., Bollandsås, O. M., Jun. 2009. <a href="https://www.sciencedirect.com/science/article/abs/pii/S0034425709000376">Classifying species of individual trees by intensity and structure features derived from airborne laser scanner data</a>. Remote Sensing of Environment 113 (6), 1163–1174.</li>
+                
                 <li>Riegl Laser Measurement Systems, 2017. <a href="http://www.riegl.com/uploads/tx_pxpriegldownloads/Whitepaper_LASextrabytes_implementation_in-RIEGLSoftware_2017-12-04.pdf">LAS Extrabytes Implementation in RIEGL Software</a>. Riegl Laser Measurement Systems GmbH, Horn, Riedenburgstrasse 48, Austria.</li>
 
                 <li>Shi, Y., Wang, T., Skidmore, A. K., Heurich, M., Mar. 2018b. <a href="https://www.sciencedirect.com/science/article/abs/pii/S0924271618300315">Important LiDAR metrics for discriminating forest tree species in Central Europe</a>. ISPRS Journal of Photogrammetry and Remote Sensing 137, 163–174.</li>
