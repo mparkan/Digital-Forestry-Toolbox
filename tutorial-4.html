@@ -224,19 +224,11 @@
             </h2>
 
 
-            <p>When compared to small branches, stems and primary branches are more likely to fully intercept the laser beam and generate a last return (see figure 2). Since we are only interested in detecting stems, we can apply a filter which keeps only last returns (and also removes terrain points or other unwanted classes). To do this, we create a logical (boolean) vector:
+            <p>In this step we create a filter which selects only last returns from the points within the medium and high vegetation classes:
 
-            <pre><code>idxl_last = pc.record.return_number == pc.record.number_of_returns;
+            <pre><code>idxl_first = pc.record.return_number == 1;
 idxl_veg = ismember(pc.record.classification, [4, 5]);
-idxl_filter = idxl_veg & idxl_last;</code></pre>
-
-            <p>Note that while using only the last returns may increase the detection reliability for large stems, it may also reduce the detection rate for smaller stems. You can modify this filtering criteria or add new ones (e.g. acquisition date, intensity, colour) to suit your specific needs.</p>
-
-            <figure>
-                <img src="img/dft_tutorial_3_ima_3a.png" alt="" style="width:90%;">
-                <img src="img/dft_tutorial_3_ima_3b.png" alt="" style="width:90%;">
-                <figcaption><b>Figure 2</b> - Cross section of the normalized point cloud. <b>Top</b>: all points. <b>Bottom</b>: only last returns and vegetation classes.</figcaption>
-            </figure>
+idxl_filter = idxl_veg & idxl_first;</code></pre>
 
 
             <h2>
@@ -326,7 +318,7 @@ xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</cod
                 <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Superpixel segmentation
             </h2>
 
-            <p>Another possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a> is a popular option. Other approaches include majority vote or Conditional Random Fields (CRF)</p>
+            <p>One possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a> is a well suited for this purpose. Other approaches include majority voting or Conditional Random Fields (CRF). SLIC works by computing local K-means clusters, where the relative importance of spatial and color distance can be controlled with a compacity parameter.</p>
 
             
             <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
@@ -421,7 +413,7 @@ end</code></pre>
             };
 
             // define tile grid
-            var extent = [2699499.7000000001862645, 1270999.8000000000465661, 2700000.2000000001862645, 1271500.3000000000465661]; // [minx, miny, maxx, maxy].
+            var extent = [2499100.0000000000000000,1127220.0000000000000000, 2499780.0000000000000000,1127900.0000000000000000]; // [minx, miny, maxx, maxy].
             var minZoom = 0;
             var maxZoom = 5;
             var startResolution = (extent[2]-extent[0]) / 256;
@@ -434,7 +426,7 @@ end</code></pre>
                 resolutions: pixelResolutions
             });
 
-            // define vector layer
+/*            // define vector layer
             var vectorLayer1 = new ol.layer.Vector({
                 title: 'Tree tops',
                 type: 'overlay',
@@ -452,25 +444,41 @@ end</code></pre>
                         })
                     }))
                 })
-            });
-
+            });*/
+            
+            
             // define XYZ tiles layer
             var rasterTileLayer1 = new ol.layer.Tile({
-                title: 'Near infrared image',
+                title: 'RGB image',
                 type: 'base',
                 source: new ol.source.XYZ({
-                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_2/raster/ortho_nir/{z}/{x}/{y}.jpg',
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_3/raster/ortho/{z}/{x}/{y}.jpg',
                     crossOrigin: 'anonymous',
                     tileGrid: mapTileGrid,
                     projection: 'EPSG:2056',
                     opaque: false,
-                    attributions: ['Data courtesy of <a href=https://maps.zh.ch/>Kanton Zürich</a>']
+                    attributions: ['Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>']
                 })
             });
 
-
+            
             // define static image layer
             var rasterStaticLayer1 = new ol.layer.Image({
+                title: 'Canopy Height',
+                type: 'base',
+                source: new ol.source.ImageStatic({
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_intensity.png',
+                    crossOrigin: 'anonymous',
+                    projection: 'EPSG:2056',
+                    imageSize: [681,681],
+                    imageExtent: extent,
+                    attributions: 'Data courtesy of <a href=https://maps.zh.ch/>Kanton Zürich</a>'
+                })
+            });
+            
+            
+            // define static image layer
+            var rasterStaticLayer2 = new ol.layer.Image({
                 title: 'Canopy Height',
                 type: 'base',
                 source: new ol.source.ImageStatic({
@@ -482,6 +490,7 @@ end</code></pre>
                     attributions: 'Data courtesy of <a href=https://maps.zh.ch/>Kanton Zürich</a>'
                 })
             });
+            
 
 
             // define scale bar control
@@ -537,8 +546,7 @@ end</code></pre>
                     new ol.interaction.DragRotateAndZoom()
                 ]),
                 layers: [
-                    layerGroup1,
-                    layerGroup2
+                    layerGroup1
                 ],
                 view: new ol.View({
                     extent: extent,
