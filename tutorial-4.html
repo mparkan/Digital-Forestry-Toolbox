@@ -479,15 +479,15 @@ end</code></pre>
             
             // define static image layer
             var rasterStaticLayer2 = new ol.layer.Image({
-                title: 'Canopy Height',
+                title: 'Classification',
                 type: 'base',
                 source: new ol.source.ImageStatic({
-                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_2/raster/dhm/zh_2014_a_dhm.jpg',
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_class.png',
                     crossOrigin: 'anonymous',
                     projection: 'EPSG:2056',
-                    imageSize: [626,626],
+                    imageSize: [681,681],
                     imageExtent: extent,
-                    attributions: 'Data courtesy of <a href=https://maps.zh.ch/>Kanton Zürich</a>'
+                    attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
                 })
             });
             
@@ -520,7 +520,8 @@ end</code></pre>
                 title: 'Basemaps',
                 layers: [
                     rasterTileLayer1,
-                    rasterStaticLayer1
+                    rasterStaticLayer1,
+                    rasterStaticLayer2
                 ]
             });
 
