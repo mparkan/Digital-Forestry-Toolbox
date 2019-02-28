@@ -75,23 +75,22 @@
 
             <p>It has been repeatedly demonstrated that the return intensity and echo ranking distributions are important feature to differentiate tree species (<a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018</a>). Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns (see figures 1 and 2). Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions is useful to differentiate deciduous and evergreen foliage.</p>  
             
-
+            <br>
             <figure>
                 <img src="img/dft_tutorial_4_ima_1a.png" alt="" style="width:80%;">
                 <figcaption><b>Figure 1</b> - Conceptual example of the opacity difference (under leaf-off conditions) between birch (left) and spruce (right) trees. Low structural opacity will typically result in multiple low intensity returns. On the contrary, high structural opacity will tend to result in fewer high intensity returns.</figcaption>
             </figure>
+            <br>
             
-            <p>This tutorial assumes that:</p>
-            <ol>
-                <li>The data was acquired in leaf-off conditions</li>
-                <li>The return intensity was calibrated and corrected</li>
-            </ol>
-
-            <p>The range between the sensor and the target surface has a large influence on the measured intensity, as shown in the RaDAR/LiDAR range equation below:</p>
-
-
+            <p>. In theory, it is possible to determine the reflectance of the target surface, as shown in the RaDAR/LiDAR range equation below:</p>   
+                
+                The raw intensity values should not be used directly as a classification feature; they should first be calibrated/corrected (Vain and Kaasalainen, 2011; Kashani et al., 2015). This can be a relatively complex task, as the return intensity depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p> 
+                
             $$P_r = \frac{D_{r}^2 \eta_{atm} \eta_{sys} \sigma P_t}{4 \pi R^4 \beta_{t}^2 }$$
 
+            $$\sigma = \frac{4 \pi}{\Omega} \rho A_t$$
+        
+        
             <p>where:</p>
 
             <ul style="list-style-type:none">
@@ -107,8 +106,23 @@
                 <li> \(\rho\) is the reflectance of the target;</li>
                 <li> \(A_t\) is the area of the target [m<sup>2</sup>].</li>
             </ul>
+                
+            <p>This models shows that the range between the sensor and the target surface has a large influence on the measured intensity. To compensate the decay of intensity with range, a correction can be applied, if the trajectory and timing are known, following for example the guidelines provided in Luzum et al. (2004).</p>
+            
+        
+            
+<!--
+            <p>This tutorial assumes that:</p>
+            <ol>
+                <li>The data was acquired in leaf-off conditions</li>
+                <li>The return intensity was calibrated and corrected</li>
+            </ol>
+
+            <p>The range between the sensor and the target surface has a large influence on the measured intensity, as shown in the RaDAR/LiDAR range equation below:</p>
+
 
             <p>Thus, raw ALS intensity cannot be used directly as a classification feature; it must first be calibrated/corrected (Vain and Kaasalainen, 2011; Kashani et al., 2015). A range correction can easily be applied, if the trajectory and timing are known, following for example the guidelines provided in Luzum et al. (2004).</p>
+-->
 
             <!--Automatic Gain Control (AGC)-->
 
@@ -150,7 +164,10 @@
 
             <p>We start by reading the LAS file using <code>LASread()</code>:</p>
 
-            <pre><code>pc = LASread('ge_2017_a.las');</code></pre>
+            <pre><code>pc = LASread('ge_2017_a.las');
+
+xyz = [pc.record.x, pc.record.y, pc.record.z];
+intensity = double(pc.record.intensity);</code></pre>
 
             <p>Note that you may have to adjust the file path in the code above, depending on where you are storing the LAS file. Also note that the point classification uses the following scheme:</p>
 
@@ -220,10 +237,10 @@
             </h2>
 
 
-            <p>In this step we create a filter which selects only last returns from the points within the medium and high vegetation classes:
+            <p>In this step we create a filter which selects only last returns from the points within the high vegetation class:
 
             <pre><code>idxl_first = pc.record.return_number == 1;
-idxl_veg = ismember(pc.record.classification, [4, 5]);
+idxl_veg = ismember(pc.record.classification, [5]);
 idxl_filter = idxl_veg & idxl_first;</code></pre>
 
 
@@ -231,30 +248,26 @@ idxl_filter = idxl_veg & idxl_first;</code></pre>
                 <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Compute an intensity map
             </h2>
 
-            <p>The stem detection algorithm uses the planimetric coordinates and height of the points above ground as an input. To compute this height, we start by building a 0.5 m resolution raster terrain model from the classified 3D point cloud using <code>elevationModels()</code>:</p>
+            <p> We now rasterize the points and compute the mean intensity of first returns in each pixel, using the <code>rasterize()</code> function:</p>
+        
+            <pre><code>intensity(~idxl_filter) = nan;
+cellSize = 1;
 
-
-            <pre><code>cellSize = 0.5;
-[models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
-    pc.record.classification, ...
-    'classTerrain', [2, 15], ...
-    'classSurface', [4,5], ...
+[I_first, refmat, ~] = rasterize(xyz(:,1:2), ...
+    intensity, ...
     'cellSize', cellSize, ...
-    'closing', 5, ...
-    'interpolation', 'idw', ...
-    'searchRadius', inf, ...
-    'weightFunction', @(d) d^-3, ...
-    'smoothingFilter', fspecial('gaussian', [2, 2], 0.8), ...
-    'outputModels', {'terrain'}, ...
-    'fig', false, ...
-    'verbose', true);</code></pre>
+    'fun', @nanmean, ...
+    'fill', nan, ...
+    'fig', false);
+</code></pre>
 
-            <p>We then subtract the terrain elevation from the point cloud elevation, to obtain the height of the points above the ground:</p>
-
-            <pre><code>P = round([pc.record.x - refmat(3,1), pc.record.y - refmat(3,2)] / refmat(1:2,:));
-ind = sub2ind([nrows, ncols], P(:,1), P(:,2));
-xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</code></pre>
-
+        <p>The resuling raster can be displayed with:</p>
+        
+        <pre><code>figure
+imagesc(I_first);
+axis equal tight
+colorbar
+caxis(quantile(I_first(:), [0.02, 0.98]))</code></pre>
 
 
             <h2>
@@ -283,45 +296,14 @@ xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</cod
                 <li><b>minLength</b>: the minimum count for a local maxima to be considered a stem</li>
             </ul>
 
-            <p>By modifing the parameters values, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection. The interactive map below illustrates the detected stem positions.</p>
-
-
-            <div id="map2"></div>
-
-            <!--
-<figure>
-<div id="image-table" style="width:100%;margin:auto">
-<table>
-<tr>
-<td style="padding:5px;border:none">
-<img src="img/dft_tutorial_3_ima_2a.png" alt="" style="width:100%;">
-</td>
-<td style="padding:5px;border:none">
-<img src="img/dft_tutorial_3_ima_2b.png" alt="" style="width:100%;">
-</td>
-<td style="padding:5px;border:none">
-<img src="img/dft_tutorial_3_ima_2c.png" alt="" style="width:100%;">
-</td>
-</tr>
-</table>
-
-</div>
-<figcaption><b>Figure 2</b> - The point density is higher near the stem, for a tree growing vertically.</figcaption>
-</figure>
--->
 
             <h2>
                 <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Superpixel segmentation
             </h2>
 
-            <p>One possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a> is a well suited for this purpose. Other approaches include majority voting or <a href="https://en.wikipedia.org/wiki/Conditional_random_field">Conditional Random Fields (CRF)</a>. SLIC works by computing local K-means clusters, where the relative importance of spatial and color distance can be controlled with a compacity parameter.</p>
-
-            
-            
-            <p>Octave users (or Matlab users who dot not have the image processing toolbox) have to compile the SLICmex.c function by typing the following line in the command window:</p>
-            
-            <pre><code>mkoctfile --mex slicmex.c</code></pre>
-            
+            <p>One possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a> is a well suited for this purpose. Other approaches include majority voting or <a href="https://en.wikipedia.org/wiki/Conditional_random_field">Conditional Random Fields (CRF)</a>. SLIC works by computing local K-means clusters, where the relative importance of spatial and color distance can be controlled with a compacity parameter. Matlab users who have access to the image processing toolbox can use the superpixels function. Octave users (or Matlab users who dot not have the image processing toolbox) have to compile the SLICmex.c function provided by Achanta et al. (and included in the external functions directory), by typing the following line in the command window:</p>
+                
+            <pre><code>mex slicmex.c</code></pre>
             
             <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
 
@@ -371,7 +353,11 @@ end</code></pre>
             <h2>
                 <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Validate the results
             </h2>
+            
+            <p>By modifing the parameters values, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection. The interactive map below illustrates the detected stem positions. The results could also be refined the </p>
 
+
+            <div id="map2"></div>
 
 
             <h2>
