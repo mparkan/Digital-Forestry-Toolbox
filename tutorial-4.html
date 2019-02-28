@@ -73,14 +73,12 @@
             </div>
 
 
-            <p>It has been repeatedly demonstrated that the return intensity and echo ranking distributions are important feature to differentiate tree species (<a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018)</a>.</p>
-
-            Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns. Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions is useful to differentiate deciduous and evergreen foliage.  
+            <p>It has been repeatedly demonstrated that the return intensity and echo ranking distributions are important feature to differentiate tree species (<a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018</a>). Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns (see figures 1 and 2). Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions is useful to differentiate deciduous and evergreen foliage.</p>  
             
 
             <figure>
                 <img src="img/dft_tutorial_4_ima_1a.png" alt="" style="width:80%;">
-                <figcaption><b>Figure 1</b> - Conceptual example of the opacity difference (under leaf-off conditions) between birch (left) and spruce (right) trees. Low structural opacity will typically result in multiple low intensity echoes. On the contrary, high structural opacity will tend to result in fewer high intensity echoes.</figcaption>
+                <figcaption><b>Figure 1</b> - Conceptual example of the opacity difference (under leaf-off conditions) between birch (left) and spruce (right) trees. Low structural opacity will typically result in multiple low intensity returns. On the contrary, high structural opacity will tend to result in fewer high intensity returns.</figcaption>
             </figure>
             
             <p>This tutorial assumes that:</p>
@@ -114,25 +112,23 @@
 
             <!--Automatic Gain Control (AGC)-->
 
-
-
             <figure>
                 <div id="image-table" style="width:100%;margin:auto">
                     <table>
                         <tr>
                             <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_3_im_1a.png" alt="" style="width:80%;">
-                                <!--<figcaption style="width:80%;"><b>(a)</b> Sampling of the tree structure is often non-homogenous in the ALS point cloud.</figcaption>-->
+                                <img src="img/dft_tutorial_4_ima_2a.png" alt="" style="width:90%;">
+                                <!--<figcaption style="width:80%;"><b>(a)</b> </figcaption>-->
                             </td>
 
                             <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_3_im_1b.png" alt="" style="width:80%;">
-                                <!--<figcaption style="width:80%;"><b>(b)</b> Sampling of the tree structure is often non-homogenous in the ALS point cloud.</figcaption>-->
+                                <img src="img/dft_tutorial_4_ima_2b.png" alt="" style="width:90%;">
+                                <!--<figcaption style="width:80%;"><b>(b)</b> </figcaption>-->
                             </td>
                         </tr>
                     </table>
                 </div>
-                <figcaption><b>Figure 1</b> - The point density is higher near the stem, for a tree growing vertically. <b>Left</b>: Point counts. <b>Right</b>: Raster cell counts.</figcaption>
+                <figcaption><b>Figure 2</b> - Example of difference in return intensity between a birch (left) and a spruce (right) tree in leaf-off conditions. Data courtesty of Geneva state (2017).</figcaption>
             </figure>
 
             <h2>
@@ -321,6 +317,12 @@ xyh = [pc.record.x, pc.record.y, pc.record.z - models.terrain.values(ind)];</cod
             <p>One possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">Achanta et al. (2012)</a> is a well suited for this purpose. Other approaches include majority voting or <a href="https://en.wikipedia.org/wiki/Conditional_random_field">Conditional Random Fields (CRF)</a>. SLIC works by computing local K-means clusters, where the relative importance of spatial and color distance can be controlled with a compacity parameter.</p>
 
             
+            
+            <p>Octave users (or Matlab users who dot not have the image processing toolbox) have to compile the SLICmex.c function by typing the following line in the command window:</p>
+            
+            <pre><code>mkoctfile --mex slicmex.c</code></pre>
+            
+            
             <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
 
             <pre><code>fid = fopen('ge_2017_a_stems.csv', 'w+'); % open file
@@ -446,7 +448,6 @@ end</code></pre>
                 })
             });*/
             
-            
             // define XYZ tiles layer
             var rasterTileLayer1 = new ol.layer.Tile({
                 title: 'RGB image',
@@ -491,8 +492,7 @@ end</code></pre>
                 })
             });
             
-
-
+            
             // define scale bar control
             var scaleLineControl = new ol.control.ScaleLine();
 
