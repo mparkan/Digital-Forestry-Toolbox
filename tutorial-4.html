@@ -73,7 +73,7 @@
             </div>
 
 
-            <p>It has been repeatedly demonstrated that the return intensity and echo ranking distributions are important feature to differentiate tree species (<a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018</a>). Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns (see figures 1 and 2). Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions is useful to differentiate deciduous and evergreen foliage.</p>  
+            <p>It has been repeatedly demonstrated that the return intensity and ranking distributions are important features to differentiate tree species (e.g. <a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018</a>). Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns (see figures 1 and 2). Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions is useful to differentiate deciduous and evergreen foliage. This is not to be confused with the distinction of broadleaf and coniferous, as some coniferous trees, such as larches, will shed their needles in automn while some broadleaf trees, such as hollies, will keep their leaves in winter.</p>  
             
             <br>
             <figure>
@@ -360,32 +360,24 @@ end</code></pre>
 
    
             <h2>
-                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - 
+                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Compute segment level intensity
             </h2>
 
             <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
 
-            <pre><code>fid = fopen('ge_2017_a_stems.csv', 'w+'); % open file
-fprintf(fid, 'X, Y, H\n'); % write header line
-fprintf(fid, '%.2f, %.2f, %.2f\n', xyh_stem'); % write records
-fclose(fid); % close file</code></pre>
+            <pre><code>I_first_s = accumarray(L(:)+1, I_first(:), [nrows*ncols,1], @nanmean, nan);
+I_first_s = I_first_s(L+1);</code></pre>
 
-            <p>After exporting the CSV file, you can try opening it in any text editor (e.g. <a href="https://notepad-plus-plus.org/">Notepad++</a>).</p>
+<pre><code>figure
+imagesc(I_first_s)
+axis equal tight
+colorbar
+caxis(quantile(I_first_s(:), [0.02, 0.98]))</code></pre>
 
-
+     
             <h2>
-                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Export the classification map to an ARC/INFO ASCII grid
+                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Create a classification map
             </h2>
-
-            <br>
-            <div class="box">
-
-                <p style="text-align: center"><i class="fa fa-exclamation-triangle fa-2x" aria-hidden="true"></i></p>
-
-                <b>Octave users</b>, please make sure you are using the latest versions of the <a href="https://sourceforge.net/p/octave/io/ci/default/tree/"><b>'io' (2.4.12 or above)</b></a> and <a href="https://sourceforge.net/p/octave/mapping/ci/default/tree/"> <b>'mapping' (1.4.0 snapshot or above)</b></a> packages. Previous versions contain critical issues in the shapewrite function.
-
-            </div>
-            <br>
 
             <p>To export the stem attributes to an ESRI shapefile, you first have to format them into a non-scalar structure and add a "Geometry" field:</p>
 
@@ -407,17 +399,15 @@ end</code></pre>
 
             <p>After exporting the shapefile, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
 
-
-            <h2>
-                <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Validate the results
-            </h2>
             
-            <p>By modifing the parameters values, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection. The interactive map below illustrates the detected stem positions. The results could also be refined the </p>
-
+            <p>By modifing the parameters values, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection. The interactive map below illustrates the detected stem positions. The results could also be refined the . Use the layer switcher to compare different map layers (aerial photography, intensity map, classification map).</p>
 
             <div id="map2"></div>
 
-
+<!--            <h2>
+                <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Validate the results
+            </h2>-->
+        
             <h2>
                 <a id="references" class="anchor" href="references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>References</b>
             </h2>
