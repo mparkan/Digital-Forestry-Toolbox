@@ -343,7 +343,7 @@ axis equal tight
 colorbar
 caxis(quantile(I_first(:), [0.02, 0.98]))</code></pre>
 
-        <p>It can also be exported to an ARC/INFO ASCII grid file with the <code>ASCwrite()</code> function:</p>
+        <p>Notice that the resulting intensity map is somewhat noisy due to the presence of small high intensity spots (near tree stems). You can optionally export the intensity map to an ARC/INFO ASCII grid file with the <code>ASCwrite()</code> function:</p>
         
 
 <pre><code>ASCwrite('ge_2017_a_intensity.asc', ...
@@ -358,7 +358,7 @@ caxis(quantile(I_first(:), [0.02, 0.98]))</code></pre>
                 <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Superpixel segmentation
             </h2>
         
-            <p>One possible approach to smooth the intensity map is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="#references">Achanta et al. (2012)</a> is a well suited for this purpose. Other approaches include majority voting or <a href="https://en.wikipedia.org/wiki/Conditional_random_field">Conditional Random Fields (CRF)</a>. SLIC works by computing local K-means clusters, where the relative importance of spatial and color distance can be controlled with a compacity parameter. Matlab users who have access to the image processing toolbox can use the superpixels function. Octave users (or Matlab users who dot not have the image processing toolbox) have to compile the SLICmex.c function provided by Achanta et al. (and included in the external functions directory), by typing the following line in the command window:</p>
+            <p>One possible approach to smooth the intensity map we obtained in the preious step is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="#references">Achanta et al. (2012)</a> is a well suited for this purpose. Other applicable approaches include majority voting or <a href="https://en.wikipedia.org/wiki/Conditional_random_field">Conditional Random Fields (CRF)</a>. SLIC is modified K-means algorithm, where the relative importance of spatial and color distances can be controlled with a compacity parameter. Matlab users who have access to the image processing toolbox can use the <code>superpixels()</code> function. Octave users (or Matlab users who dot not have the image processing toolbox) have to compile the SLICmex.c function provided by Achanta et al. (and included in the external functions directory of the Digital Forestry Toolbox), by typing the following line in the command window:</p>
         
         <pre><code>mex slicmex.c</code></pre>
         
