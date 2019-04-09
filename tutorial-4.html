@@ -62,30 +62,44 @@
                 <a id="introduction" class="anchor" href="introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Introduction</b>
             </h2>
 
-            <p>This tutorial presents a simple approach to differentiate deciduous and evergreen foliage using the calibrated/corrected return intensity of Airborne Laser Scanning (ALS) data. Foliage persistance maps can for example be useful to improve stem diameter prediction (by applying deciduous/evergreen specific allometric models) and for habitat modelling. We will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>.</p>
-
-            <p>A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
-
-            <div id="map1">
-
-                <iframe src='https://map.geo.admin.ch/embed.html?topic=ech&lang=en&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&E=2499604.02&N=1127554.43&zoom=8' width='100%' height='450' frameborder='0'></iframe>
-
-            </div>
-
-
-            <p>It has been repeatedly demonstrated that the return intensity and ranking distributions are important features to differentiate tree species (e.g. <a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018</a>). Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns (see figures 1 and 2). Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions is useful to differentiate deciduous and evergreen foliage. This is not to be confused with the distinction of broadleaf and coniferous, as some coniferous trees, such as larches, will shed their needles in automn while some broadleaf trees, such as hollies, will keep their leaves in winter.</p>  
+            <p>This tutorial presents a simple approach to differentiate deciduous and evergreen foliage using the calibrated/corrected return intensity of Airborne Laser Scanning (ALS) data. Foliage persistance maps can for example be useful to improve stem diameter prediction (by applying deciduous/evergreen specific allometric models) and for wildlife habitat modelling. This distinction is <b>not to be confused with the distinction of broadleaf and coniferous</b>, as some coniferous trees, such as larches, will shed their needles in automn while some broadleaf trees, such as hollies, will keep their leaves in winter.</p> 
+            <p>It has been repeatedly demonstrated that the return intensity and ranking distributions of laser scans are important features to differentiate tree species (e. g. <a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018</a>). Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns (see figures 1 and 2). Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions can be readily used to differentiate deciduous and evergreen foliage.</p>  
             
             <br>
             <figure>
                 <img src="img/dft_tutorial_4_ima_1a.png" alt="" style="width:80%;">
-                <figcaption><b>Figure 1</b> - Conceptual example of the opacity difference (under leaf-off conditions) between birch (left) and spruce (right) trees. Low structural opacity will typically result in multiple low intensity returns. On the contrary, high structural opacity will tend to result in fewer high intensity returns.</figcaption>
+                <figcaption><b>Figure 1</b> - Conceptual example of the opacity difference under leaf-off conditions between birch (left) and spruce (right) trees. Low structural opacity will typically result in multiple low intensity returns. On the contrary, high structural opacity will tend to result in fewer high intensity returns.</figcaption>
+            </figure>
+            
+            <figure>
+                <div id="image-table" style="width:100%;margin:auto">
+                    <table>
+                        <tr>
+                            <td style="padding:5px;border:none">
+                                <img src="img/dft_tutorial_4_ima_2a.png" alt="" style="width:85%;">
+                                <!--<figcaption style="width:80%;"><b>(a)</b> </figcaption>-->
+                            </td>
+
+                            <td style="padding:5px;border:none">
+                                <img src="img/dft_tutorial_4_ima_2b.png" alt="" style="width:85%;">
+                                <!--<figcaption style="width:80%;"><b>(b)</b> </figcaption>-->
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <figcaption><b>Figure 2</b> - Example of difference in return intensity between a birch (left) and a spruce (right) tree in leaf-off conditions. Data courtesty of Geneva state (2017).</figcaption>
             </figure>
             <br>
             
+             <p>It is important note that the raw intensity values should not be used directly as a distinction feature; they should first be calibrated/corrected (<a href="#references">Vain and Kaasalainen, 2011; Kashani et al., 2015</a>). This can be a relatively complex task, as the return intensity depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p>
+            
+            <br>
+            
+<!--
             <p>. In theory, it is possible to determine the reflectance of the target surface, as shown in the RaDAR/LiDAR range equation below:</p>   
                 
-                The raw intensity values should not be used directly as a classification feature; they should first be calibrated/corrected (<a href="#references">Vain and Kaasalainen, 2011; Kashani et al., 2015</a>). This can be a relatively complex task, as the return intensity depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p> 
-                
+-->
+            
             $$P_r = \frac{D_{r}^2 \eta_{atm} \eta_{sys} \sigma P_t}{4 \pi R^4 \beta_{t}^2 }$$
 
             $$\sigma = \frac{4 \pi}{\Omega} \rho A_t$$
@@ -176,24 +190,16 @@
 
             <!--Automatic Gain Control (AGC)-->
 
-            <figure>
-                <div id="image-table" style="width:100%;margin:auto">
-                    <table>
-                        <tr>
-                            <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_4_ima_2a.png" alt="" style="width:90%;">
-                                <!--<figcaption style="width:80%;"><b>(a)</b> </figcaption>-->
-                            </td>
 
-                            <td style="padding:5px;border:none">
-                                <img src="img/dft_tutorial_4_ima_2b.png" alt="" style="width:90%;">
-                                <!--<figcaption style="width:80%;"><b>(b)</b> </figcaption>-->
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <figcaption><b>Figure 2</b> - Example of difference in return intensity between a birch (left) and a spruce (right) tree in leaf-off conditions. Data courtesty of Geneva state (2017).</figcaption>
-            </figure>
+        
+                    <p>We will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>. A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
+
+            <div id="map1">
+
+                <iframe src='https://map.geo.admin.ch/embed.html?topic=ech&lang=en&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&E=2499604.02&N=1127554.43&zoom=8' width='100%' height='450' frameborder='0'></iframe>
+
+            </div>
+        
 
             <h2>
                 <a id="setup" class="anchor" href="setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Setup</b>
