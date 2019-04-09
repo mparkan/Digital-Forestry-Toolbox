@@ -72,17 +72,22 @@
             </figure>
             
             <figure>
+                <img src="img/dft_tutorial_4_ima_2.png" alt="" style="width:80%;">
+                <figcaption><b>Figure 2</b> - Example of difference in return intensity between a birch (left) and a spruce (right) tree in leaf-off conditions. Data courtesty of Geneva state (2017).</figcaption>
+            </figure>
+            <br>
+            
+            <!--
+            <figure>
                 <div id="image-table" style="width:100%;margin:auto">
                     <table>
                         <tr>
                             <td style="padding:5px;border:none">
                                 <img src="img/dft_tutorial_4_ima_2a.png" alt="" style="width:85%;">
-                                <!--<figcaption style="width:80%;"><b>(a)</b> </figcaption>-->
                             </td>
 
                             <td style="padding:5px;border:none">
                                 <img src="img/dft_tutorial_4_ima_2b.png" alt="" style="width:85%;">
-                                <!--<figcaption style="width:80%;"><b>(b)</b> </figcaption>-->
                             </td>
                         </tr>
                     </table>
@@ -90,8 +95,10 @@
                 <figcaption><b>Figure 2</b> - Example of difference in return intensity between a birch (left) and a spruce (right) tree in leaf-off conditions. Data courtesty of Geneva state (2017).</figcaption>
             </figure>
             <br>
-            
-             <p>It is important note that the raw intensity values should not be used directly as a distinction feature; they should first be calibrated/corrected (<a href="#references">Vain and Kaasalainen, 2011; Kashani et al., 2015</a>). This can be a relatively complex task, as the return intensity depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p>
+            -->
+
+
+             <p>It is important to note that the raw intensity should not be used directly as a distinction feature; it should first be calibrated/corrected (<a href="#references">Vain and Kaasalainen, 2011; Kashani et al., 2015</a>). This can be a relatively complex task, as the return intensity depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p>
             
             <br>
             
@@ -120,7 +127,18 @@
                 <li> \(\rho\) is the reflectance of the target;</li>
                 <li> \(A_t\) is the area of the target [m<sup>2</sup>].</li>
             </ul>
-                
+            
+            <p>Thus, the reflectance of the target surface can be estimated with:</p> 
+            
+            $$\rho = \frac{P_r R^4 \beta_{t}^2}{D_{r}^2 \eta_{atm} \eta_{sys} P_t A_t}$$
+            
+            
+            <p>This equation assumes that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a> and that the entire laser beam is intercepted.</p>
+            
+            <p>ALS systems generally offer the possibility to apply some form of intensity correction in their properitary post-processing software (e. g. Ri) </p>
+            
+            
+            
             <p>Many LiDAR instruments have a high dynamic range meaning the ratio of the minimum and maximum measurable intensity (also called amplitude) value is very large and may span several orders of magnitude (<a href="#references">Riegl Laser Measurement Systems, 2017</a>). Thus, it is common to use decibel units (i.e. a logarithmic scale) to represent the intensity:</p> 
         
         
@@ -152,7 +170,7 @@
 
             $$v_u = \frac{(15 + 20) \cdot 24000}{65535} -15 = -2.182 \quad [dB]$$
 
-        <p>This models shows that the range between the sensor and the target surface has a large influence on the measured intensity. To compensate the decay of intensity with range, a correction can be applied, if the trajectory and timing are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>.</p>
+        <p>This model shows that the range between the sensor and the target surface has a large influence on the measured intensity. To compensate the decay of intensity with range, a correction can be applied, if the trajectory and timing are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>.</p>
             
         
             $$I_{n} = I \cdot \left(\frac{r}{r_{ref}}\right)^2$$
