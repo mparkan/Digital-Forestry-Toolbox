@@ -63,7 +63,7 @@
             </h2>
 
             <p>This tutorial presents a simple approach to differentiate deciduous and evergreen foliage using the calibrated/corrected return intensity of Airborne Laser Scanning (ALS) data. Foliage persistance maps can for example be useful to improve stem diameter prediction (by applying deciduous/evergreen specific allometric models) and for wildlife habitat modelling. This distinction is <b>not to be confused with the distinction of broadleaf and coniferous</b>, as some coniferous trees, such as larches, will shed their needles in automn while some broadleaf trees, such as hollies, will keep their leaves in winter.</p> 
-            <p>It has been repeatedly demonstrated that the return intensity and ranking distributions of laser scans are important features to differentiate tree species (e. g. <a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018</a>). Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns (see figures 1 and 2). Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions can be readily used to differentiate deciduous and evergreen foliage.</p>  
+            <p>Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns (see figures 1 and 2). Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions can be readily used to differentiate deciduous and evergreen foliage. It has also been repeatedly demonstrated that the return intensity and ranking distributions of laser scans are important features to differentiate tree species (e. g. <a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018</a>).</p>  
             
             <br>
             <figure>
@@ -98,7 +98,7 @@
             -->
 
 
-             <p>It is important to note that the raw intensity should not be used directly as a distinction feature; it should first be calibrated/corrected (<a href="#references">Vain and Kaasalainen, 2011; Kashani et al., 2015</a>). This can be a relatively complex task, as the return intensity depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p>
+             <p>The raw intensity, however, cannot be directly used as a discriminative feature; it should first be calibrated/corrected (<a href="#references">Vain and Kaasalainen, 2011; Kashani et al., 2015</a>). This can be a complex task, as the return intensity depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p>
             
             <br>
             
@@ -128,14 +128,35 @@
                 <li> \(A_t\) is the area of the target [m<sup>2</sup>].</li>
             </ul>
             
-            <p>Thus, the reflectance of the target surface can be estimated with:</p> 
+            <p>The parameter in which we are interested is the reflectance (&rho;). It can be estimated by rearanging the terms of the RaDAR/LiDAR range equation:</p> 
             
             $$\rho = \frac{P_r R^4 \beta_{t}^2}{D_{r}^2 \eta_{atm} \eta_{sys} P_t A_t}$$
             
             
-            <p>This equation assumes that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a> and that the entire laser beam is intercepted.</p>
+            <p>Moreover, this equation assumes that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a> and that the entire laser beam is intercepted. Both of these assumptions are invalid when measuring forests.</p>
             
-            <p>ALS systems generally offer the possibility to apply some form of intensity correction in their properitary post-processing software (e. g. Ri) </p>
+            
+            
+            <p>ALS systems generally offer the possibility to apply some form of intensity correction in their proprietary post-processing software. Riegl's RiProcess software, for example, lets you export either the amplitude (range dependent value) or a range corrected value called reflectance to the "intensity" field in LAS files.</p>
+            
+            
+            <p>This model shows that the range between the sensor and the target surface has a large influence on the measured intensity. To compensate the decay of intensity with range, a correction can be applied, if the trajectory and timing are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>.</p>
+            
+        
+            $$I_{n} = I \cdot \left(\frac{r}{r_{ref}}\right)^2$$
+
+
+            <p>where:</p>
+        
+            <ul style="list-style-type:none">
+                <li> \(I_n\) is the normalized intensity;</li>
+                <li> \(I\) is the raw intensity;</li>
+                <li> \(r\) is the range between the sensor and the point;</li>
+                <li> \(r_{ref}\) is an arbitrary constant reference range (e.g. 1000 m).</li>
+            </ul>
+        
+  
+            
             
             
             
@@ -170,28 +191,8 @@
 
             $$v_u = \frac{(15 + 20) \cdot 24000}{65535} -15 = -2.182 \quad [dB]$$
 
-        <p>This model shows that the range between the sensor and the target surface has a large influence on the measured intensity. To compensate the decay of intensity with range, a correction can be applied, if the trajectory and timing are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>.</p>
             
-        
-            $$I_{n} = I \cdot \left(\frac{r}{r_{ref}}\right)^2$$
 
-
-            <p>where:</p>
-        
-            <ul style="list-style-type:none">
-                <li> \(I_n\) is the normalized intensity;</li>
-                <li> \(I\) is the raw intensity;</li>
-                <li> \(r\) is the range between the sensor and the point;</li>
-                <li> \(r_{ref}\) is an arbitrary constant reference range (e.g. 1000 m).</li>
-            </ul>
-        
-    
-<p>Riegl LiDAR software allows exporting either the amplitude (range dependent value) or a range corrected value called reflectance to the "intensity" LAS field. For the datasets acquired with the Riegl LMS-Q1560, the intensity stored in the LAS files is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535) \citep{riegllasermeasurementsystems_2017}.</p> 
-        
-
-        
-
-        
             
 <!--
             <p>This tutorial assumes that:</p>
@@ -208,9 +209,12 @@
 
             <!--Automatic Gain Control (AGC)-->
 
-
+<!--<p>Riegl LiDAR software allows exporting either the amplitude (range dependent value) or a range corrected value called reflectance to the "intensity" LAS field. For the datasets acquired with the Riegl LMS-Q1560, the intensity stored in the LAS files is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535) (<a href="#references">Riegl Laser Measurement Systems, 2017</a>).</p> -->
         
-                    <p>We will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>. A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
+                    <p>In this tutorial, we will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>. Riegl's RiProcess post-processing software allows exporting either the amplitude (range dependent value) or a range corrected value called reflectance to the "intensity" LAS field. In the Geneva dataset used here, the intensity stored in the LAS file is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535).</p> 
+                        
+                        
+                        A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
 
             <div id="map1">
 
