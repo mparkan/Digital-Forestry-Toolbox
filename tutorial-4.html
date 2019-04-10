@@ -128,7 +128,7 @@
                 <li> \(A_t\) is the area of the target, i.e. area illuminated by the laser [m<sup>2</sup>].</li>
             </ul>
             
-            <p>The RaDAR/LiDAR range equation can be simplified, if we assume that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a>, that it has a scattering solid angle of &pi; [sr] and that the entire laser beam is intercepted (<a href="#references">Höfle and Pfeifer, 2007</a>). Under these assumptions, the area of the target \(A_t\) and effective cross section \(\sigma\) respectively become:
+            <p>The RaDAR/LiDAR range equation can be simplified, if we assume that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a>, that it has a scattering solid angle \(\Omega = \pi\) [sr] and that the entire laser beam is intercepted (<a href="#references">Höfle and Pfeifer, 2007</a>). Under these assumptions, the area of the target \(A_t\) and effective cross section \(\sigma\) respectively become:</p>
                 
              $$A_t = \frac{\pi R^2 \beta_{t}^2}{4}$$
             
@@ -140,25 +140,12 @@
                 <li> \(\alpha\) is the angle between the surface normal and the laser beam;</li>
             </ul>
             
+            <p>The received power \(P_r\) is then:</p>
+            
              $$P_r = \frac{P_t D_{r}^2 \rho}{4 R^2} \eta_{atm} \eta_{sys} cos(\alpha)$$
                 
-             None of these assumptions are realistic when complex surfaces such as trees.   
-                
-            
-<!--            <p>The <a href="https://en.wikipedia.org/wiki/Reflectance">reflectance</a> (&rho;) - a measure of the target's tendency to reflect the incoming laser light - is the value we would like to estimate. It can be isolated, by rearanging the terms of the RaDAR/LiDAR range equation:</p> -->
-            
-<!--            $$\rho = \frac{P_r R^4 \beta_{t}^2 \Omega}{D_{r}^2 \eta_{atm} \eta_{sys} P_t A_t}$$-->
-            
-            
-<!--            <p>Moreover, this equation assumes that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a> and that the entire laser beam is intercepted. Both of these assumptions are invalid when measuring forests.</p>-->
-            
 
-            
-            
-<!--             $$\rho = \frac{4 R^2 P_r}{P_t D_{r}^2 \eta_{atm} \eta_{sys} cos(\alpha)}$$-->
-            
-            
-            <p>This model shows that the range between the sensor and the target surface has a large influence on the received power and thus on . To compensate the decay of intensity with range, a correction can be applied, if the trajectory and timing are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>:</p>
+            <p>This shows that the range between the sensor and the target surface has a large influence (quadratic in this case) on the received power (a proxy of the variable we call the intensity). To compensate the decay of intensity with range, a correction can be applied, if the aircraft trajectory and return times are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>:</p>
             
         
             $$I_{n} = I \cdot \left(\frac{R}{R_{ref}}\right)^2$$
@@ -167,12 +154,15 @@
             <p>where:</p>
         
             <ul style="list-style-type:none">
-                <li> \(I_n\) is the normalized intensity;</li>
+                <li> \(I_n\) is the range normalized intensity;</li>
                 <li> \(I\) is the raw intensity;</li>
                 <li> \(R\) is the range from sensor to target [m];</li>
                 <li> \(R_{ref}\) is an arbitrary constant reference range (e. g. 1000 m).</li>
             </ul>
         
+            
+            <p>Altough none of the modelling assumptions used above are realistic when dealing with complex objects such as trees, this simple range correction may help homogenise intensity values accross the dataset.</p>
+            
             
             <p>ALS post-processing software generally offer the possibility to apply some form of intensity correction. Riegl's RiProcess software, for example, lets you export either the amplitude (range dependent value) or a range independant value called reflectance to the "intensity" field in LAS files (<a href="#references">Riegl Laser Measurement Systems, 2017</a>). In this tutorial, we will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/">Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>. <b>The intensity stored in the LAS file is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535), so no further correction is required</b>.</p>
             
@@ -184,6 +174,20 @@
 
             </div>
     
+
+<!--            <p>The <a href="https://en.wikipedia.org/wiki/Reflectance">reflectance</a> (&rho;) - a measure of the target's tendency to reflect the incoming laser light - is the value we would like to estimate. It can be isolated, by rearanging the terms of the RaDAR/LiDAR range equation:</p> -->
+            
+<!--            $$\rho = \frac{P_r R^4 \beta_{t}^2 \Omega}{D_{r}^2 \eta_{atm} \eta_{sys} P_t A_t}$$-->
+            
+            
+<!--            <p>Moreover, this equation assumes that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a> and that the entire laser beam is intercepted. Both of these assumptions are invalid when measuring forests.</p>-->
+            
+
+            
+            
+<!--             $$\rho = \frac{4 R^2 P_r}{P_t D_{r}^2 \eta_{atm} \eta_{sys} cos(\alpha)}$$-->
+                        
+            
             
 <!--            <p>Many LiDAR instruments have a high dynamic range meaning the ratio of the minimum and maximum measurable intensity (also called amplitude) value is very large and may span several orders of magnitude (<a href="#references">Riegl Laser Measurement Systems, 2017</a>). Thus, it is common to use decibel units (i.e. a logarithmic scale) to represent the intensity:</p> 
         
