@@ -123,14 +123,14 @@
                 <li> \(\sigma\) is the effective target cross-section [m<sup>2</sup>];</li>
                 <li> \(R\) is the range from sensor to target [m];</li>
                 <li> \(\beta_{t}\) is the width of the laser beam [m];</li>
-                <li> \(\Omega\) is the scattering solid angle [sr];</li>
+                <li> \(\Omega\) is the scattering <a href="https://en.wikipedia.org/wiki/Solid_angle">solid angle</a> [sr];</li>
                 <li> \(\rho\) is the reflectance of the target;</li>
                 <li> \(A_t\) is the area of the target, i.e. area illuminated by the laser [m<sup>2</sup>].</li>
             </ul>
             
             <p>The <a href="https://en.wikipedia.org/wiki/Reflectance">reflectance</a> (&rho;) - a measure of the target's tendency to reflect the incoming laser light - is the value we would ideally like to estimate. It can be isolated, by rearanging the terms of the RaDAR/LiDAR range equation:</p> 
             
-            $$\rho = \frac{P_r R^4 \beta_{t}^2}{D_{r}^2 \eta_{atm} \eta_{sys} P_t A_t}$$
+            $$\rho = \frac{P_r R^4 \beta_{t}^2 \Omega}{D_{r}^2 \eta_{atm} \eta_{sys} P_t A_t}$$
             
             
             <p>Moreover, this equation assumes that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a> and that the entire laser beam is intercepted. Both of these assumptions are invalid when measuring forests.</p>
