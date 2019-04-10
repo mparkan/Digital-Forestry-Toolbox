@@ -98,7 +98,7 @@
             -->
 
 
-             <p>However, due to various instrumental and environmental effects, the raw intensity is generally inconsistent accross the surveyed area and cannot be directly used as a discriminative feature; it should first be corrected (<a href="#references">Höfle and Pfeifer, 2007; Vain and Kaasalainen, 2011; Kashani et al., 2015</a>). This can be a complex task, as the return intensity depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p>
+             <p>However, due to various instrumental and environmental effects, the raw intensity is generally inconsistent accross the surveyed area and cannot be directly used as a discriminative feature; it should first be corrected (<a href="#references">Höfle and Pfeifer, 2007; Vain and Kaasalainen, 2011; Kashani et al., 2015</a>). This can be a complex task, as the return intensity (a proxy of the power reflected by the target surface and received by the sensor) depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p>
             
             <br>
             
@@ -128,7 +128,7 @@
                 <li> \(A_t\) is the area of the target, i.e. area illuminated by the laser [m<sup>2</sup>].</li>
             </ul>
             
-            <p>The RaDAR/LiDAR range equation can be simplified, if we assume that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a>, that it has a scattering solid angle \(\Omega = \pi\) [sr] and that the entire laser beam is intercepted (<a href="#references">Höfle and Pfeifer, 2007</a>). Under these assumptions, the area of the target \(A_t\) and effective cross section \(\sigma\) respectively become:</p>
+            <p>The RaDAR/LiDAR range equation can be simplified, if we assume that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a>, that it has a scattering solid angle \(\Omega = \pi\) [sr] and that the entire laser beam is intercepted (<a href="#references">Höfle and Pfeifer, 2007</a>). Under these assumptions, the area of the target \(A_t\) and its effective cross section \(\sigma\) respectively become:</p>
                 
              $$A_t = \frac{\pi R^2 \beta_{t}^2}{4}$$
             
@@ -137,7 +137,7 @@
             <p>where:</p>
 
             <ul style="list-style-type:none">
-                <li> \(\alpha\) is the angle between the surface normal and the laser beam;</li>
+                <li> \(\alpha\) is the angle between the surface normal and the laser beam.</li>
             </ul>
             
             <p>The received power \(P_r\) is then:</p>
