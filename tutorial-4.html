@@ -125,10 +125,10 @@
                 <li> \(\beta_{t}\) is the width of the laser beam [m];</li>
                 <li> \(\Omega\) is the scattering solid angle [sr];</li>
                 <li> \(\rho\) is the reflectance of the target;</li>
-                <li> \(A_t\) is the area of the target [m<sup>2</sup>].</li>
+                <li> \(A_t\) is the area of the target, i.e. area illuminated by the laser [m<sup>2</sup>].</li>
             </ul>
             
-            <p>The <a href="https://en.wikipedia.org/wiki/Reflectance">reflectance</a> (&rho;) - a measure of a surface's tendency to reflect incoming energy - is the value we would ideally like to estimate. It can be isolated, by rearanging the terms of the RaDAR/LiDAR range equation:</p> 
+            <p>The <a href="https://en.wikipedia.org/wiki/Reflectance">reflectance</a> (&rho;) - a measure of the target's tendency to reflect the incoming laser light - is the value we would ideally like to estimate. It can be isolated, by rearanging the terms of the RaDAR/LiDAR range equation:</p> 
             
             $$\rho = \frac{P_r R^4 \beta_{t}^2}{D_{r}^2 \eta_{atm} \eta_{sys} P_t A_t}$$
             
@@ -140,7 +140,7 @@
             <p>ALS systems generally offer the possibility to apply some form of intensity correction in their proprietary post-processing software. Riegl's RiProcess software, for example, lets you export either the amplitude (range dependent value) or a range corrected value called reflectance to the "intensity" field in LAS files.</p>
             
             
-            <p>This model shows that the range between the sensor and the target surface has a large influence on the measured intensity. To compensate the decay of intensity with range, a correction can be applied, if the trajectory and timing are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>.</p>
+            <p>This model shows that the range between the sensor and the target surface has a large influence on the measured intensity. To compensate the decay of intensity with range, a correction can be applied, if the trajectory and timing are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>:</p>
             
         
             $$I_{n} = I \cdot \left(\frac{r}{r_{ref}}\right)^2$$
