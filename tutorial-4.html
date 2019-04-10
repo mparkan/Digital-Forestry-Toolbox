@@ -152,9 +152,16 @@
             </ul>
         
             
-            <p>ALS systems generally offer the possibility to apply some form of intensity correction in their proprietary post-processing software. Riegl's RiProcess software, for example, lets you export either the amplitude (range dependent value) or a range independant value called reflectance to the "intensity" field in LAS files (<a href="#references">Riegl Laser Measurement Systems, 2017</a>).</p>
+            <p>ALS post-processing software generally offer the possibility to apply some form of intensity correction. Riegl's RiProcess software, for example, lets you export either the amplitude (range dependent value) or a range independant value called reflectance to the "intensity" field in LAS files (<a href="#references">Riegl Laser Measurement Systems, 2017</a>). In this tutorial, we will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/">Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>. The intensity stored in the LAS file is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535), so no further correction is required</b>.</p>
             
+            <p>A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
 
+            <div id="map1">
+
+                <iframe src='https://map.geo.admin.ch/embed.html?topic=ech&lang=en&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&E=2499604.02&N=1127554.43&zoom=8' width='100%' height='450' frameborder='0'></iframe>
+
+            </div>
+    
             
 <!--            <p>Many LiDAR instruments have a high dynamic range meaning the ratio of the minimum and maximum measurable intensity (also called amplitude) value is very large and may span several orders of magnitude (<a href="#references">Riegl Laser Measurement Systems, 2017</a>). Thus, it is common to use decibel units (i.e. a logarithmic scale) to represent the intensity:</p> 
         
@@ -207,16 +214,10 @@
 
 <!--<p>Riegl LiDAR software allows exporting either the amplitude (range dependent value) or a range corrected value called reflectance to the "intensity" LAS field. For the datasets acquired with the Riegl LMS-Q1560, the intensity stored in the LAS files is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535) (<a href="#references">Riegl Laser Measurement Systems, 2017</a>).</p> -->
         
-                    <p>In this tutorial, we will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>. Riegl's RiProcess post-processing software allows exporting either the amplitude (range dependent value) or a range corrected value called reflectance to the "intensity" LAS field. In the Geneva dataset used here, the intensity stored in the LAS file is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535).</p> 
+<!--                    <p>In this tutorial, we will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/"> Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>. Riegl's RiProcess post-processing software allows exporting either the amplitude (range dependent value) or a range corrected value called reflectance to the "intensity" LAS field. In the Geneva dataset used here, the intensity stored in the LAS file is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535).</p> -->
                         
                         
-                        A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
 
-            <div id="map1">
-
-                <iframe src='https://map.geo.admin.ch/embed.html?topic=ech&lang=en&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&E=2499604.02&N=1127554.43&zoom=8' width='100%' height='450' frameborder='0'></iframe>
-
-            </div>
         
 
             <h2>
