@@ -145,7 +145,7 @@
              $$P_r = \frac{P_t D_{r}^2 \rho}{4 R^2} \eta_{atm} \eta_{sys} cos(\alpha)$$
                 
 
-            <p>This shows that the range between the sensor and the target surface has a large influence (quadratic in this case) on the received power (a proxy of the variable we call the intensity). To compensate the decay of intensity with range, a correction can be applied, if the aircraft trajectory and return times are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>:</p>
+            <p>This shows that the range between the sensor and the target surface has a large influence (quadratic in this case) on the received power (received intensity). To compensate the decay of intensity with range, a correction can be applied, if the aircraft trajectory and return times are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>:</p>
             
         
             $$I_{n} = I \cdot \left(\frac{R}{R_{ref}}\right)^2$$
@@ -161,10 +161,7 @@
             </ul>
         
             
-            <p>Altough none of the modelling assumptions used above are realistic when dealing with complex objects such as trees, this simple range correction may help homogenise intensity values accross the dataset.</p>
-            
-            
-            <p>ALS post-processing software generally offer the possibility to apply some form of intensity correction. Riegl's RiProcess software, for example, lets you export either the amplitude (range dependent value) or a range independant value called reflectance to the "intensity" field in LAS files (<a href="#references">Riegl Laser Measurement Systems, 2017</a>). In this tutorial, we will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/">Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>. <b>The intensity stored in the LAS file is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535), so no further correction is required</b>.</p>
+            <p>Altough none of the modelling assumptions used above are realistic when dealing with complex objects such as trees, this simple range correction may help homogenise intensity values accross the dataset. ALS post-processing software generally offer the possibility to apply some form of intensity correction. Riegl's RiProcess software, for example, lets you export either the amplitude (range dependent value) or a range independant value which they call reflectance to the "intensity" field in LAS files (<a href="#references">Riegl Laser Measurement Systems, 2017</a>). In this tutorial, we will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/">Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>. <b>The intensity stored in the LAS file is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535), so no further range correction is required</b>. If you would like to apply the approach illustrated in this tutorial to other ALS datasets, you should first inquire if and how the intensity has been processed.</p>
             
             <p>A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
 
