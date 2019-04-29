@@ -37,6 +37,36 @@
             .ol-rotate {
                 top: 3em;
             }
+            .slider {
+              -webkit-appearance: none;
+              position: relative;    
+              margin-left: 15%;
+              margin-right: 15%; 
+              width: 70%;
+              height: 15px;
+              border-radius: 5px;   
+              background: #d3d3d3;
+              outline: none;
+              opacity: 0.7;
+              -webkit-transition: .2s;
+              transition: opacity .2s;
+            }
+            .slider::-webkit-slider-thumb {
+              -webkit-appearance: none;
+              appearance: none;
+              width: 25px;
+              height: 25px;
+              border-radius: 50%; 
+              background: rgb(91, 117, 109);
+              cursor: pointer;
+            }
+            .slider::-moz-range-thumb {
+              width: 25px;
+              height: 25px;
+              border-radius: 50%;
+              background: rgb(91, 117, 109);
+              cursor: pointer;
+            }
         </style>
 
     </head>
@@ -331,41 +361,60 @@ intensity = double(pc.record.intensity);</code></pre>
 
 
             <h2>
-                <a id="step-2" class="anchor" href="step-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 2</b> - Filter the points by classification and return number
+                <a id="step-2" class="anchor" href="step-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 2</b> - Compute raster elevation models
             </h2>
 
+            <p>In this step, we compute 1x1 m raster elevation models, using the <code>elevationModels()</code> function:</p>
+            
+        <pre><code>cellSize = 1;
+[models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
+    pc.record.classification, ...
+    'classTerrain', [2, 16], ...
+    'classSurface', [3, 4, 5], ...
+    'cellSize', cellSize, ...
+    'closing', 3, ...
+    'smoothingFilter', [], ...
+    'outputModels', {'terrain', 'surface', 'height'}, ...
+    'fig', true, ...
+    'verbose', true);
 
-            <p>In this step we create a filter which selects only last returns from the points within the high vegetation class:
+% convert map coordinates to image coordinates
+[nrows, ncols] = size(models.terrain.values);
+P = [pc.record.x - refmat(3,1), pc.record.y - refmat(3,2)] / refmat(1:2,:);
+row = round(P(:,1));
+col = round(P(:,2));
+ind = sub2ind([nrows, ncols], row, col);</code></pre>
 
-            <pre><code>idxl_first = pc.record.return_number == 1;
-idxl_veg = ismember(pc.record.classification, [5]);
-idxl_filter = idxl_veg & idxl_first;</code></pre>
+            
+             <h2>
+                <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Filter the canopy points 
+            </h2>
+            
+            
+            <p>We now create a filter which selects only high vegetation points located in the top highest 1 m section of the canopy:</p>
+
+            <pre><code>idxl_veg = ismember(pc.record.classification, [4,5]);
+
+z_margin = 1;
+idxl_canopy = pc.record.z >= (models.surface.values(ind) - z_margin);
+idxl_filter = idxl_veg & idxl_canopy;</code></pre>
 
 
             <h2>
-                <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Compute an intensity map
+                <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Compute an intensity map
             </h2>
 
-            <p> We now rasterize the points using a 1x1 m grid and compute the mean intensity of first returns in each cell, using the <code>rasterize()</code> function:</p>
+            <p>We create the intensity map by averaging the intensity of the canopy points located in each of the raster cells:</p>
         
-            <pre><code>intensity(~idxl_filter) = nan;
-cellSize = 1;
-
-[I_first, refmat, ~] = rasterize(xyz(:,1:2), ...
-    intensity, ...
-    'cellSize', cellSize, ...
-    'fun', @nanmean, ...
-    'fill', 0, ...
-    'fig', false);
-</code></pre>
+            <pre><code>I = accumarray([row(idxl_filter), col(idxl_filter)], intensity(idxl_filter), [nrows, ncols], @mean, 0);</code></pre>
 
         <p>The resuling raster can be displayed with:</p>
         
         <pre><code>figure
-imagesc(I_first);
+imagesc(I);
 axis equal tight
 colorbar
-caxis(quantile(I_first(:), [0.02, 0.98]))</code></pre>
+caxis(quantile(I(:), [0.02, 0.98]))</code></pre>
 
             <figure>
                 <img src="img/dft_tutorial_4_ima_3.png" alt="" style="width:80%;">
@@ -377,7 +426,7 @@ caxis(quantile(I_first(:), [0.02, 0.98]))</code></pre>
         
 
 <pre><code>ASCwrite('ge_2017_a_intensity.asc', ...
-    I_first, ...
+    I, ...
     refmat, ...
     'precision', 2, ...
     'noData', -99999, ...
@@ -385,7 +434,7 @@ caxis(quantile(I_first(:), [0.02, 0.98]))</code></pre>
         
         
             <h2>
-                <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Superpixel segmentation
+                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Segmentation
             </h2>
         
             <p>One simple approach to smooth the intensity map we obtained in the previous step is to apply segmentation and average the intensity in each segment. We will illustrate two different algorithms here: the marker controlled watershed segmention (cf. tutorial 2) and the Simple Linear Iterative Clustering (SLIC) proposed by <a href="#references">Achanta et al. (2012)</a>. 
@@ -454,6 +503,12 @@ end</code></pre>
             <p>By modifing the parameters values, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection. The interactive map below illustrates the detected stem positions. The results could also be refined the . Use the layer switcher to compare different map layers (aerial photography, intensity map, classification map).</p>
 
             <div id="map2"></div>
+            
+            <div class="slidecontainer">
+              <input type="range" min="0" max="1" value="0.2" step="0.01" class="slider" id="myRange" oninput="rasterStaticLayer2.setOpacity(this.value)">
+            </div>
+            
+            
 
 <!--            <h2>
                 <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Validate the results
@@ -554,6 +609,7 @@ end</code></pre>
             var rasterStaticLayer1 = new ol.layer.Image({
                 title: 'Canopy return intensity',
                 type: 'base',
+                opacity: 1.0,
                 source: new ol.source.ImageStatic({
                     url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_intensity.png',
                     crossOrigin: 'anonymous',
@@ -569,6 +625,7 @@ end</code></pre>
             var rasterStaticLayer2 = new ol.layer.Image({
                 title: 'Classification',
                 type: 'base',
+                opacity: 0.2, 
                 source: new ol.source.ImageStatic({
                     url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_class.png',
                     crossOrigin: 'anonymous',
@@ -607,8 +664,8 @@ end</code></pre>
                 title: 'Basemaps',
                 layers: [
                     rasterTileLayer1,
-                    rasterStaticLayer1,
                     rasterStaticLayer2
+                    //rasterStaticLayer1,
                 ]
             });
 
@@ -627,8 +684,8 @@ end</code></pre>
                 controls: ol.control.defaults({attribution: false}).extend([
                     scaleLineControl,
                     attributionControl,
-                    fullScreenControl,
-                    layerSwitcherControl
+                    fullScreenControl
+                    //layerSwitcherControl
                 ]),
                 interactions: ol.interaction.defaults().extend([
                     new ol.interaction.DragRotateAndZoom()
