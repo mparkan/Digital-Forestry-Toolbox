@@ -85,8 +85,8 @@
             <h1>Deciduous/evergreen foliage classification</h1>
 
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Published</b>: April 10, 2019 / <b>Last updated</b>: April 10, 2019</p>
-            <p style="text-align: center"><b>Tested on Matlab r2017b, GNU Octave 4.4.1</b></p>
+            <p style="text-align: center"><b>Published</b>: April 29, 2019 / <b>Last updated</b>: April 29, 2019</p>
+            <p style="text-align: center"><b>Tested on Matlab r2018b, GNU Octave 5.1.0</b></p>
 
             <h2>
                 <a id="introduction" class="anchor" href="introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Introduction</b>
@@ -369,7 +369,7 @@ intensity = double(pc.record.intensity);</code></pre>
         <pre><code>cellSize = 1;
 [models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
     pc.record.classification, ...
-    'classTerrain', [2, 16], ...
+    'classTerrain', [2, 9, 16], ...
     'classSurface', [3, 4, 5], ...
     'cellSize', cellSize, ...
     'closing', 3, ...
@@ -460,7 +460,7 @@ I_first_n = uint8(I_first_n * 255);</code></pre>
 
    
             <h2>
-                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Compute segment level intensity
+                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Compute segment level intensity
             </h2>
 
             <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
@@ -476,7 +476,7 @@ caxis(quantile(I_first_s(:), [0.02, 0.98]))</code></pre>
 
      
             <h2>
-                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Create a classification map
+                <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Create a classification map
             </h2>
 
             <p>To export the stem attributes to an ESRI shapefile, you first have to format them into a non-scalar structure and add a "Geometry" field:</p>
