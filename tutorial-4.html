@@ -355,7 +355,7 @@ cellSize = 1;
     intensity, ...
     'cellSize', cellSize, ...
     'fun', @nanmean, ...
-    'fill', nan, ...
+    'fill', 0, ...
     'fig', false);
 </code></pre>
 
@@ -367,6 +367,12 @@ axis equal tight
 colorbar
 caxis(quantile(I_first(:), [0.02, 0.98]))</code></pre>
 
+            <figure>
+                <img src="img/dft_tutorial_4_ima_3.png" alt="" style="width:80%;">
+                <figcaption><b>Figure 3</b> - First returns intensity map.</figcaption>
+            </figure>
+            
+            
         <p>Notice that the resulting intensity map is somewhat noisy due to the presence of small high intensity spots (near tree stems). You can optionally export the intensity map to an ARC/INFO ASCII grid file with the <code>ASCwrite()</code> function:</p>
         
 
@@ -382,29 +388,22 @@ caxis(quantile(I_first(:), [0.02, 0.98]))</code></pre>
                 <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Superpixel segmentation
             </h2>
         
-            <p>One possible approach to smooth the intensity map we obtained in the preious step is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="#references">Achanta et al. (2012)</a> is a well suited for this purpose. Other applicable approaches include majority voting or <a href="https://en.wikipedia.org/wiki/Conditional_random_field">Conditional Random Fields (CRF)</a>. SLIC is modified K-means algorithm, where the relative importance of spatial and color distances can be controlled with a compacity parameter. Matlab users who have access to the image processing toolbox can use the <code>superpixels()</code> function. Octave users (or Matlab users who dot not have the image processing toolbox) have to compile the SLICmex.c function provided by Achanta et al. (and included in the external functions directory of the Digital Forestry Toolbox), by typing the following line in the command window:</p>
+            <p>One simple approach to smooth the intensity map we obtained in the previous step is to apply segmentation and average the intensity in each segment. The Simple Linear Iterative Clustering (SLIC) algorithm proposed by <a href="#references">Achanta et al. (2012)</a> is a well suited for this purpose. Other applicable approaches include majority voting or <a href="https://en.wikipedia.org/wiki/Conditional_random_field">Conditional Random Fields (CRF)</a>. SLIC is modified K-means algorithm, where the relative importance of spatial and color distances can be controlled with a compacity parameter. Matlab users who have access to the image processing toolbox can use the <code>superpixels()</code> function. Octave users (or Matlab users who dot not have the image processing toolbox) have to compile the SLICmex.c function provided by Achanta et al. (and included in the external functions directory of the Digital Forestry Toolbox), by typing the following line in the command window:</p>
         
         <pre><code>mex slicmex.c</code></pre>
         
-            <pre><code>% convert NaN values to zero
-I_first(isnan(I_first)) = 0;
-
-% rescale values to an 8 bit range (0-255)
+            <p>This implementation of the SLIC algorithm requires an 8 bit image as input, so we convert the intensity map to an 8 bit range (0-255) with the following code:</p>
+            
+            <pre><code>% rescale values to an 8 bit range (0-255)
 I_first_n = (I_first - quantile(I_first(:), 0.02)) ./ diff(quantile(I_first(:), [0.02, 0.98]));
-I_first_n = uint8(I_first_n * 255);
+I_first_n = uint8(I_first_n * 255);</code></pre>
 
-
-if OCTAVE_FLAG
+            <p>You can then run the SLIC segmentation with the following code:</p>
+            
+<pre><code>[L, nlabels] = slicmex(I_first_n, 15000, 100);
     
-    % before running slicmex, you have to compile it with the following command:
-    % mex slicmex.c
-    [L, nlabels] = slicmex(I_first_n, 15000, 100);
-    
-else
-    
-    [L, nlabels] = superpixels(I_first, 18000, 'Compactness', 30);
-    
-end</code></pre>
+    % Note: Matlab users who have the "image processing" toolbox can also use the superpixels() function
+    % [L, nlabels] = superpixels(I_first, 15000, 'Compactness', 30);</code></pre>
 
    
             <h2>
