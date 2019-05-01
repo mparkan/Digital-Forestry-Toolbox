@@ -437,29 +437,11 @@ caxis(quantile(I(:), [0.02, 0.98]))</code></pre>
                 <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Segmentation
             </h2>
         
-            <p>One simple approach to smooth the intensity map we obtained in the previous step is to apply segmentation and average the intensity in each segment. We will illustrate two different algorithms here: the marker controlled watershed segmention (cf. tutorial 2) and the Simple Linear Iterative Clustering (SLIC) proposed by <a href="#references">Achanta et al. (2012)</a>. 
-                
-                Other applicable approaches include majority voting or <a href="https://en.wikipedia.org/wiki/Conditional_random_field">Conditional Random Fields (CRF)</a>. 
-                
-                SLIC is modified K-means algorithm, where the relative importance of spatial and color distances can be controlled with a compacity parameter. Matlab users who have access to the image processing toolbox can use the <code>superpixels()</code> function. Octave users (or Matlab users who dot not have the image processing toolbox) have to compile the SLICmex.c function provided by Achanta et al. (and included in the external functions directory of the Digital Forestry Toolbox), by typing the following line in the command window:</p>
+            <p>One simple approach to smooth the intensity map we obtained in the previous step is to apply segmentation and average the intensity in each segment. We will only illustrate the Simple Linear Iterative Clustering (SLIC) proposed by <a href="#references">Achanta et al. (2012)</a>, but other segmentation algorithms such as the marker controlled watershed segmention (cf. tutorial 2) could be used as well. SLIC is modified K-means algorithm, where the relative importance of spatial separation and color (or grayscale) similarity of clusters can be controlled with a compacity parameter. Matlab users who have access to the image processing toolbox can use the <code>superpixels()</code> function. Octave users (or Matlab users who dot not have the image processing toolbox) have to compile the SLICmex.c function provided by Achanta et al. (and included in the external functions directory of the Digital Forestry Toolbox), by typing the following line in the command window:</p>
         
         <pre><code>mex slicmex.c</code></pre>
         
-            <p>This implementation of the SLIC algorithm requires an 8 bit image as input, so we convert the intensity map to an 8 bit range (0-255) with the following code:</p>
-            
-            <pre><code>I_first_n = (I_first - quantile(I_first(:), 0.02)) ./ diff(quantile(I_first(:), [0.02, 0.98]));
-I_first_n = uint8(I_first_n * 255);</code></pre>
-
-            <p>You can then run the SLIC segmentation with the following code:</p>
-            
-<pre><code>[L, nlabels] = slicmex(I_first_n, 15000, 100);</code></pre>
-
-
-    <p>Matlab users who have the "image processing" toolbox can alternatively use the <code>superpixels()</code> function:</p>
-            
-    <pre><code>[L, nlabels] = superpixels(I_first, 15000, 'Compactness', 30);</code></pre>
-            
-            
+            <p>Then run the following code:</p>
             
             <pre><code>segmentation = 'slic'; % specify 'slic' or 'watershed'
 
