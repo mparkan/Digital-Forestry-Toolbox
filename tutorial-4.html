@@ -447,38 +447,89 @@ caxis(quantile(I(:), [0.02, 0.98]))</code></pre>
         
             <p>This implementation of the SLIC algorithm requires an 8 bit image as input, so we convert the intensity map to an 8 bit range (0-255) with the following code:</p>
             
-            <pre><code>% rescale values to an 8 bit range (0-255)
-I_first_n = (I_first - quantile(I_first(:), 0.02)) ./ diff(quantile(I_first(:), [0.02, 0.98]));
+            <pre><code>I_first_n = (I_first - quantile(I_first(:), 0.02)) ./ diff(quantile(I_first(:), [0.02, 0.98]));
 I_first_n = uint8(I_first_n * 255);</code></pre>
 
             <p>You can then run the SLIC segmentation with the following code:</p>
             
-<pre><code>[L, nlabels] = slicmex(I_first_n, 15000, 100);
-    
-    % Note: Matlab users who have the "image processing" toolbox can also use the superpixels() function
-    % [L, nlabels] = superpixels(I_first, 15000, 'Compactness', 30);</code></pre>
+<pre><code>[L, nlabels] = slicmex(I_first_n, 15000, 100);</code></pre>
 
-   
+
+    <p>Matlab users who have the "image processing" toolbox can alternatively use the <code>superpixels()</code> function:</p>
+            
+    <pre><code>[L, nlabels] = superpixels(I_first, 15000, 'Compactness', 30);</code></pre>
+            
+            
+            
+            <pre><code>segmentation = 'slic'; % specify 'slic' or 'watershed'
+
+switch segmentation
+    
+    case 'slic' % Superpixel segmentation
+        
+        % rescale values to an 8 bit range (0-255)
+        I_n = (I - quantile(I(:), 0.02)) ./ diff(quantile(I(:), [0.02, 0.98]));
+        I_n = uint8(I_n * 255);
+        
+        % before running slicmex, you have to compile it with the following command:
+        % mex slicmex.c
+        [L, nlabels] = slicmex(I_n, ceil(0.05*nrows*ncols), 75);
+        
+        % Note: Matlab users who have the "image processing" toolbox can also use the superpixels() function
+        % [L, nlabels] = superpixels(I_n, ceil(0.05*nrows*ncols), 'Compactness', 75);
+        
+    case 'watershed' % Marker controlled watershed segmentation
+        
+        [peaks_crh, ~] = canopyPeaks(models.height.values, ...
+            refmat, ...
+            'minTreeHeight', 2, ...
+            'smoothingFilter', fspecial('gaussian', [3 3], 1), ...
+            'searchRadius', @(h) 0.28 * h^0.59, ...
+            'fig', false, ...
+            'verbose', true);
+        
+        [L, ~] = treeWatershed(models.height.values, ...
+            'markers', peaks_crh(:,1:2), ...
+            'minHeight', 1, ...
+            'removeBorder', false, ...
+            'fig', false, ...
+            'verbose', true);
+        
+end</code></pre>
+            
+            
+            
             <h2>
                 <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Compute segment level intensity
             </h2>
 
-            <p>You can write the stem attributes to a Comma Separated Values text file (.csv) with:</p>
+            <p>We now compute the mean intensity and height of each segment with:</p>
 
-            <pre><code>I_first_s = accumarray(L(:)+1, I_first(:), [nrows*ncols,1], @nanmean, nan);
-I_first_s = I_first_s(L+1);</code></pre>
+            <pre><code>I_s = accumarray(L(:)+1, I(:), [nrows*ncols,1], @nanmean, nan);
+I_s = I_s(L+1);
+</code></pre>
 
-<pre><code>figure
-imagesc(I_first_s)
-axis equal tight
-colorbar
-caxis(quantile(I_first_s(:), [0.02, 0.98]))</code></pre>
+            <pre><code>H_s = accumarray(L(:)+1, models.height.values(:), [nrows*ncols,1], @nanmean, single(nan));
+H_s = H_s(L+1);</code></pre>
 
-     
+            <p>We then remove segments with an average height smaller than 3 m and those containing only null intensity values:</p>
+            
+            <pre><code>h_min = 3;
+I_s(H_s <= h_min) = nan;
+
+I_s(I_s == 0) = nan;</code></pre>
+                
+            
             <h2>
                 <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Create a classification map
             </h2>
 
+            
+<p>We start by examining the distribution of intensity values with a histogram:</p>
+            
+<pre><code>figure
+hist(I_s(~isnan(I_s)), 100)</code></pre>
+            
             <p>To export the stem attributes to an ESRI shapefile, you first have to format them into a non-scalar structure and add a "Geometry" field:</p>
 
             <pre><code>S = struct;
