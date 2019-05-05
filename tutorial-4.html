@@ -479,8 +479,6 @@ switch segmentation
         
 end</code></pre>
             
-            
-            
             <h2>
                 <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Compute segment level intensity
             </h2>
@@ -511,7 +509,14 @@ I_s(I_s == 0) = nan;</code></pre>
             
 <pre><code>figure
 hist(I_s(~isnan(I_s)), 100)</code></pre>
+
+            <figure>
+                <img src="img/dft_tutorial_4_ima_4.png" alt="" style="width:80%;">
+                <figcaption><b>Figure 3</b> - Histogram of average segment intensity values.</figcaption>
+            </figure>
             
+            <p>Notice the bimodal distribution, with a threshold around 17'000 for the persistant foliage</p>
+
             <p>To export the stem attributes to an ESRI shapefile, you first have to format them into a non-scalar structure and add a "Geometry" field:</p>
 
             <pre><code>S = struct;
