@@ -508,14 +508,30 @@ I_s(I_s == 0) = nan;</code></pre>
 <p>We start by examining the distribution of intensity values with a histogram:</p>
             
 <pre><code>figure
-hist(I_s(~isnan(I_s)), 100)</code></pre>
+hist(I_s(~isnan(I_s)), 100)
+xlabel('intensity')
+ylabel('count')
+</code></pre>
 
             <figure>
                 <img src="img/dft_tutorial_4_ima_4.png" alt="" style="width:80%;">
-                <figcaption><b>Figure 3</b> - Histogram of average segment intensity values.</figcaption>
+                <figcaption><b>Figure 4</b> - Histogram of average segment intensity values.</figcaption>
             </figure>
             
-            <p>Notice the bimodal distribution, with a threshold around 17'000 for the persistant foliage</p>
+            <p>Notice the bimodal distribution, with two peaks around 12'000 and 20'000. We can split the values into low (&lt; 7500), medium (&ge; 7500 to &lt; 17'000) and high (&ge; 17'000) intensity categories with the <code>histc()</code> function:</p>
+
+            <pre><code>[~, C] = histc(I_s(:), [7500, 17000, inf]);</code></pre>
+
+            <p>We then reshape the intensity categories vector into an array and plot it:</p>
+
+            <pre><code>C = reshape(C, nrows, ncols);
+figure
+imagesc(C)
+axis equal tight
+</code></pre>
+            
+            
+            
 
             <p>To export the stem attributes to an ESRI shapefile, you first have to format them into a non-scalar structure and add a "Geometry" field:</p>
 
