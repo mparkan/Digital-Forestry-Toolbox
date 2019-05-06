@@ -530,31 +530,27 @@ imagesc(C)
 axis equal tight
 </code></pre>
             
-            
-            
+            <h2>
+                <a id="step-8" class="anchor" href="step-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 8</b> - Filter out small patches
+            </h2>
 
-            <p>To export the stem attributes to an ESRI shapefile, you first have to format them into a non-scalar structure and add a "Geometry" field:</p>
 
-            <pre><code>S = struct;
-for j = 1:size(xyh_stem,1)
-
-    S(j,1).Geometry = 'Point';
-    S(j,1).BoundingBox = [];
-    S(j,1).ID = j;
-    S(j,1).X = xyh_stem(j,1);
-    S(j,1).Y = xyh_stem(j,2);
-    S(j,1).H = xyh_stem(j,3);
-
-end</code></pre>
-
-            <p>Specify the output filepath (by default, the file is created in the current working directory) and use <code>shapewrite()</code> to write the file:</p>
-
-            <pre><code>shapewrite(S, 'ge_2017_a_stems.shp');</code></pre>
-
-            <p>After exporting the shapefile, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
 
             
-            <p>By modifing the parameters values, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection. The interactive map below illustrates the detected stem positions. The results could also be refined the . Use the layer switcher to compare different map layers (aerial photography, intensity map, classification map).</p>
+            <p>To remove small patches in the persistant category (C = 2), we apply <a href="https://ch.mathworks.com/help/images/understanding-morphological-reconstruction.html">morphological reconstruction</a> to the category 2 boolean image, using a morphological erosion (with a disk shaped window with a 1 pixel radius) as the marker:</p>
+            <pre><code>J = imreconstruct(imerode(C == 2, strel("disk", 1)), C == 2);
+C(J ~= (C == 2)) = 1;</code></pre>
+
+            <p>Finally, you can optionally export the category map to an ARC/INFO ASCII grid file with the <code>ASCwrite()</code> function:</p>
+            
+           <pre><code>ASCwrite('ge_2017_a_class.asc', ...
+    C, ...
+    refmat, ...
+    'precision', 0, ...
+    'noData', -99999, ...
+    'verbose', true);</code></pre>
+    
+           <p>After exporting the map, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>). The interactive map below illustrates the obtained categorical map overalaid on a leaf-off orthoimage of the same area. Try moving the transparency slider to evalute the correspondance with the orthoimage. Note that the features in the LiDAR derived map and in the background orthoimage do not overlap perfectly. This due to the orthorectification process which used a terrain model instead of a surface model.</p>
 
             <div id="map2"></div>
             
