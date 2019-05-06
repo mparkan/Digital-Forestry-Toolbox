@@ -518,7 +518,7 @@ ylabel('count')
                 <figcaption><b>Figure 4</b> - Histogram of average segment intensity values.</figcaption>
             </figure>
             
-            <p>Notice the bimodal distribution, with two peaks around 12'000 and 20'000. We can split the values into low (&lt; 7500), medium (&ge; 7500 to &lt; 17'000) and high (&ge; 17'000) intensity categories with the <code>histc()</code> function:</p>
+            <p>Notice the bimodal distribution, with two peaks around 12'000 and 20'000. To separate non-tree, deciduous and evergreen areas, we can split the values into low (&lt; 7500), medium (&ge; 7500 to &lt; 17'000) and high (&ge; 17'000) intensity categories with the <code>histc()</code> function:</p>
 
             <pre><code>[~, C] = histc(I_s(:), [7500, 17000, inf]);</code></pre>
 
@@ -534,7 +534,7 @@ axis equal tight
                 <a id="step-8" class="anchor" href="step-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 8</b> - Filter out small patches
             </h2>
 
-            <p>To remove small patches in the persistant category (C = 2), we apply <a href="https://ch.mathworks.com/help/images/understanding-morphological-reconstruction.html">morphological reconstruction</a> to the category 2 boolean image, using a morphological erosion (with a disk shaped window with a 1 pixel radius) as the marker:</p>
+            <p>To remove small patches in the evergreen category (C = 2), we apply <a href="https://ch.mathworks.com/help/images/understanding-morphological-reconstruction.html">morphological reconstruction</a> to the category 2 boolean image, using a morphological erosion (with a disk shaped window with a 1 pixel radius) as the marker:</p>
             <pre><code>J = imreconstruct(imerode(C == 2, strel("disk", 1)), C == 2);
 C(J ~= (C == 2)) = 1;</code></pre>
 
