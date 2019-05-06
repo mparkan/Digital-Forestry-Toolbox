@@ -534,9 +534,6 @@ axis equal tight
                 <a id="step-8" class="anchor" href="step-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 8</b> - Filter out small patches
             </h2>
 
-
-
-            
             <p>To remove small patches in the persistant category (C = 2), we apply <a href="https://ch.mathworks.com/help/images/understanding-morphological-reconstruction.html">morphological reconstruction</a> to the category 2 boolean image, using a morphological erosion (with a disk shaped window with a 1 pixel radius) as the marker:</p>
             <pre><code>J = imreconstruct(imerode(C == 2, strel("disk", 1)), C == 2);
 C(J ~= (C == 2)) = 1;</code></pre>
@@ -558,11 +555,6 @@ C(J ~= (C == 2)) = 1;</code></pre>
               <input type="range" min="0" max="1" value="0.2" step="0.01" class="slider" id="myRange" oninput="rasterStaticLayer2.setOpacity(this.value)">
             </div>
             
-            
-
-<!--            <h2>
-                <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Validate the results
-            </h2>-->
         
             <h2>
                 <a id="references" class="anchor" href="references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>References</b>
