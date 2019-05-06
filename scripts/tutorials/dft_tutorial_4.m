@@ -36,9 +36,6 @@ end
 % IMPORTANT: adjust the path to the input LAS file
 pc = LASread('ge_2017_a.las');
 
-xyz = [pc.record.x, pc.record.y, pc.record.z];
-intensity = double(pc.record.intensity);
-
 
 %% Step 2 - Compute a raster Canopy Height Model (CHM)
 
