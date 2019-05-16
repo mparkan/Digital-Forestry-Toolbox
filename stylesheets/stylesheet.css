@@ -350,6 +350,7 @@ border-bottom: 3px solid rgba(91, 117, 109,60); //#eff0f1
 
 
 #map1{
+    z-index: 0; 
     padding: 1em;
     width: 100%;
     margin: auto;
@@ -357,6 +358,7 @@ border-bottom: 3px solid rgba(91, 117, 109,60); //#eff0f1
 }
 
 #map2 {
+    z-index: 0; 
     padding: 1em;
     width: 100%;
     height: 600px;
