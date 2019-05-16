@@ -37,15 +37,33 @@
             .ol-rotate {
                 top: 3em;
             }
+            
+            .ol-custom{
+              position: relative;
+              z-index: 1000;
+            }
+            
+            #map2 {
+             position: relative;
+            }
+            
+            .slidecontainer {
+              position: absolute;
+              margin: auto;
+              left:0;
+              right:0;
+              width: 300px;
+              height: 30px;
+              top: 2.5rem;
+              z-index: 99; 
+            }
+                       
             .slider {
               -webkit-appearance: none;
-              position: relative;    
-              margin-left: 15%;
-              margin-right: 15%; 
-              width: 70%;
-              height: 15px;
+              width:100%;
+              height: 20px;
               border-radius: 5px;   
-              background: #d3d3d3;
+              background: rgba(255,255,255,0.9); /*#d3d3d3;*/
               outline: none;
               opacity: 0.7;
               -webkit-transition: .2s;
@@ -54,19 +72,22 @@
             .slider::-webkit-slider-thumb {
               -webkit-appearance: none;
               appearance: none;
-              width: 25px;
-              height: 25px;
+              top: 10rem;
+              width: 30px;
+              height: 30px;
               border-radius: 50%; 
-              background: rgb(91, 117, 109);
+              background: rgba(0,0,0,0.95); /* rgb(91, 117, 109);*/
               cursor: pointer;
             }
             .slider::-moz-range-thumb {
-              width: 25px;
-              height: 25px;
+              top: 10rem;    
+              width: 30px;
+              height: 30px;
               border-radius: 50%;
-              background: rgb(91, 117, 109);
+              background: rgba(0,0,0,0.9); /* rgb(91, 117, 109);*/
               cursor: pointer;
             }
+            
         </style>
 
     </head>
@@ -452,11 +473,15 @@ C(J ~= (C == 2)) = 1;</code></pre>
     
            <p>After exporting the map, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>). The interactive map below illustrates the categorical map overlayed on a leaf-off orthoimage of the same area (try moving the transparency slider to compare it with the orthoimage). Note that the features in the LiDAR derived map and in the orthoimage do not overlap perfectly. This is due to the orthorectification process which used a terrain model instead of a surface model.</p>
 
-            <div id="map2"></div>
+            <div id="map2">
             
             <div class="slidecontainer">
               <input type="range" min="0" max="1" value="0.2" step="0.01" class="slider" id="myRange" oninput="rasterStaticLayer2.setOpacity(this.value)">
             </div>
+
+            </div>
+            
+        
             
         
             <h2>
