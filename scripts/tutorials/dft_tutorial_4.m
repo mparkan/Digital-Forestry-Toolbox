@@ -70,7 +70,9 @@ idxl_filter = idxl_veg & idxl_canopy;
 
 %% Step 4 - Compute an intensity raster
 
-I = accumarray([row(idxl_filter), col(idxl_filter)], double(pc.record.intensity(idxl_filter)), [nrows, ncols], @mean, 0);
+% computing the mean using sum() and numel() is faster than using mean() in accumarray 
+I = accumarray([row(idxl_filter), col(idxl_filter)], double(pc.record.intensity(idxl_filter)), [nrows, ncols], @sum, 0) ./ ...
+    accumarray([row(idxl_filter), col(idxl_filter)], double(pc.record.intensity(idxl_filter)), [nrows, ncols], @numel, 1); 
 
 % plot the intensity map
 figure('Color', [1,1,1])
