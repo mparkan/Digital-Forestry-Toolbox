@@ -329,7 +329,9 @@ idxl_filter = idxl_veg & idxl_canopy;</code></pre>
 
             <p>We create the intensity map by averaging the intensity of the canopy points located in each of the raster cells:</p>
 
-            <pre><code>I = accumarray([row(idxl_filter), col(idxl_filter)], intensity(idxl_filter), [nrows, ncols], @mean, 0);</code></pre>
+            <pre><code>% computing the mean using sum() and numel() is faster than using mean() in accumarray 
+I = accumarray([row(idxl_filter), col(idxl_filter)], double(pc.record.intensity(idxl_filter)), [nrows, ncols], @sum, 0) ./ ...
+    accumarray([row(idxl_filter), col(idxl_filter)], double(pc.record.intensity(idxl_filter)), [nrows, ncols], @numel, 1);</code></pre>
 
             <p>The resuling raster can be displayed with:</p>
 
@@ -414,9 +416,7 @@ end</code></pre>
               <input type="range" min="0" max="1" value="0.9" step="0.01" class="slider" id="myRange" title="Transparency" oninput="rasterStaticLayer2.setOpacity(this.value)">
             </div>
 
-            </div>
-            
-            
+            </div>          
 
             <h2>
                 <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Compute segment level intensity
@@ -638,11 +638,11 @@ C(J ~= (C == 2)) = 1;</code></pre>
 
 
                 // define fullscreen control icon 1
-                var icon1 = document.createElement("expand_icon");
+                var icon1 = document.createElement("expand_icon_1");
                 icon1.className = "fa fa-expand";
 
                 // define fullscreen control icon 2
-                var icon2 = document.createElement("expand_icon");
+                var icon2 = document.createElement("expand_icon_2");
                 icon2.className = "fa fa-expand";
                 
                 var icon2 = icon1;
