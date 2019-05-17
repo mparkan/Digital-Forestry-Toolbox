@@ -20,6 +20,26 @@
         <script src="lib/ol-layerswitcher/ol-layerswitcher.js"></script>
         <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
 
+        <style>
+            .map:-moz-full-screen {
+                height: 100%;
+            }
+            .map:-webkit-full-screen {
+                height: 100%;
+            }
+            .map:-ms-fullscreen {
+                height: 100%;
+            }
+            .map:fullscreen {
+                height: 100%;
+            }
+            /* position the rotate control lower than usual */
+            .ol-rotate {
+                top: 3em;
+            }
+
+        </style>
+
     </head>
     <body>
 
@@ -186,7 +206,7 @@ r(h) = 0.5 + 0.25 \cdot ln(\max_h(h,1)) $$-->
 
             <p>By modifing the <code>'searchRadius'</code> parameter, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection. The interactive map below illustrates the detected tree top positions.</p>
 
-             <div class="olmap" id="map2"></div>
+            <div class="olmap" id="map2"></div>
 
 
             <!--        <figure>
