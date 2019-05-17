@@ -37,59 +37,56 @@
             .ol-rotate {
                 top: 3em;
             }
-            
+
             .ol-custom{
-              position: relative;
-              z-index: 1000;
+                position: relative;
+                z-index: 1000;
             }
-            
-            #map2 {
-             position: relative;
-            }
-            
+
+
             .slidecontainer {
-              position: absolute;
-              margin: auto;
-              left:0;
-              right:0;
-              width: 300px;
-              max-width: 40%;
-              height: 30px;
-              top: 1.75em;
-              z-index: 99;
-              
+                position: absolute;
+                margin: auto;
+                left:0;
+                right:0;
+                width: 300px;
+                max-width: 40%;
+                height: 30px;
+                top: 1.75em;
+                z-index: 99;
+
             }
-                       
+
             .slider {
-              -webkit-appearance: none;
-              width:100%;
-              height: 22px;
-              border-radius: 5px;   
-              background: rgba(255,255,255,0.85); /*#d3d3d3;*/
-              outline: none;
-              -webkit-transition: .2s;
-              transition: opacity .2s;
-              box-shadow: 0px 0px 6px 1px;  
+                -webkit-appearance: none;
+                width:100%;
+                height: 22px;
+                border-radius: 5px;   
+                background: rgba(255,255,255,0.85); /*#d3d3d3;*/
+                outline: none;
+                -webkit-transition: .2s;
+                transition: opacity .2s;
+                box-shadow: 0px 0px 6px 1px;  
             }
             .slider::-webkit-slider-thumb {
-              -webkit-appearance: none;
-              appearance: none;
-              top: 10rem;
-              width: 30px;
-              height: 30px;
-              border-radius: 50%; 
-              background: rgba(0,0,0,0.85); /* rgb(91, 117, 109);*/
-              cursor: pointer;
+                -webkit-appearance: none;
+                appearance: none;
+                top: 10rem;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%; 
+                background: rgba(0,0,0,0.85); /* rgb(91, 117, 109);*/
+                cursor: pointer;
             }
             .slider::-moz-range-thumb {
-              top: 10rem;    
-              width: 30px;
-              height: 30px;
-              border-radius: 50%;
-              background: rgba(0,0,0,0.85); /* rgb(91, 117, 109);*/
-              cursor: pointer;
+                top: 10rem;    
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                background: rgba(0,0,0,0.85); /* rgb(91, 117, 109);*/
+                cursor: pointer;
             }
-            
+
         </style>
 
     </head>
@@ -116,29 +113,29 @@
 
             <p>This tutorial presents a simple approach to differentiate deciduous and evergreen foliage using the corrected return intensity of Airborne Laser Scanning (ALS) data. Foliage persistance maps can for example be useful to improve stem diameter prediction (by applying deciduous/evergreen specific allometric models) and for wildlife habitat modelling. This distinction is <b>not to be confused with the distinction of broadleaf and coniferous</b>, as some coniferous trees, such as larches, will shed their needles in automn while some broadleaf trees, such as hollies, will keep their leaves in winter.</p> 
             <p>Dense foliage and large branches have a higher probability of completely intercepting the laser beam and generating single high intensity returns (see figures 1 and 2). Moreover, most LiDAR systems employ near infrared light which is strongly reflected by live foliage. Thus, ALS data acquired during leaf-off conditions can be readily used to differentiate deciduous and evergreen foliage. It has also been repeatedly demonstrated that the return intensity and ranking distributions of laser scans are important features to differentiate tree species (e. g. <a href="#references">Liang et al., 2007; Ørka et al. 2009; Shi et al., 2018</a>).</p>  
-            
+
             <br>
             <figure>
                 <img src="img/dft_tutorial_4_ima_1a.png" alt="" style="width:80%;">
                 <figcaption><b>Figure 1</b> - Conceptual example of the opacity difference under leaf-off conditions between birch (left) and spruce (right) trees. Low structural opacity will typically result in multiple low intensity returns. On the contrary, high structural opacity will tend to result in fewer high intensity returns.</figcaption>
             </figure>
-            
+
             <figure>
                 <img src="img/dft_tutorial_4_ima_2.png" alt="" style="width:80%;">
                 <figcaption><b>Figure 2</b> - Example of difference in return intensity between a birch (left) and a spruce (right) tree in leaf-off conditions. Data courtesty of Geneva state (2017).</figcaption>
             </figure>
             <br>
-            
 
-             <p>However, due to various instrumental and environmental effects, the raw intensity is generally inconsistent accross the surveyed area and cannot be directly used as a discriminative feature; it should first be corrected (<a href="#references">Höfle and Pfeifer, 2007; Vain and Kaasalainen, 2011; Kashani et al., 2015</a>). This can be a complex task, as the return intensity (a proxy of the power reflected by the target surface and received by the sensor) depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p>
-            
+
+            <p>However, due to various instrumental and environmental effects, the raw intensity is generally inconsistent accross the surveyed area and cannot be directly used as a discriminative feature; it should first be corrected (<a href="#references">Höfle and Pfeifer, 2007; Vain and Kaasalainen, 2011; Kashani et al., 2015</a>). This can be a complex task, as the return intensity (a proxy of the power reflected by the target surface and received by the sensor) depends on parameters which can be difficult to estimate, as shown in the RaDAR/LiDAR range equation below:</p>
+
             <br>
-            
+
             $$P_r = \frac{D_{r}^2 \eta_{atm} \eta_{sys} \sigma P_t}{4 \pi R^4 \beta_{t}^2 }$$
 
             $$\sigma = \frac{4 \pi}{\Omega} \rho A_t$$
-        
-        
+
+
             <p>where:</p>
 
             <ul style="list-style-type:none">
@@ -154,50 +151,50 @@
                 <li> \(\rho\) is the reflectance of the target;</li>
                 <li> \(A_t\) is the area of the target, i.e. area illuminated by the laser [m<sup>2</sup>].</li>
             </ul>
-            
+
             <p>The RaDAR/LiDAR range equation can be simplified, if we assume that the target is a <a href="https://en.wikipedia.org/wiki/Lambertian_reflectance">Lambertian surface</a>, that it has a scattering solid angle \(\Omega = \pi\) [sr] and that the entire laser beam is intercepted (<a href="#references">Höfle and Pfeifer, 2007</a>). Under these assumptions, the area of the target \(A_t\) and its effective cross section \(\sigma\) respectively become:</p>
-                
-             $$A_t = \frac{\pi R^2 \beta_{t}^2}{4}$$
-            
-             $$\sigma = \pi \rho R^2 \beta_{t}^2 cos(\alpha)$$   
-            
+
+            $$A_t = \frac{\pi R^2 \beta_{t}^2}{4}$$
+
+            $$\sigma = \pi \rho R^2 \beta_{t}^2 cos(\alpha)$$   
+
             <p>where:</p>
 
             <ul style="list-style-type:none">
                 <li> \(\alpha\) is the angle between the surface normal and the laser beam.</li>
             </ul>
-            
+
             <p>The received power \(P_r\) is then:</p>
-            
-             $$P_r = \frac{P_t D_{r}^2 \rho}{4 R^2} \eta_{atm} \eta_{sys} cos(\alpha)$$
-                
+
+            $$P_r = \frac{P_t D_{r}^2 \rho}{4 R^2} \eta_{atm} \eta_{sys} cos(\alpha)$$
+
 
             <p>This shows that the range between the sensor and the target surface has a large influence (quadratic in this case) on the received power (received intensity). To compensate the decay of intensity with range, a correction can be applied, if the aircraft trajectory and return times are known, following for example the guidelines provided in <a href="#references">Luzum et al. (2004)</a>:</p>
-            
-        
+
+
             $$I_{n} = I \cdot \left(\frac{R}{R_{ref}}\right)^2$$
 
 
             <p>where:</p>
-        
+
             <ul style="list-style-type:none">
                 <li> \(I_n\) is the range normalized intensity;</li>
                 <li> \(I\) is the raw intensity;</li>
                 <li> \(R\) is the range from sensor to target [m];</li>
                 <li> \(R_{ref}\) is an arbitrary constant reference range (e. g. 1000 m).</li>
             </ul>
-        
-            
+
+
             <p>Altough none of the modelling assumptions used above are realistic when dealing with complex objects such as trees, this simple range correction may help homogenise intensity values accross the dataset. ALS post-processing software generally offer the possibility to apply some form of intensity correction. Riegl's RiProcess software, for example, lets you export either the amplitude (range dependent value) or a range independant value which they call reflectance to the "intensity" field in LAS files (<a href="#references">Riegl Laser Measurement Systems, 2017</a>). In this tutorial, we will use data acquired over the state of Geneva (Switzerland) in February 2017 (leaf-off conditions) with the <a href="http://www.riegl.com/nc/products/airborne-scanning/">Riegl LMS-Q1560</a> sensor. The data is openly available from <a href="https://ge.ch/sitg/donnees">Geneva's Official Geodata Portal</a>. <b>The intensity stored in the LAS file is the reflectance (i.e. range independent value) scaled to a 16 bit range (0-65535), so no further range correction is required</b>. If you would like to apply the approach illustrated in this tutorial to other ALS datasets, you should first inquire if and how the intensity has been processed.</p>
-            
+
             <p>A small forest located about 10 km to the North of Geneva city (see map below) will serve as our study case. Within this area, the main tree species are pedunculate oak (<i>Quercus robur</i>) and Scots pine (<i>Pinus sylvestris</i>).</p>
 
-            <div id="map1">
+            <div class="geoadminmap" id="map1">
 
                 <iframe src='https://map.geo.admin.ch/embed.html?topic=ech&lang=en&bgLayer=ch.swisstopo.swissimage&layers=ch.swisstopo.zeitreihen,ch.bfs.gebaeude_wohnungs_register,ch.bav.haltestellen-oev,ch.swisstopo.swisstlm3d-wanderwege&layers_visibility=false,false,false,false&layers_timestamp=18641231,,,&E=2499604.02&N=1127554.43&zoom=8' width='100%' height='450' frameborder='0'></iframe>
 
             </div>
-    
+
 
             <h2>
                 <a id="setup" class="anchor" href="setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Setup</b>
@@ -291,8 +288,8 @@ intensity = double(pc.record.intensity);</code></pre>
             </h2>
 
             <p>In this step, we compute 0.5x0.5 m raster elevation models, using the <code>elevationModels()</code> function:</p>
-            
-        <pre><code>cellSize = 0.5;
+
+            <pre><code>cellSize = 0.5;
 [models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
     pc.record.classification, ...
     'classTerrain', [2, 9, 16], ...
@@ -311,12 +308,12 @@ row = round(P(:,1));
 col = round(P(:,2));
 ind = sub2ind([nrows, ncols], row, col);</code></pre>
 
-            
-             <h2>
+
+            <h2>
                 <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Filter the canopy points 
             </h2>
-            
-            
+
+
             <p>We now create a filter which selects only high vegetation points located in the top highest 1 m section of the canopy:</p>
 
             <pre><code>idxl_veg = ismember(pc.record.classification, [4,5]);
@@ -331,12 +328,12 @@ idxl_filter = idxl_veg & idxl_canopy;</code></pre>
             </h2>
 
             <p>We create the intensity map by averaging the intensity of the canopy points located in each of the raster cells:</p>
-        
+
             <pre><code>I = accumarray([row(idxl_filter), col(idxl_filter)], intensity(idxl_filter), [nrows, ncols], @mean, 0);</code></pre>
 
-        <p>The resuling raster can be displayed with:</p>
-        
-        <pre><code>figure
+            <p>The resuling raster can be displayed with:</p>
+
+            <pre><code>figure
 imagesc(I);
 axis equal tight
 colorbar
@@ -346,51 +343,51 @@ caxis(quantile(I(:), [0.02, 0.98]))</code></pre>
                 <img src="img/dft_tutorial_4_ima_3.png" alt="" style="width:80%;">
                 <figcaption><b>Figure 3</b> - Intensity map.</figcaption>
             </figure>
-            
-            
-        <p>Notice that the resulting intensity map is somewhat noisy due to the presence of small high intensity spots (near tree stems). You can optionally export the intensity map to an ARC/INFO ASCII grid file with the <code>ASCwrite()</code> function:</p>
-        
 
-<pre><code>ASCwrite('ge_2017_a_intensity.asc', ...
+
+            <p>Notice that the resulting intensity map is somewhat noisy due to the presence of small high intensity spots (near tree stems). You can optionally export the intensity map to an ARC/INFO ASCII grid file with the <code>ASCwrite()</code> function:</p>
+
+
+            <pre><code>ASCwrite('ge_2017_a_intensity.asc', ...
     I, ...
     refmat, ...
     'precision', 2, ...
     'noData', -99999, ...
     'verbose', true);</code></pre>
-        
-        
+
+
             <h2>
                 <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Segmentation
             </h2>
-        
+
             <p>One simple approach to smooth the intensity map we obtained in the previous step is to apply segmentation and average the intensity in each segment. We will only illustrate the Simple Linear Iterative Clustering (SLIC) proposed by <a href="#references">Achanta et al. (2012)</a>, but other segmentation algorithms such as the marker controlled watershed segmention (cf. tutorial 2) could be used as well. SLIC is modified K-means algorithm, where the relative importance of spatial separation and color (or grayscale) similarity of clusters can be controlled with a compacity parameter. Matlab users who have access to the image processing toolbox can use the <code>superpixels()</code> function. Octave users (or Matlab users who dot not have the image processing toolbox) have to compile the SLICmex.c function provided by Achanta et al. (and included in the external functions directory of the Digital Forestry Toolbox), by typing the following line in the command window:</p>
-        
-        <pre><code>mex slicmex.c</code></pre>
-        
+
+            <pre><code>mex slicmex.c</code></pre>
+
             <p>Then run the following code:</p>
-            
+
             <pre><code>segmentation = 'slic'; % specify 'slic' or 'watershed'
 
 switch segmentation
-    
+
     case 'slic' % Superpixel segmentation
-        
+
         % rescale values to an 8 bit range (0-255)
         I_n = (I - quantile(I(:), 0.02)) ./ diff(quantile(I(:), [0.02, 0.98]));
         I_n = uint8(I_n * 255);
-        
+
         % before running slicmex, you have to compile it with the following command:
         % mex slicmex.c
         r = 2.5; % target radius of one superpixel (in map units)
         a = pi*r^2; % target area of one superpixel (in map units)
         n_superpixels = round(nrows * ncols * cellSize^2 / a); % number of superpixels
         [L, nlabels] = slicmex(I_n, n_superpixels, 100);
-        
+
         % Note: Matlab users who have the "image processing" toolbox can also use the superpixels() function
         % [L, nlabels] = superpixels(I_n, n_superpixels, 'Compactness', 75);
-        
+
     case 'watershed' % Marker controlled watershed segmentation
-        
+
         [peaks_crh, ~] = canopyPeaks(models.height.values, ...
             refmat, ...
             'minTreeHeight', 2, ...
@@ -398,16 +395,29 @@ switch segmentation
             'searchRadius', @(h) 0.28 * h^0.59, ...
             'fig', false, ...
             'verbose', true);
-        
+
         [L, ~] = treeWatershed(models.height.values, ...
             'markers', peaks_crh(:,1:2), ...
             'minHeight', 1, ...
             'removeBorder', false, ...
             'fig', false, ...
             'verbose', true);
-        
+
 end</code></pre>
             
+            <p>The interactive map below illustrates the intensity map (in grayscale) and the superpixel boundaries (in yellow) obtained with the SLIC approach. Try using the transparency slider on the map to visualize the overlap between the superpixels and underlying canopy extent.</p>
+
+            
+            <div class="olmap" id="map2">
+
+            <div class="slidecontainer">
+              <input type="range" min="0" max="1" value="0.9" step="0.01" class="slider" id="myRange" title="Transparency" oninput="rasterStaticLayer2.setOpacity(this.value)">
+            </div>
+
+            </div>
+            
+            
+
             <h2>
                 <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Compute segment level intensity
             </h2>
@@ -422,20 +432,20 @@ I_s = I_s(L+1);
 H_s = H_s(L+1);</code></pre>
 
             <p>We then remove segments with a maximum height smaller than 3 m and those containing only null intensity values:</p>
-            
+
             <pre><code>h_min = 3;
 I_s(H_s <= h_min) = nan;
 
 I_s(I_s == 0) = nan;</code></pre>
-                
-            
+
+
             <h2>
                 <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Create a classification map
             </h2>
 
-            
+
 <p>We start by examining the distribution of intensity values with a histogram:</p>
-            
+
 <pre><code>figure
 hist(I_s(~isnan(I_s)), 100)
 xlabel('intensity')
@@ -446,7 +456,7 @@ ylabel('count')
                 <img src="img/dft_tutorial_4_ima_4.png" alt="" style="width:80%;">
                 <figcaption><b>Figure 4</b> - Histogram of average segment intensity values.</figcaption>
             </figure>
-            
+
             <p>Notice the bimodal distribution, with two peaks around 12'000 and 20'000. To separate non-tree, deciduous and evergreen areas, we can split the values into low (&lt; 7500), medium (&ge; 7500 to &lt; 17'000) and high (&ge; 17'000) intensity categories with the <code>histc()</code> function:</p>
 
             <pre><code>[~, C] = histc(I_s(:), [7500, 17000, inf]);</code></pre>
@@ -458,7 +468,7 @@ figure
 imagesc(C)
 axis equal tight
 </code></pre>
-            
+
             <h2>
                 <a id="step-8" class="anchor" href="step-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 8</b> - Filter out small patches
             </h2>
@@ -469,25 +479,25 @@ J = imreconstruct(imerode(C == 2, se), C == 2);
 C(J ~= (C == 2)) = 1;</code></pre>
 
             <p>Finally, you can optionally export the category map to an ARC/INFO ASCII grid file with the <code>ASCwrite()</code> function:</p>
-            
+
            <pre><code>ASCwrite('ge_2017_a_class.asc', ...
     C, ...
     refmat, ...
     'precision', 0, ...
     'noData', -99999, ...
     'verbose', true);</code></pre>
-    
+
            <p>After exporting the map, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>). The interactive map below illustrates the categorical map overlayed on a leaf-off orthoimage of the same area (try moving the transparency slider to compare it with the orthoimage). Note that the features in the LiDAR derived map and in the orthoimage do not overlap perfectly. This is due to the orthorectification process which used a terrain model instead of a surface model.</p>
 
-            <div id="map2">
-            
+            <div class="olmap" id="map3">
+
             <div class="slidecontainer">
               <input type="range" min="0" max="1" value="0.2" step="0.01" class="slider" id="myRange" title="Transparency" oninput="rasterStaticLayer3.setOpacity(this.value)">
             </div>
 
             </div>
-            
-        
+
+
             <h2>
                 <a id="references" class="anchor" href="references" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>References</b>
             </h2>
@@ -497,7 +507,7 @@ C(J ~= (C == 2)) = 1;</code></pre>
                 <li>Achanta, R., Shaji, A., Smith, K., Lucchi, A., Fua, P., Süsstrunk, S., 2012. <a href="https://ivrl.epfl.ch/research-2/research-current/research-superpixels/">SLIC Superpixels Compared to State-of-the-Art Superpixel Methods</a>. IEEE Transactions on Pattern Analysis and Machine Intelligence 34, 2274–2282. https://doi.org/10.1109/TPAMI.2012.120</li>
 
                 <li>Höfle, B., Pfeifer, N., 2007. <a href="https://www.sciencedirect.com/science/article/pii/S0924271607000603">Correction of laser scanning intensity data: Data and model-driven approaches</a>. ISPRS Journal of Photogrammetry and Remote Sensing 62, 415–433. https://doi.org/10.1016/j.isprsjprs.2007.05.008</li>
-                
+
                 <li>Kashani, A.G., Olsen, M.J., Parrish, C.E., Wilson, N., 2015. <a href="https://www.mdpi.com/1424-8220/15/11/28099">A Review of LIDAR Radiometric Processing: From Ad Hoc Intensity Correction to Rigorous Radiometric Calibration</a>. Sensors 15, 28099–28128. https://doi.org/10.3390/s151128099</li>
 
                 <li>Liang, X., Hyyppä, J., Matikainen, L., 2007. <a href="http://www.isprs.org/proceedings/XXXVI/3-W52/final_papers/Liang_2007.pdf">Deciduous-coniferous tree classification using difference between first and last pulse laser signatures</a>. International Archives of Photogrammetry, Remote Sensing and Spatial Information Sciences 36, 253–257.</li>
@@ -505,11 +515,11 @@ C(J ~= (C == 2)) = 1;</code></pre>
                 <li>Luzum, B., Starek, M., Slatton, K.C., 2004. <a href="https://www.researchgate.net/publication/266228111_Normalizing_ALSM_Intensities">Normalizing ALSM intensities (No. Rep_2004-07-01)</a>, Geosensing Engineering and Mapping (GEM) Center. Civil and Coastal Engineering Department, University of Florida, Gainesville, FL, USA.</li>
 
                 <li>Ørka, H. O., Næsset, E., Bollandsås, O. M., Jun. 2009. <a href="https://www.sciencedirect.com/science/article/abs/pii/S0034425709000376">Classifying species of individual trees by intensity and structure features derived from airborne laser scanner data</a>. Remote Sensing of Environment 113 (6), 1163–1174.</li>
-                
+
                 <li>Riegl Laser Measurement Systems, 2017. <a href="http://www.riegl.com/uploads/tx_pxpriegldownloads/Whitepaper_LASextrabytes_implementation_in-RIEGLSoftware_2017-12-04.pdf">LAS Extrabytes Implementation in RIEGL Software</a>. Riegl Laser Measurement Systems GmbH, Horn, Riedenburgstrasse 48, Austria.</li>
 
                 <li>Shi, Y., Wang, T., Skidmore, A. K., Heurich, M., Mar. 2018b. <a href="https://www.sciencedirect.com/science/article/abs/pii/S0924271618300315">Important LiDAR metrics for discriminating forest tree species in Central Europe</a>. ISPRS Journal of Photogrammetry and Remote Sensing 137, 163–174.</li>
-                
+
                 <li>Vain, A., Kaasalainen, S., 2011. <a href="http://cdn.intechopen.com/pdfs/15799/InTech-Correcting_airborne_laser_scanning_intensity_data.pdf">Correcting airborne laser scanning intensity data</a>. INTECH Open Access Publisher.</li>
 
             </ul>
@@ -521,30 +531,30 @@ C(J ~= (C == 2)) = 1;</code></pre>
 
         </section>
 
-        <script>
+            <script>
 
-            // add CH1903 and CH1903+ CRS definitions
-            if (proj4) {
-                proj4.defs("EPSG:21781","+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=600000 +y_0=200000 +ellps=bessel +towgs84=674.4,15.1,405.3,0,0,0,0 +units=m +no_defs");
-                proj4.defs("EPSG:2056", "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs");
-                ol.proj.proj4.register(proj4);
-            };
+                // add CH1903 and CH1903+ CRS definitions
+                if (proj4) {
+                    proj4.defs("EPSG:21781","+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=600000 +y_0=200000 +ellps=bessel +towgs84=674.4,15.1,405.3,0,0,0,0 +units=m +no_defs");
+                    proj4.defs("EPSG:2056", "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs");
+                    ol.proj.proj4.register(proj4);
+                };
 
-            // define tile grid
-            var extent = [2499100.0000000000000000,1127220.0000000000000000, 2499780.0000000000000000,1127900.0000000000000000]; // [minx, miny, maxx, maxy].
-            var minZoom = 0;
-            var maxZoom = 5;
-            var startResolution = (extent[2]-extent[0]) / 256;
-            var pixelResolutions = new Array(maxZoom + 1);
-            for (var i = 0, ii = pixelResolutions.length; i < ii; ++i) {
-                pixelResolutions[i] = startResolution / Math.pow(2, i);
-            }
-            var mapTileGrid = new ol.tilegrid.TileGrid({
-                extent: extent,
-                resolutions: pixelResolutions
-            });
+                // define tile grid
+                var extent = [2499100.0000000000000000,1127220.0000000000000000, 2499780.0000000000000000,1127900.0000000000000000]; // [minx, miny, maxx, maxy].
+                var minZoom = 0;
+                var maxZoom = 5;
+                var startResolution = (extent[2]-extent[0]) / 256;
+                var pixelResolutions = new Array(maxZoom + 1);
+                for (var i = 0, ii = pixelResolutions.length; i < ii; ++i) {
+                    pixelResolutions[i] = startResolution / Math.pow(2, i);
+                }
+                var mapTileGrid = new ol.tilegrid.TileGrid({
+                    extent: extent,
+                    resolutions: pixelResolutions
+                });
 
-/*            // define vector layer
+                /*            // define vector layer
             var vectorLayer1 = new ol.layer.Vector({
                 title: 'Tree tops',
                 type: 'overlay',
@@ -563,139 +573,156 @@ C(J ~= (C == 2)) = 1;</code></pre>
                     }))
                 })
             });*/
-            
-            // define XYZ tiles layer
-            var rasterTileLayer1 = new ol.layer.Tile({
-                title: 'RGB image',
-                type: 'base',
-                source: new ol.source.XYZ({
-                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_3/raster/ortho/{z}/{x}/{y}.jpg',
-                    crossOrigin: 'anonymous',
-                    tileGrid: mapTileGrid,
-                    projection: 'EPSG:2056',
-                    opaque: false,
-                    attributions: ['Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>']
-                })
-            });
 
-            
-            // define static image layer
-            var rasterStaticLayer1 = new ol.layer.Image({
-                title: 'Canopy return intensity',
-                type: 'base',
-                opacity: 1.0,
-                source: new ol.source.ImageStatic({
-                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_intensity.png',
-                    crossOrigin: 'anonymous',
-                    projection: 'EPSG:2056',
-                    imageSize: [1361,1361],
-                    imageExtent: extent,
-                    attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
-                })
-            });
-            
-            
-            // define static image layer
-            var rasterStaticLayer2 = new ol.layer.Image({
-                title: 'Classification',
-                type: 'base',
-                opacity: 1.0, 
-                source: new ol.source.ImageStatic({
-                    url: './data/tutorial_4/raster/ge_2017_a_superpixels.gif',
-                    crossOrigin: 'anonymous',
-                    projection: 'EPSG:2056',
-                    imageSize: [1361,1361],
-                    imageExtent: extent,
-                    attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
-                })
-            });
-            
-            
-            // define static image layer
-            var rasterStaticLayer3 = new ol.layer.Image({
-                title: 'Classification',
-                type: 'base',
-                opacity: 0.2, 
-                source: new ol.source.ImageStatic({
-                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_class.png',
-                    crossOrigin: 'anonymous',
-                    projection: 'EPSG:2056',
-                    imageSize: [1361,1361],
-                    imageExtent: extent,
-                    attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
-                })
-            });
-            
-
-            // define scale bar control
-            var scaleLineControl = new ol.control.ScaleLine();
-
-            // define attribution control
-            var attributionControl = new ol.control.Attribution({
-                collapsible: true,
-                className: 'ol-attribution'
-            });
-
-            // define fullscreen control
-            var icon1 = document.createElement("expand_icon");
-            icon1.className = "fa fa-expand";
-
-            var fullScreenControl = new ol.control.FullScreen({
-                label: icon1
-            });
-
-            // layer switcher control
-            var layerSwitcherControl = new ol.control.LayerSwitcher({
-                tipLabel: 'Layers'
-            });
+                // define XYZ tiles layer
+                var rasterTileLayer1 = new ol.layer.Tile({
+                    title: 'RGB image',
+                    type: 'base',
+                    source: new ol.source.XYZ({
+                        url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_3/raster/ortho/{z}/{x}/{y}.jpg',
+                        crossOrigin: 'anonymous',
+                        tileGrid: mapTileGrid,
+                        projection: 'EPSG:2056',
+                        opaque: false,
+                        attributions: ['Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>']
+                    })
+                });
 
 
-            var layerGroup1 = new ol.layer.Group({
-                title: 'Basemaps',
-                layers: [
-                    rasterTileLayer1,
-                    rasterStaticLayer3
-                ]
-            });
+                // define static image layer
+                var rasterStaticLayer1 = new ol.layer.Image({
+                    title: 'Canopy return intensity',
+                    type: 'base',
+                    opacity: 1.0,
+                    source: new ol.source.ImageStatic({
+                        url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_intensity.png',
+                        crossOrigin: 'anonymous',
+                        projection: 'EPSG:2056',
+                        imageSize: [1361,1361],
+                        imageExtent: extent,
+                        attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
+                    })
+                });
 
 
-/*            var layerGroup2 = new ol.layer.Group({
-                title: 'Overlays',
-                layers: [
-                    vectorLayer1
-                ]
-            });*/
+                // define static image layer
+                var rasterStaticLayer2 = new ol.layer.Image({
+                    title: 'Classification',
+                    type: 'base',
+                    opacity: 0.9, 
+                    source: new ol.source.ImageStatic({
+                        url: './data/tutorial_4/raster/ge_2017_a_superpixels.gif',
+                        crossOrigin: 'anonymous',
+                        projection: 'EPSG:2056',
+                        imageSize: [1361,1361],
+                        imageExtent: extent,
+                        attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
+                    })
+                });
 
 
-            // initialize map
-            var map = new ol.WebGLMap({
-                target: 'map2',
-                controls: ol.control.defaults({attribution: false}).extend([
-                    scaleLineControl,
-                    attributionControl,
-                    fullScreenControl
-                    //layerSwitcherControl
-                ]),
-                interactions: ol.interaction.defaults().extend([
-                    new ol.interaction.DragRotateAndZoom()
-                ]),
-                layers: [
-                    layerGroup1
-                ],
-                view: new ol.View({
-                    extent: extent,
-                    center: ol.extent.getCenter(extent),
-                    projection: ol.proj.get('EPSG:2056'),
-                    zoom: 2,
-                    minZoom: 1,
-                    maxZoom: 6,
-                    maxResolution: mapTileGrid.getResolution(minZoom)
-                })
-            });
+                // define static image layer
+                var rasterStaticLayer3 = new ol.layer.Image({
+                    title: 'Classification',
+                    type: 'base',
+                    opacity: 0.2, 
+                    source: new ol.source.ImageStatic({
+                        url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_class.png',
+                        crossOrigin: 'anonymous',
+                        projection: 'EPSG:2056',
+                        imageSize: [1361,1361],
+                        imageExtent: extent,
+                        attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
+                    })
+                });
 
 
-        </script>
+                // define scale bar control
+                var scaleLineControl = new ol.control.ScaleLine();
 
-    </body>
+                // define attribution control
+                var attributionControl = new ol.control.Attribution({
+                    collapsible: true,
+                    className: 'ol-attribution'
+                });
 
-</html>
+                // define fullscreen control
+                var icon1 = document.createElement("expand_icon");
+                icon1.className = "fa fa-expand";
+
+                var fullScreenControl = new ol.control.FullScreen({
+                    label: icon1
+                });
+
+                
+                /*  
+                // layer switcher control
+                var layerSwitcherControl = new ol.control.LayerSwitcher({
+                    tipLabel: 'Layers'
+                });
+                */
+
+                // initialize custom map 1
+                var map1 = new ol.WebGLMap({
+                    target: 'map2',
+                    controls: ol.control.defaults({attribution: false}).extend([
+                        new ol.control.ScaleLine(),
+                        new ol.control.Attribution({
+                            collapsible: true,
+                            className: 'ol-attribution'
+                        }),
+                        new ol.control.FullScreen({
+                            label: icon1
+                        })
+                    ]),
+                    interactions: ol.interaction.defaults().extend([
+                        new ol.interaction.DragRotateAndZoom()
+                    ]),
+                    layers: [
+                        rasterStaticLayer1,
+                        rasterStaticLayer2
+                    ],
+                    view: new ol.View({
+                        extent: extent,
+                        center: ol.extent.getCenter(extent),
+                        projection: ol.proj.get('EPSG:2056'),
+                        zoom: 2,
+                        minZoom: 1,
+                        maxZoom: 6,
+                        maxResolution: mapTileGrid.getResolution(minZoom)
+                    })
+                });
+
+
+                // initialize custom map 2
+                var map2 = new ol.WebGLMap({
+                    target: 'map3',
+                    controls: ol.control.defaults({attribution: false}).extend([
+                        scaleLineControl,
+                        attributionControl,
+                        fullScreenControl
+                    ]),
+                    interactions: ol.interaction.defaults().extend([
+                        new ol.interaction.DragRotateAndZoom()
+                    ]),
+                    layers: [
+                        rasterTileLayer1,
+                        rasterStaticLayer3
+                    ],
+                    view: new ol.View({
+                        extent: extent,
+                        center: ol.extent.getCenter(extent),
+                        projection: ol.proj.get('EPSG:2056'),
+                        zoom: 2,
+                        minZoom: 1,
+                        maxZoom: 6,
+                        maxResolution: mapTileGrid.getResolution(minZoom)
+                    })
+                });
+
+
+            </script>
+
+            </body>
+
+        </html>
