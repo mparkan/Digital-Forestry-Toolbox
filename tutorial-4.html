@@ -606,6 +606,24 @@ C(J ~= (C == 2)) = 1;</code></pre>
                 })
             });
             
+            // define static image layer
+            var rasterStaticLayer3 = new ol.layer.Image({
+                title: 'Classification',
+                type: 'base',
+                opacity: 0.2, 
+                source: new ol.source.ImageStatic({
+                    url: 'ge_2017_a_superpixels.png',
+                    crossOrigin: 'anonymous',
+                    projection: 'EPSG:2056',
+                    imageSize: [1361,1361],
+                    imageExtent: extent,
+                    attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
+                })
+            });
+            
+            
+            
+            
             
             // define scale bar control
             var scaleLineControl = new ol.control.ScaleLine();
@@ -634,7 +652,8 @@ C(J ~= (C == 2)) = 1;</code></pre>
                 title: 'Basemaps',
                 layers: [
                     rasterTileLayer1,
-                    rasterStaticLayer2
+                    rasterStaticLayer2,
+                    rasterStaticLayer3
                     //rasterStaticLayer1,
                 ]
             });
