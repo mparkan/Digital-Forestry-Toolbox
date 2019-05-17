@@ -107,7 +107,7 @@
             <h1>Deciduous/evergreen foliage classification</h1>
 
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Published</b>: April 29, 2019 / <b>Last updated</b>: April 29, 2019</p>
+            <p style="text-align: center"><b>Published</b>: April 29, 2019 / <b>Last updated</b>: May 17, 2019</p>
             <p style="text-align: center"><b>Tested on Matlab r2018b, GNU Octave 5.1.0</b></p>
 
             <h2>
@@ -292,7 +292,7 @@ intensity = double(pc.record.intensity);</code></pre>
 
             <p>In this step, we compute 1x1 m raster elevation models, using the <code>elevationModels()</code> function:</p>
             
-        <pre><code>cellSize = 1;
+        <pre><code>cellSize = 0.5;
 [models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
     pc.record.classification, ...
     'classTerrain', [2, 9, 16], ...
@@ -344,7 +344,7 @@ caxis(quantile(I(:), [0.02, 0.98]))</code></pre>
 
             <figure>
                 <img src="img/dft_tutorial_4_ima_3.png" alt="" style="width:80%;">
-                <figcaption><b>Figure 3</b> - First returns intensity map.</figcaption>
+                <figcaption><b>Figure 3</b> - Intensity map.</figcaption>
             </figure>
             
             
@@ -381,10 +381,13 @@ switch segmentation
         
         % before running slicmex, you have to compile it with the following command:
         % mex slicmex.c
-        [L, nlabels] = slicmex(I_n, ceil(0.05*nrows*ncols), 75);
+        r = 2.5; % target radius of one superpixel (in map units)
+        a = pi*r^2; % target area of one superpixel (in map units)
+        n_superpixels = round(nrows * ncols * cellSize^2 / a); % number of superpixels
+        [L, nlabels] = slicmex(I_n, n_superpixels, 100);
         
         % Note: Matlab users who have the "image processing" toolbox can also use the superpixels() function
-        % [L, nlabels] = superpixels(I_n, ceil(0.05*nrows*ncols), 'Compactness', 75);
+        % [L, nlabels] = superpixels(I_n, n_superpixels, 'Compactness', 75);
         
     case 'watershed' % Marker controlled watershed segmentation
         
@@ -409,16 +412,16 @@ end</code></pre>
                 <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Compute segment level intensity
             </h2>
 
-            <p>We now compute the mean intensity and height of each segment with:</p>
+            <p>We now compute the mean intensity and maximum height of each segment with:</p>
 
             <pre><code>I_s = accumarray(L(:)+1, I(:), [nrows*ncols,1], @nanmean, nan);
 I_s = I_s(L+1);
 </code></pre>
 
-            <pre><code>H_s = accumarray(L(:)+1, models.height.values(:), [nrows*ncols,1], @nanmean, single(nan));
+            <pre><code>H_s = accumarray(L(:)+1, models.height.values(:), [nrows*ncols,1], @nanmax, single(nan));
 H_s = H_s(L+1);</code></pre>
 
-            <p>We then remove segments with an average height smaller than 3 m and those containing only null intensity values:</p>
+            <p>We then remove segments with a maximum height smaller than 3 m and those containing only null intensity values:</p>
             
             <pre><code>h_min = 3;
 I_s(H_s <= h_min) = nan;
@@ -478,7 +481,7 @@ C(J ~= (C == 2)) = 1;</code></pre>
             <div id="map2">
             
             <div class="slidecontainer">
-              <input type="range" min="0" max="1" value="0.2" step="0.01" class="slider" id="myRange" title="Transparency" oninput="rasterStaticLayer2.setOpacity(this.value)">
+              <input type="range" min="0" max="1" value="0.2" step="0.01" class="slider" id="myRange" title="Transparency" oninput="rasterStaticLayer3.setOpacity(this.value)">
             </div>
 
             </div>
@@ -584,7 +587,7 @@ C(J ~= (C == 2)) = 1;</code></pre>
                     url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_intensity.png',
                     crossOrigin: 'anonymous',
                     projection: 'EPSG:2056',
-                    imageSize: [681,681],
+                    imageSize: [1361,1361],
                     imageExtent: extent,
                     attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
                 })
@@ -595,24 +598,9 @@ C(J ~= (C == 2)) = 1;</code></pre>
             var rasterStaticLayer2 = new ol.layer.Image({
                 title: 'Classification',
                 type: 'base',
-                opacity: 0.2, 
+                opacity: 1.0, 
                 source: new ol.source.ImageStatic({
-                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_class.png',
-                    crossOrigin: 'anonymous',
-                    projection: 'EPSG:2056',
-                    imageSize: [681,681],
-                    imageExtent: extent,
-                    attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
-                })
-            });
-            
-            // define static image layer
-            var rasterStaticLayer3 = new ol.layer.Image({
-                title: 'Classification',
-                type: 'base',
-                opacity: 0.2, 
-                source: new ol.source.ImageStatic({
-                    url: 'ge_2017_a_superpixels.png',
+                    url: './data/tutorial_4/raster/ge_2017_a_superpixels.gif',
                     crossOrigin: 'anonymous',
                     projection: 'EPSG:2056',
                     imageSize: [1361,1361],
@@ -622,9 +610,22 @@ C(J ~= (C == 2)) = 1;</code></pre>
             });
             
             
+            // define static image layer
+            var rasterStaticLayer3 = new ol.layer.Image({
+                title: 'Classification',
+                type: 'base',
+                opacity: 0.2, 
+                source: new ol.source.ImageStatic({
+                    url: 'http://mparkan.github.io/Digital-Forestry-Toolbox/data/tutorial_4/raster/ge_2017_a_class.png',
+                    crossOrigin: 'anonymous',
+                    projection: 'EPSG:2056',
+                    imageSize: [1361,1361],
+                    imageExtent: extent,
+                    attributions: 'Data courtesy of <a href=https://ge.ch/sitg/donnees>Geneva</a>'
+                })
+            });
             
-            
-            
+
             // define scale bar control
             var scaleLineControl = new ol.control.ScaleLine();
 
@@ -652,9 +653,7 @@ C(J ~= (C == 2)) = 1;</code></pre>
                 title: 'Basemaps',
                 layers: [
                     rasterTileLayer1,
-                    rasterStaticLayer2,
                     rasterStaticLayer3
-                    //rasterStaticLayer1,
                 ]
             });
 
