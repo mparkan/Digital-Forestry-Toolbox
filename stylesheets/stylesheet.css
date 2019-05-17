@@ -349,7 +349,25 @@ border-bottom: 3px solid rgba(91, 117, 109,60); //#eff0f1
 }
 
 
-#map1{
+/*#map1{
+    z-index: 0; 
+    padding: 1em;
+    width: 100%;
+    margin: auto;
+    overflow: hidden;
+}*/
+
+/*#map2 {
+    z-index: 0; 
+    padding: 1em;
+    width: 100%;
+    height: 600px;
+    overflow: hidden;
+    background: url(map-background.jpg) repeat;
+    background-clip: content-box;
+}*/
+
+.geoadminmap {
     z-index: 0; 
     padding: 1em;
     width: 100%;
@@ -357,7 +375,9 @@ border-bottom: 3px solid rgba(91, 117, 109,60); //#eff0f1
     overflow: hidden;
 }
 
-#map2 {
+
+.olmap {
+    position: relative;
     z-index: 0; 
     padding: 1em;
     width: 100%;
