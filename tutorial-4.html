@@ -290,7 +290,7 @@ intensity = double(pc.record.intensity);</code></pre>
                 <a id="step-2" class="anchor" href="step-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 2</b> - Compute raster elevation models
             </h2>
 
-            <p>In this step, we compute 1x1 m raster elevation models, using the <code>elevationModels()</code> function:</p>
+            <p>In this step, we compute 0.5x0.5 m raster elevation models, using the <code>elevationModels()</code> function:</p>
             
         <pre><code>cellSize = 0.5;
 [models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
@@ -463,7 +463,7 @@ axis equal tight
                 <a id="step-8" class="anchor" href="step-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 8</b> - Filter out small patches
             </h2>
 
-            <p>To remove small patches in the evergreen category (C = 2), we apply <a href="https://ch.mathworks.com/help/images/understanding-morphological-reconstruction.html">morphological reconstruction</a> to the category 2 boolean image, using a morphological erosion (with a disk shaped window with a 1 pixel radius) as the marker:</p>
+            <p>To remove small patches in the evergreen category (C = 2), we apply <a href="https://ch.mathworks.com/help/images/understanding-morphological-reconstruction.html">morphological reconstruction</a> to the category 2 boolean image, using a morphological erosion (with a disk shaped window with a 3 pixel radius) as the marker:</p>
             <pre><code>se = strel("disk", 3, 0); % circular structuring element with a radius of 3 pixels 
 J = imreconstruct(imerode(C == 2, se), C == 2);
 C(J ~= (C == 2)) = 1;</code></pre>
