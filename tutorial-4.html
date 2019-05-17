@@ -464,7 +464,8 @@ axis equal tight
             </h2>
 
             <p>To remove small patches in the evergreen category (C = 2), we apply <a href="https://ch.mathworks.com/help/images/understanding-morphological-reconstruction.html">morphological reconstruction</a> to the category 2 boolean image, using a morphological erosion (with a disk shaped window with a 1 pixel radius) as the marker:</p>
-            <pre><code>J = imreconstruct(imerode(C == 2, strel("disk", 1)), C == 2);
+            <pre><code>se = strel("disk", 3, 0); % circular structuring element with a radius of 3 pixels 
+J = imreconstruct(imerode(C == 2, se), C == 2);
 C(J ~= (C == 2)) = 1;</code></pre>
 
             <p>Finally, you can optionally export the category map to an ARC/INFO ASCII grid file with the <code>ASCwrite()</code> function:</p>
