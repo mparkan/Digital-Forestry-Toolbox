@@ -11,7 +11,7 @@
 %
 % Author: Matthew Parkan
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: May 6, 2019
+% Last revision: May 17, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -39,7 +39,7 @@ pc = LASread('ge_2017_a.las');
 
 %% Step 2 - Compute a raster Canopy Height Model (CHM)
 
-cellSize = 1;
+cellSize = 0.5;
 [models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
     pc.record.classification, ...
     'classTerrain', [2, 9, 16], ...
@@ -102,10 +102,13 @@ switch segmentation
         
         % before running slicmex, you have to compile it with the following command:
         % mex slicmex.c
-        [L, nlabels] = slicmex(I_n, ceil(0.05*nrows*ncols), 75);
+        r = 2.5; % target radius of one superpixel (in map units)
+        a = pi*r^2; % target area of one superpixel (in map units)
+        n_superpixels = round(nrows * ncols * cellSize^2 / a); % number of superpixels
+        [L, nlabels] = slicmex(I_n, n_superpixels, 100);
         
         % Note: Matlab users who have the "image processing" toolbox can also use the superpixels() function
-        % [L, nlabels] = superpixels(I_n, ceil(0.05*nrows*ncols), 'Compactness', 75);
+        % [L, nlabels] = superpixels(I_n, n_superpixels, 'Compactness', 75);
         
     case 'watershed' % Marker controlled watershed segmentation
         
@@ -132,7 +135,7 @@ end
 I_s = accumarray(L(:)+1, I(:), [nrows*ncols,1], @nanmean, nan);
 I_s = I_s(L+1);
 
-H_s = accumarray(L(:)+1, models.height.values(:), [nrows*ncols,1], @nanmean, single(nan));
+H_s = accumarray(L(:)+1, models.height.values(:), [nrows*ncols,1], @nanmax, single(nan));
 H_s = H_s(L+1);
 
 % threshold minimum segment height
@@ -173,7 +176,8 @@ axis equal tight
 
 %% Step 8 - filter small patches with by applying morphological reconstruction on the eroded
 
-J = imreconstruct(imerode(C == 2, strel("disk", 1, 0)), C == 2);
+se = strel("disk", 3, 0); % circular structuring element with a radius of 3 pixels 
+J = imreconstruct(imerode(C == 2, se), C == 2);
 C(J ~= (C == 2)) = 1;
 
 % plot the classification map
