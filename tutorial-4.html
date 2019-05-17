@@ -413,7 +413,7 @@ end</code></pre>
             <div class="olmap" id="map2">
 
             <div class="slidecontainer">
-              <input type="range" min="0" max="1" value="0.9" step="0.01" class="slider" id="myRange" title="Transparency" oninput="rasterStaticLayer2.setOpacity(this.value)">
+              <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="myRange" title="Transparency" oninput="rasterStaticLayer2.setOpacity(this.value)">
             </div>
 
             </div>          
@@ -609,7 +609,7 @@ C(J ~= (C == 2)) = 1;</code></pre>
                 var rasterStaticLayer2 = new ol.layer.Image({
                     title: 'Classification',
                     type: 'base',
-                    opacity: 0.9, 
+                    opacity: 0.5, 
                     source: new ol.source.ImageStatic({
                         url: './data/tutorial_4/raster/ge_2017_a_superpixels.gif',
                         crossOrigin: 'anonymous',
