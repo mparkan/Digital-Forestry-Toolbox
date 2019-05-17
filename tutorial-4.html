@@ -637,31 +637,16 @@ C(J ~= (C == 2)) = 1;</code></pre>
                 });
 
 
-                // define scale bar control
-                var scaleLineControl = new ol.control.ScaleLine();
-
-                // define attribution control
-                var attributionControl = new ol.control.Attribution({
-                    collapsible: true,
-                    className: 'ol-attribution'
-                });
-
-                // define fullscreen control
+                // define fullscreen control icon 1
                 var icon1 = document.createElement("expand_icon");
                 icon1.className = "fa fa-expand";
 
-                var fullScreenControl = new ol.control.FullScreen({
-                    label: icon1
-                });
-
+                // define fullscreen control icon 2
+                var icon2 = document.createElement("expand_icon");
+                icon2.className = "fa fa-expand";
                 
-                /*  
-                // layer switcher control
-                var layerSwitcherControl = new ol.control.LayerSwitcher({
-                    tipLabel: 'Layers'
-                });
-                */
-
+                var icon2 = icon1;
+                
                 // initialize custom map 1
                 var map1 = new ol.WebGLMap({
                     target: 'map2',
@@ -698,9 +683,14 @@ C(J ~= (C == 2)) = 1;</code></pre>
                 var map2 = new ol.WebGLMap({
                     target: 'map3',
                     controls: ol.control.defaults({attribution: false}).extend([
-                        scaleLineControl,
-                        attributionControl,
-                        fullScreenControl
+                        new ol.control.ScaleLine(),
+                        new ol.control.Attribution({
+                            collapsible: true,
+                            className: 'ol-attribution'
+                        }),
+                        new ol.control.FullScreen({
+                            label: icon2
+                        })
                     ]),
                     interactions: ol.interaction.defaults().extend([
                         new ol.interaction.DragRotateAndZoom()
