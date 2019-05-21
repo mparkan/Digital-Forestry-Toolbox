@@ -27,7 +27,7 @@ function ASCwrite(filepath, A, refmat, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2018b, GNU Octave 5.1.0 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
