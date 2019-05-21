@@ -35,7 +35,7 @@ function ASCwrite(filepath, A, refmat, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: September 20, 2018
+% Last revision: May 21, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -51,7 +51,6 @@ addParameter(arg, 'noData', -9999, @(x) isnumeric(x) && (floor(x) == x) && (nume
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, filepath, A, refmat, varargin{:});
-fclose('all'); % close all open files
 
 % check filepath extension
 [fpath, fname, fext] = fileparts(filepath);
@@ -68,7 +67,16 @@ if ~strcmp(fext, '.asc')
     
 end
 
-filepath = sprintf('%s\\%s%s', fpath, fname, fext);
+if isempty(fpath)
+  
+  filepath = sprintf('%s%s', fname, fext);
+  
+else
+  
+  filepath = sprintf('%s\\%s%s', fpath, fname, fext);
+  
+end
+
 
 %% open file
 
