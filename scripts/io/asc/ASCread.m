@@ -28,7 +28,7 @@ function [A, refmat] = ASCread(filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: September 20, 2018
+% Last revision: May 21, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -40,7 +40,6 @@ addRequired(arg, 'filepath', @(x) ischar(x));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, filepath, varargin{:});
-fclose('all'); % close all open files
 
 % check filepath extension
 [~, fname, fext] = fileparts(filepath);
