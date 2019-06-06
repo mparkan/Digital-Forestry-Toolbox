@@ -8,7 +8,7 @@ Please check the [Digital-Forestry-Toolbox website](http://mparkan.github.io/Dig
 ## License
 
 * Unless otherwise stated in the file, the code is licensed under [GNU GPL V3](http://www.gnu.org/licenses/licenses.en.html).
-* The airborne laser scanning datasets are a courtesy of the States of [Solothurn](https://geoweb.so.ch/map/lidar), [Zürich](https://maps.zh.ch/?topic=LidarZH) and [Geneva](https://ge.ch/sitg/donnees) (Switzerland).
+* The airborne laser scanning datasets are a courtesy of the States of [Solothurn](https://geo.so.ch/map/?bl=hintergrundkarte_sw&st=lidar), [Zürich](https://maps.zh.ch/?topic=LidarZH) and [Geneva](https://ge.ch/sitg/donnees) (Switzerland).
 
 ## Reference
 
