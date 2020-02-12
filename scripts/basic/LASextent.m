@@ -68,7 +68,6 @@ if OCTAVE_FLAG
     
     pkg load statistics
     pkg load image
-    pkg load mapping
 
 end
 
@@ -139,37 +138,37 @@ end
 %% compute metadata
 
 n_files = length(filelist);
-extent = struct(); %table();
+extent = struct();
 warning('off');
 
 for j = 1:n_files
     
     if ~isempty(filelist(j).path)
         
-        extent(j).FILEPATH = [filelist(j).path, filesep, filelist(j).name, filelist(j).ext];
+        extent(j,1).FILEPATH = [filelist(j).path, filesep, filelist(j).name, filelist(j).ext];
         
     else
         
-        extent(j).FILEPATH = [filelist(j).name, filelist(j).ext];
+        extent(j,1).FILEPATH = [filelist(j).name, filelist(j).ext];
         
     end
     
-    extent(j).FILENAME = filelist(j).name;
+    extent(j,1).FILENAME = filelist(j).name;
     
     % read LAS file
     switch arg.Results.method
         
         case 'header'
             
-            pc = LASread(extent(j).FILEPATH, true, false);
+            pc = LASread(extent(j,1).FILEPATH, true, false);
             
             % read extrema
-            extent(j).XMIN = pc.header.min_x;
-            extent(j).XMAX = pc.header.max_x;
-            extent(j).YMIN = pc.header.min_y;
-            extent(j).YMAX = pc.header.max_y;
-            extent(j).ZMIN = pc.header.min_z;
-            extent(j).ZMAX = pc.header.max_z;
+            extent(j,1).XMIN = pc.header.min_x;
+            extent(j,1).XMAX = pc.header.max_x;
+            extent(j,1).YMIN = pc.header.min_y;
+            extent(j,1).YMAX = pc.header.max_y;
+            extent(j,1).ZMIN = pc.header.min_z;
+            extent(j,1).ZMAX = pc.header.max_z;
             
         otherwise
             
@@ -180,7 +179,7 @@ for j = 1:n_files
                 
             end
     
-            pc = LASread(extent(j).FILEPATH, false, false);
+            pc = LASread(extent(j,1).FILEPATH, false, false);
             
             if arg.Results.verbose
                 
@@ -198,12 +197,12 @@ for j = 1:n_files
             end
             
             % compute extrema
-            extent(j).XMIN = min(pc.record.x);
-            extent(j).XMAX = max(pc.record.x);
-            extent(j).YMIN = min(pc.record.y);
-            extent(j).YMAX = max(pc.record.y);
-            extent(j).ZMIN = min(pc.record.z);
-            extent(j).ZMAX = max(pc.record.z);
+            extent(j,1).XMIN = min(pc.record.x);
+            extent(j,1).XMAX = max(pc.record.x);
+            extent(j,1).YMIN = min(pc.record.y);
+            extent(j,1).YMAX = max(pc.record.y);
+            extent(j,1).ZMIN = min(pc.record.z);
+            extent(j,1).ZMAX = max(pc.record.z);
             
             % compute point density (per unit area)
             [~, idxn_unit] = subsample([pc.record.x, pc.record.y], ...
@@ -212,7 +211,7 @@ for j = 1:n_files
                 'fig', false, ...
                 'verbose', false);
             
-            extent(j).PDENSITY = median(accumarray(idxn_unit, idxn_unit, [], @numel));
+            extent(j,1).PDENSITY = median(accumarray(idxn_unit, idxn_unit, [], @numel));
             
             % compute date metadata (if GPS time is in satellite format)
             if isfield(pc.header, 'global_encoding_gps_time_type')
@@ -229,18 +228,18 @@ for j = 1:n_files
                     end_date = max(unique_date);
                     
                     % number of surveys
-                    extent(j).NSURVEYS = length(unique_date);
-                    [extent(j).YSTART, extent(j).MSTART, extent(j).DSTART,~,~,~] = datevec(start_date);
-                    [extent(j).YEND, extent(j).MEND, extent(j).DEND,~,~,~] = datevec(end_date);
-                    extent(j).DATES = strjoin(cellstr(datestr(unique_date, 'yyyy/mm/dd')), ',');
+                    extent(j,1).NSURVEYS = length(unique_date);
+                    [extent(j,1).YSTART, extent(j,1).MSTART, extent(j,1).DSTART,~,~,~] = datevec(start_date);
+                    [extent(j,1).YEND, extent(j,1).MEND, extent(j,1).DEND,~,~,~] = datevec(end_date);
+                    extent(j,1).DATES = strjoin(cellstr(datestr(unique_date, 'yyyy/mm/dd')), ',');
                     
                 end
                 
             end
             
             % subsample point cloud
-            xrange = extent(j).XMAX - extent(j).XMIN;
-            yrange = extent(j).YMAX - extent(j).YMIN;
+            xrange = extent(j,1).XMAX - extent(j,1).XMIN;
+            yrange = extent(j,1).YMAX - extent(j,1).YMIN;
             max_range = max([xrange, yrange]);
             resolution = min(3, max_range / 100);
             
@@ -265,23 +264,28 @@ for j = 1:n_files
         pause(0.01);
         
     end
-            
+             
     % compute spatial extent
     switch arg.Results.method
         
-        case {'header', 'bbox'}
+        case 'header'
             
-            extent(j).X = [extent(j).XMIN, extent(j).XMAX, extent(j).XMAX, extent(j).XMIN, extent(j).XMIN];
-            extent(j).Y = [extent(j).YMAX, extent(j).YMAX, extent(j).YMIN, extent(j).YMIN, extent(j).YMAX];
+            extent(j,1).X = [extent(j,1).XMIN, extent(j,1).XMAX, extent(j,1).XMAX, extent(j,1).XMIN, extent(j,1).XMIN];
+            extent(j,1).Y = [extent(j,1).YMAX, extent(j,1).YMAX, extent(j,1).YMIN, extent(j,1).YMIN, extent(j,1).YMAX];
+        
+        case 'bbox'
+        
+            extent(j,1).X = [extent(j,1).XMIN, extent(j,1).XMAX, extent(j,1).XMAX, extent(j,1).XMIN, extent(j,1).XMIN];
+            extent(j,1).Y = [extent(j,1).YMAX, extent(j,1).YMAX, extent(j,1).YMIN, extent(j,1).YMIN, extent(j,1).YMAX];
         
         case 'concavehull'
             
             if OCTAVE_FLAG
                 
-                error('The concavehull option is not yet supported in Octave')
+              error('The concavehull option is not yet supported in Octave')
                 
-            end
-            
+            end  
+    
             % compute single region low resolution alpha hull
             shp = alphaShape(xy_s(:,1), xy_s(:,2), 10);
             ac = criticalAlpha(shp, 'one-region');
@@ -305,15 +309,15 @@ for j = 1:n_files
 
             idxn_boundary = shp_hr.boundaryFacets;
 
-            extent(j).X = shp_hr.Points(idxn_boundary,1);
-            extent(j).Y = shp_hr.Points(idxn_boundary,2);
+            extent(j,1).X = shp_hr.Points(idxn_boundary,1);
+            extent(j,1).Y = shp_hr.Points(idxn_boundary,2);
 
         case 'convexhull'
             
             idxn_boundary = convhull(pc.record.x, pc.record.y);
 
-            extent(j).X = pc.record.x(idxn_boundary);
-            extent(j).Y = pc.record.y(idxn_boundary);
+            extent(j,1).X = pc.record.x(idxn_boundary);
+            extent(j,1).Y = pc.record.y(idxn_boundary);
             
     end
     
@@ -340,15 +344,72 @@ if ~isempty(arg.Results.outputFilepath)
         
     end
     
-        [extent.Geometry] = deal('Polygon');
+        %[extent.Geometry] = deal('Polygon');
         
         for j = 1:length(extent)
             
-           extent(j).BoundingBox = [extent(j).XMIN, extent(j).YMIN; extent(j).XMAX, extent(j).YMAX];
+           extent(j,1).Geometry = 'Polygon';
+           extent(j,1).BoundingBox = [extent(j,1).XMIN, extent(j,1).YMIN; extent(j,1).XMAX, extent(j,1).YMAX];
             
         end
         
+        figure
+        plot(extent(j,1).X, extent(j,1).Y)
+        axis equal tight
+        
+        j = 1;
+        extent2 = struct;
+        extent2(j,1).Geometry = 'Polygon';
+        extent2(j,1).X = [597620 597630 597630 597620 597620];
+        extent2(j,1).Y = [170230 170230 170220 170220 170230];
+        extent2(j,1).BoundingBox = [min(extent2(j).X), min(extent2(j).Y); max(extent2(j).X), max(extent2(j).Y)];
+        extent2(j,1).Custom1 = 'cdf';        
+        
+        
+        extent2(j,1).BoundingBox = [extent(j,1).XMIN, extent(j,1).YMIN; extent(j,1).XMAX, extent(j,1).YMAX];
+        extent2(j,1).X = extent(j,1).X';
+        extent2(j,1).Y = extent(j,1).Y';
+        extent2(j,1).Custom1 = 'cdf';
+
         shapewrite(extent, arg.Results.outputFilepath);
+        
+        
+        s = struct;
+        j = 1;
+        s(j,1).Geometry = 'Polygon';
+        s(j,1).X = [590610 590620 590620 590610 590610];
+        s(j,1).Y = [178220 178220 178210 178210 178220];
+        
+        
+        
+        s(j,1).BoundingBox = [min(s(j,1).X), min(s(j,1).Y); max(s(j,1).X), max(s(j,1).Y)];
+        s(j,1).Custom1 = 'abc';
+        s(j,1).Custom2 = 42;
+        
+        %j = 2;
+        %s(j,1).Geometry = 'Polygon';
+        %s(j,1).X = [597620 597630 597630 597620 597620];
+        %s(j,1).Y = [170230 170230 170220 170220 170230];
+        %s(j,1).BoundingBox = [min(s(j).X), min(s(j).Y); max(s(j).X), max(s(j).Y)];
+        %s(j,1).Custom1 = 'cdf';
+        %s(j,1).Custom2 = 43;
+        
+        s2 = struct;
+        j = 1;
+        s2(j,1).Geometry = 'Point';
+        s2(j,1).X = [590610];
+        s2(j,1).Y = [178220];
+        s2(j,1).id = 1;
+        
+       
+        %s(j,1).BoundingBox = [min(s(j,1).X), min(s(j,1).Y); max(s(j,1).X), max(s(j,1).Y)];
+        %s(j,1).Custom1 = 'abc';
+        %s(j,1).Custom2 = 42;
+        
+        % test if input and output have the same field values
+        shapewrite(s2, 'point_oct.shp')
+        
+        
 
     if arg.Results.verbose
         

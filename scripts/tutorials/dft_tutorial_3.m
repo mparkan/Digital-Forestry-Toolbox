@@ -3,7 +3,7 @@
 % Other m-files required: LASread.m, elevationModels.m, treeStems.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 5.1.0 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -11,7 +11,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: December 7, 2018
+% Last revision: August 3, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -105,8 +105,5 @@ for j = 1:size(xyh_stem,1)
      
 end
 
-% IMPORTANT: Octave users, please make sure you are using the latest versions of 
-% the 'io' (2.4.12 or above) and 'mapping' (1.4.0 or above) packages. 
-% Previous versions contain critical issues in the shapewrite function.
-shapewrite(S, 'ge_2017_a_stems.shp'); % IMPORTANT: adjust the path to the output SHP file
-
+% IMPORTANT: adjust the path to the output SHP file
+shapewrite(S, 'ge_2017_a_stems.shp'); 

@@ -1,4 +1,4 @@
-## Copyright (C) 2014-2019 Philip Nienhuis
+## Copyright (C) 2014-2020 Philip Nienhuis
 ## 
 ## This program is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
@@ -244,18 +244,17 @@ function [ outs, oatt ] = shaperead (fname, varargin);
 
   ## Check .shp file existence
   fidp = fopen (fname, "r");
-  if (fidp < 0)
-    error ("shaperead: can't open file %s\n", fname);
+  ## Postpone file opening error until after other provisional input validation
+  if (fidp > 0)
+    ## Temporarily close to avoid file handle leaks during further input checks
+    fclose (fidp);
   endif
-  ## Temporarily close to avoid file handle leaks during further input checks
-  fclose (fidp);
   ## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ## Open .shx file to help speed up seeks to next records. We need this info
   ## for s_recs check below
   have_shx = 0;
   fidx = fopen ([bname ".shx"], "r");
   if (fidx < 0)
-    warning ("shaperead: index file %s not found\n", [fnm ".shx"]);
     s_recs = [];
   else
     fseek (fidx, 24, "bof");
@@ -368,8 +367,16 @@ function [ outs, oatt ] = shaperead (fname, varargin);
     endif
   endif
 
-  ## Open .shp file
-  fidp = fopen (fname, "r");
+  if (fidp < 0)
+    ## Only now convey file open error message
+    error ("shaperead: can't open file %s\n", fname);
+  else
+    ## Open .shp file
+    fidp = fopen (fname, "r");
+  endif
+  if (fidx < 0)
+    warning ("shaperead: index file %s not found\n", [fnm ".shx"]);
+  endif
 
   ## ============= Preparations done, now we can start reading ============
   ## ---------------------- 2. Read .shp file proper ----------------------

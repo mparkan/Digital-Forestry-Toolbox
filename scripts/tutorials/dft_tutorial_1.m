@@ -4,7 +4,7 @@
 % LASextent.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2017b, GNU Octave 5.1.0 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 23, 2018
+% Last revision: August 3, 2019
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -26,7 +26,6 @@ if OCTAVE_FLAG
     
     pkg load statistics
     pkg load image
-    pkg load mapping
 
 end
 
@@ -59,20 +58,26 @@ intensity_s = single(pc.record.intensity(idxl_sample));
 
 %% Step 3 - Visualization
 
-figure
-scatter3(xyz_s(:,1), ...
-xyz_s(:,2), ...
-xyz_s(:,3), ...
-6, ...
-intensity_s, ...
-'Marker', '.');
-colorbar
-caxis(quantile(intensity_s, [0.01, 0.99]))
-axis equal tight
-title('Return intensity')
-xlabel('x')
-ylabel('y')
-ylabel('z')
+% Due to 3D plotting performance issues, the display of large points
+% clouds is currently discouraged in Octave
+if ~OCTAVE_FLAG
+    
+  figure
+  scatter3(xyz_s(:,1), ...
+  xyz_s(:,2), ...
+  xyz_s(:,3), ...
+  6, ...
+  intensity_s, ...
+  'Marker', '.');
+  colorbar
+  caxis(quantile(intensity_s, [0.01, 0.99]))
+  axis equal tight
+  title('Return intensity')
+  xlabel('x')
+  ylabel('y')
+  ylabel('z')
+
+end
 
 
 %% Step 4 - Checking the acquisition dates
@@ -102,7 +107,44 @@ extent = LASextent('zh_2014_a.las', ...
     'fig', false, ...
     'verbose', true);
 
+        s2 = struct;
+        j = 1;
+        s2(j,1).Geometry = 'Point';
+        s2(j,1).X = [590610];
+        s2(j,1).Y = [178220];
+        s2(j,1).ID = 1;
+       
+        %s(j,1).BoundingBox = [min(s(j,1).X), min(s(j,1).Y); max(s(j,1).X), max(s(j,1).Y)];
+        %s(j,1).Custom1 = 'abc';
+        %s(j,1).Custom2 = 42;
+        
+        % test if input and output have the same field values
+        %shapewrite(s2, 'point_oct.shp')
+        
+        %s(j,1).BoundingBox = [min(s(j,1).X), min(s(j,1).Y); max(s(j,1).X), max(s(j,1).Y)];
+        %s(j,1).Custom1 = 'abc';
+        %s(j,1).Custom2 = 42;
+        
+        % test if input and output have the same field values
+        shapewrite(s2, 'point_mat.shp')
 
+        fid = fopen('C:\Users\mat\Downloads\test\point_mat.dbf', 'r');
+        BB_mat = fread(fid, 'uint8')
+        fclose(fid);
+        
+        fid = fopen('C:\Users\mat\Downloads\test\point_oct.dbf', 'r');
+        BB_oct = fread(fid, 'uint8')
+        fclose(fid);
+        
+        
+        
+        [BB_mat, BB_oct]
+        isequal(BB_mat, BB_oct)
+        
+        
+        
+        
+        
 %% Step 7 - Extracting a cross-section from a 3D point cloud
 
 width = 2;

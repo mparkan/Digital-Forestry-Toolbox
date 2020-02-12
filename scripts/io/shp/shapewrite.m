@@ -1,4 +1,4 @@
-## Copyright (C) 2014-2019 Philip Nienhuis
+## Copyright (C) 2014-2020 Philip Nienhuis
 ## 
 ## This program is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
@@ -158,8 +158,8 @@ in struct\n=> input arg. #3 ignored");
   ## Prepare a few things
   numfeat = numel (shp);
   if (abs (otype) >= 1)
-    [~, stype] = ismember(lower(shp(1).Geometry), {"point", "multipoint", "line", "polygon"});
-
+    stype = strmatch (lower (shp(1).Geometry), ...
+                  {"point", "multipoint", "line", "polygon"});
     if (isempty (stype))
       ## Not a supported struct type
       error ("shapewrite: unsupported struct type.\n")

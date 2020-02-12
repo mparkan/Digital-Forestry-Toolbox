@@ -1,5 +1,5 @@
-## Copyright (C) 2015-2018 Philip Nienhuis
-## Copyright (C) 2018 Matthew Parkan
+## Copyright (C) 2015-2020 Philip Nienhuis
+## Copyright (C) 2018-2020 Matthew Parkan
 ##
 ## This program is free software; you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
@@ -20,14 +20,16 @@
 ##
 ## @var{fname} must be a valid file name, optionally with '.dbf' suffix.
 ## @var{data} should be a cell array of which the top row contains column
-## names (character strings, each max. 10 characters).  Each column must
-## contain only one class of data, except of course the top entry (the column
-## header).  Integers interspersed in double type colums will be written as
-## doubles.  Data types that can be written are character (text string),
-## numeric (integer and float, the latter with 6 decimal places), and logical.
+## names (character strings, each max. 10 characters; longer column names will
+## be truncated).  Each column must contain only one class of data, except of
+## course the top entry (the column header).  Integers interspersed in double
+## type colums will be written as doubles.  Data types that can be written are
+## character (text string), numeric (integer and float, the latter with 6
+## decimal places), and logical.
 ##
-## Output argument @var{status} is 1 if the file was written successfully, 0
-## otherwise.
+## Output argument @var{status} is 1 if the file was written successfully, -1 if
+## one or more data columns were skipped, 0 otherwise.  If 0 the incomplete file
+## will be deleted as well.
 ##
 ## Provisionally only dBase v. III+ files without memos can be written.
 ##
@@ -61,8 +63,8 @@ function [status] = dbfwrite (fname, data)
   if (! isempty (toolong))
     ## Truncate headers if required and check for uniqueness
     warning ("dbfwrite: one or more column header(s) > 10 characters - truncated\n");
-    fmt = [repmat(sprintf ("%d "), 1, numel (toolong))(:)];
-    printf ("Applies to columns %s\n", sprintf (fmt, toolong));
+    fmt = [repmat("%d ", 1, numel (toolong))];
+    printf ("Applies to column(s): %s\n", sprintf (fmt, toolong));
     if (numel (unique (data(1, :))) < numel (data(1, :)))
       error ("dbfwrite: column headers aren't unique - please fix data\n");
     endif
@@ -114,6 +116,7 @@ function [status] = dbfwrite (fname, data)
     fseek (fid, 32, "bof");
 
     RR = zeros (32, nfields, "uint8");
+    colskipped = 0;
     for ii=1:nfields
       decpl = 0;
       recdesc = sprintf ("%d", uint32 (zeros (1, 8)));
@@ -139,7 +142,12 @@ function [status] = dbfwrite (fname, data)
         ftype = "L";
         fldlng = 1;
       else
-        error ("dbfwrite: heterogeneous data types in column %d", ii);
+        warning ("dbfwrite: heterogeneous data types in column %d ('%s'), \
+skipped.\n", ii, data{1, ii});
+        RR(:, end) = [];
+        nfields--;
+        colskipped = 1;
+        continue ;
         ## unwind_protect_cleanup takes care of closing & wiping file
       endif
       recdesc(12) = ftype;                                    ## Field type
@@ -195,9 +203,9 @@ function [status] = dbfwrite (fname, data)
     ## Write data in ~100 MB chunks to avoid overflow. First find an optimal
     ## chunk size as max. nr. of records in a chunk= (= nr.of rows in data)
     chunk_sz = floor (1e8 / reclen);
-    for ii=2 : chunk_sz : nrecs
+    for ii=1 : chunk_sz : nrecs
       ## Reshape chunk of data matrix
-      T = [data(ii:min (ii+chunk_sz-1, nrecs+1), :)'(:)];
+      T = [data(ii+1:min (ii+chunk_sz, nrecs+1), :)'(:)];
       blob = sprintf (fmt, T{:}); 
       ## Write blob to file
       fwrite (fid, blob, "char");
@@ -209,6 +217,8 @@ function [status] = dbfwrite (fname, data)
     if (! status)
       printf ("dbfwrite: removing incomplete file %s.\n", fname);
       unlink (fname);
+    elseif (colskipped)
+      status = -1;
     endif
   end_unwind_protect
 
