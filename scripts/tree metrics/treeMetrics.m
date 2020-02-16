@@ -78,7 +78,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2018b, GNU Octave 4.4.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2019b, GNU Octave 5.2.0 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -87,7 +87,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: January 23, 2019
+% Last revision: February 16, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -1239,11 +1239,11 @@ for j = 1:length(L)
             % single region 2D alpha shape
             metrics.ConcaveHull2D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
             
-            for k = find(metrics.NPoints > 2) %1:n_obs
+            for k = find(metrics.NPoints > 2)' %1:n_obs
                 
                 try
                     
-                    shp = alphaShape(metrics.XYH{k}(:,1:2), 5);
+                    shp = alphaShape(metrics.XYH{k}(:,1:2), inf);
                     alpha = criticalAlpha(shp, 'one-region');
                     metrics.ConcaveHull2D{k,1} = alphaShape(metrics.XYH{k}(:,1:2), ...
                         alpha, ...
@@ -1263,11 +1263,11 @@ for j = 1:length(L)
             % single region 3D alpha shape
             metrics.ConcaveHull3D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
             
-            for k = find(metrics.NPoints > 3) %1:n_obs
+            for k = find(metrics.NPoints > 3)' %1:n_obs
                 
                 try
                     
-                    shp = alphaShape(metrics.XYH{k}, 5);
+                    shp = alphaShape(metrics.XYH{k}, inf);
                     alpha = criticalAlpha(shp, 'one-region');
                     metrics.ConcaveHull3D{k,1} = alphaShape(metrics.XYH{k}, alpha);
                     
