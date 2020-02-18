@@ -112,9 +112,10 @@ addRequired(arg, 'refmat', @(x) all(size(x) == [3,2]));
 addParameter(arg, 'metrics', {'all'}, @(x) iscell(x) && ~isempty(x));
 addParameter(arg, 'treePos', [], @(x) (size(x,2) == 3) && isnumeric(x));
 addParameter(arg, 'intensityScaling', true, @(x) islogical(x) && (numel(x) == 1));
-addParameter(arg, 'dependencies', false, @(x) islogical(x) && (numel(x) == 1));
-addParameter(arg, 'scalarOnly', false, @(x) islogical(x) && (numel(x) == 1));
+%addParameter(arg, 'dependencies', false, @(x) islogical(x) && (numel(x) == 1));
+%addParameter(arg, 'scalarOnly', false, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'fieldAbbreviations', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'nameLengths', 'long', @(x) ismember(x, {'long','short'}) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, label, xyz, intensity, returnNumber, returnTotal, rgb, dtm, refmat, varargin{:});
@@ -1732,18 +1733,22 @@ for j = 1:length(L)
 end
 
 % remove dependencies from metrics
-if  ~arg.Results.dependencies
-   
-   metrics = rmfield(metrics, intersect(G.Nodes.Name(L), G.Nodes.Name(~idxl_filter)));
-   
-end
+%if ~arg.Results.dependencies
+%  
+%   metrics = rmfield(metrics, intersect(G.Nodes.Name(L), G.Nodes.Name(~idxl_filter)));
+%   
+%end
 
 % remove non-scalar metrics
-if arg.Results.scalarOnly
-    
-    metrics = rmfield(metrics, setdiff(fieldnames(metrics), M.Name(logical(M.Scalar))));
-    
-end
+%if arg.Results.scalarOnly
+%    
+%    metrics = rmfield(metrics, setdiff(fieldnames(metrics), M.Name(logical(M.Scalar))));
+%    
+%end
+
+% remove dependency fields
+metrics = rmfield(metrics, setdiff(fieldnames(metrics), M.Name(logical(G.Nodes.Available & G.Nodes.Selected))));
+
 
 % use field name abbreviations instead of full names
 if arg.Results.fieldAbbreviations
