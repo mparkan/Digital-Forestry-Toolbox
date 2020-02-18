@@ -58,6 +58,10 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 %
 %    label - Nx1 integer vector, updated point label (individual tree labels)
 %
+%    scalar - Nx1 boolean vector, flag to indicate scalar fields
+%
+%    format - Nx1 cell array, print format for scalar fields
+%
 % Example:
 %
 %    metrics = treeMetrics(label_3d, ...
@@ -87,7 +91,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 16, 2020
+% Last revision: February 18, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -291,97 +295,143 @@ k = 1;
 M.Category{k} = 'Identifier';
 M.Name{k} = 'UUID';
 M.Abbreviation{k} = 'UUID';
+M.Description{k} = 'Universally Unique Identifier';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%s';
+M.Printable{k} = true;
 k = k + 1;
 
 M.Category{k} = 'Identifier';
 M.Name{k} = 'LUID';
 M.Abbreviation{k} = 'LUID';
+M.Description{k} = 'Locally Unique Identifier';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%u';
+M.Printable{k} = true;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'RandomControl';
 M.Abbreviation{k} = 'RandomCtrl';
+M.Description{k} = 'Random Number (between 0 and 1)';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
+M.Printable{k} = true;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'NPoints';
 M.Abbreviation{k} = 'NPoints';
+M.Description{k} = 'Number of points';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%u';
+M.Printable{k} = true;
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'XYZ';
 M.Abbreviation{k} = 'XYZ';
+M.Description{k} = 'Raw 3D coordinates (x,y,z)';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'XYH';
 M.Abbreviation{k} = 'XYH';
+M.Description{k} = '';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'UVW';
 M.Abbreviation{k} = 'UVW';
+M.Description{k} = 'Principal components 3D coordinates (u,v,w)';
 M.Dependencies{k} = {'XYH'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
+M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
+k = k + 1;
+
+M.Category{k} = 'Basic';
+M.Name{k} = 'X';
+M.Abbreviation{k} = 'X';
+M.Description{k} = 'X coordinate of the position proxy';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
+M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
+k = k + 1;
+
+M.Category{k} = 'Basic';
+M.Name{k} = 'Y';
+M.Abbreviation{k} = 'Y';
+M.Description{k} = 'Y coordinate of the position proxy';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
+M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
+k = k + 1;
+
+M.Category{k} = 'Basic';
+M.Name{k} = 'Z';
+M.Abbreviation{k} = 'Z';
+M.Description{k} = 'Z coordinate of the position proxy';
+M.Dependencies{k} = {'NPoints'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
+M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
+k = k + 1;
+
+M.Category{k} = 'Basic';
+M.Name{k} = 'ConvexHull2D';
+M.Abbreviation{k} = 'ConvHull2D';
+M.Description{k} = '2D convex hull';
+M.Dependencies{k} = {'XYZ', 'NPoints'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
+M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
+k = k + 1;
+
+M.Category{k} = 'Basic';
+M.Name{k} = 'XConvexHull2D';
+M.Abbreviation{k} = 'XConvHull2D';
+M.Description{k} = 'X coordinates of 2D convex hull';
+M.Dependencies{k} = {'XYZ', 'ConvexHull2D'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'X';
-M.Abbreviation{k} = 'X';
-M.Dependencies{k} = {'NPoints'};
-M.Scalar(k) = true;
-M.Octave(k) = true;
-M.ScaleDependant(k) = false;
-k = k + 1;
-
-M.Category{k} = 'Basic';
-M.Name{k} = 'Y';
-M.Abbreviation{k} = 'Y';
-M.Dependencies{k} = {'NPoints'};
-M.Scalar(k) = true;
-M.Octave(k) = true;
-M.ScaleDependant(k) = false;
-k = k + 1;
-
-M.Category{k} = 'Basic';
-M.Name{k} = 'Z';
-M.Abbreviation{k} = 'Z';
-M.Dependencies{k} = {'NPoints'};
-M.Scalar(k) = true;
-M.Octave(k) = true;
-M.ScaleDependant(k) = false;
-k = k + 1;
-
-M.Category{k} = 'Basic';
-M.Name{k} = 'ConvexHull2D';
-M.Abbreviation{k} = 'ConvHull2D';
-M.Dependencies{k} = {'XYH', 'NPoints'};
+M.Name{k} = 'YConvexHull2D';
+M.Abbreviation{k} = 'YConvHull2D';
+M.Description{k} = 'Y coordinates of 2D convex hull';
+M.Dependencies{k} = {'XYZ', 'ConvexHull2D'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -390,505 +440,650 @@ k = k + 1;
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConvexHull3D';
 M.Abbreviation{k} = 'ConvHull3D';
+M.Description{k} = '3D convex hull';
 M.Dependencies{k} = {'XYH', 'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConcaveHull2D';
 M.Abbreviation{k} = 'ConcHull2D';
+M.Description{k} = '2D concave hull';
 M.Dependencies{k} = {'XYH', 'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'ConcaveHull3D';
 M.Abbreviation{k} = 'ConcHull3D';
+M.Description{k} = '3D concave hull';
 M.Dependencies{k} = {'XYH', 'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightMean';
 M.Abbreviation{k} = 'HeightMean';
+M.Description{k} = 'Mean of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightMedian';
 M.Abbreviation{k} = 'HeightMed';
+M.Description{k} = 'Median of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightSD';
 M.Abbreviation{k} = 'HeightSD';
+M.Description{k} = 'Standard deviation of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightCV';
 M.Abbreviation{k} = 'HeightCV';
+M.Description{k} = 'Coefficient of variation of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightKurtosis';
 M.Abbreviation{k} = 'HeightKurt';
+M.Description{k} = 'Kurtosis of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightSkewness';
 M.Abbreviation{k} = 'HeightSkew';
+M.Description{k} = 'Skewness of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightQ25';
 M.Abbreviation{k} = 'HeightQ25';
+M.Description{k} = '25th percentile of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightQ50';
 M.Abbreviation{k} = 'HeightQ50';
+M.Description{k} = '50th percentile of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightQ75';
 M.Abbreviation{k} = 'HeightQ75';
+M.Description{k} = '75th percentile of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'HeightQ90';
 M.Abbreviation{k} = 'HeightQ90';
+M.Description{k} = '90th percentile of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'PrinCompVar1';
 M.Abbreviation{k} = 'PCVar1';
+M.Description{k} = 'Variance of the first principal component';
 M.Dependencies{k} = {'UVW', 'NPoints'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'PrinCompVar2';
 M.Abbreviation{k} = 'PCVar2';
+M.Description{k} = 'Variance of the second principal component';
 M.Dependencies{k} = {'UVW', 'NPoints'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'PrinCompVar3';
 M.Abbreviation{k} = 'PCVar3';
+M.Description{k} = 'Variance of the third principal component';
 M.Dependencies{k} = {'UVW', 'NPoints'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'ConcaveBoundaryFraction';
 M.Abbreviation{k} = 'ConcFrac';
+M.Description{k} = 'Fraction of points located on the concave hull';
 M.Dependencies{k} = {'ConcaveHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'ConvexBoundaryFraction';
 M.Abbreviation{k} = 'ConvFrac';
+M.Description{k} = 'Fraction of points located on the convex hull';
 M.Dependencies{k} = {'ConvexHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'ConcavePointDensity';
 M.Abbreviation{k} = 'ConcDens';
+M.Description{k} = 'Number of points divided by the 3D concave hull volume';
 M.Dependencies{k} = {'NPoints', 'ConcaveVolume'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
 M.Name{k} = 'ConvexPointDensity';
 M.Abbreviation{k} = 'ConvDens';
+M.Description{k} = 'Number of points divided by the 3D convex hull volume';
 M.Dependencies{k} = {'NPoints', 'ConvexVolume'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'TotalHeight';
 M.Abbreviation{k} = 'TotHeight';
+M.Description{k} = 'Total height';
 M.Dependencies{k} = {'XYZ', 'X', 'Y', 'Z'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConcaveArea';
 M.Abbreviation{k} = 'ConcArea';
+M.Description{k} = 'Area of the 2D concave hull';
 M.Dependencies{k} = {'ConcaveHull2D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConcaveSurfaceArea';
 M.Abbreviation{k} = 'ConcSuArea';
+M.Description{k} = 'Surface area of the 3D concave hull';
 M.Dependencies{k} = {'ConcaveHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConcaveVolume';
 M.Abbreviation{k} = 'ConcVol';
+M.Description{k} = 'Volume of the 3D concave hull';
 M.Dependencies{k} = {'ConcaveHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConcaveSpecificSurface';
 M.Abbreviation{k} = 'ConcSpSurf';
+M.Description{k} = 'Specific surface of the 3D concave hull';
 M.Dependencies{k} = {'ConcaveVolume', 'ConcaveSurfaceArea'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConvexArea';
 M.Abbreviation{k} = 'ConvArea';
+M.Description{k} = 'Area of the 2D convex hull';
 M.Dependencies{k} = {'ConvexHull2D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'CrownDiameter';
 M.Abbreviation{k} = 'CrownDiam';
+M.Description{k} = 'Diameter of the equivalent area circle';
 M.Dependencies{k} = {'ConvexArea'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConvexSurfaceArea';
 M.Abbreviation{k} = 'ConvSuArea';
+M.Description{k} = 'Surface area of the 3D convex hull';
 M.Dependencies{k} = {'ConvexHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConvexVolume';
 M.Abbreviation{k} = 'ConvVol';
+M.Description{k} = 'Volume of the 3D convex hull';
 M.Dependencies{k} = {'ConvexHull3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
+M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'Convexity';
 M.Abbreviation{k} = 'Convexity';
+M.Description{k} = 'Convexity (concave surface area divided by convex surface area)';
 M.Dependencies{k} = {'ConvexSurfaceArea', 'ConcaveSurfaceArea'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConvexHullLacunarity';
 M.Abbreviation{k} = 'ConvLacuna';
+M.Description{k} = 'Convex hull lacunarity (concave volume divided by convex volume)';
 M.Dependencies{k} = {'ConvexVolume', 'ConcaveVolume'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'ConvexSpecificSurface';
 M.Abbreviation{k} = 'ConvSpSurf';
+M.Description{k} = 'Convex hull specific surface ()';
 M.Dependencies{k} = {'ConvexVolume', 'ConvexSurfaceArea'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'AspectRatio';
 M.Abbreviation{k} = 'AspRatio';
+M.Description{k} = 'Aspect ratio (height divided by convex area)';
 M.Dependencies{k} = {'ConvexArea', 'TotalHeight'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'Opacity';
 M.Abbreviation{k} = 'Opacity';
+M.Description{k} = 'Opacity ()';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'OpacityQ50';
 M.Abbreviation{k} = 'OpacityQ50';
+M.Description{k} = '50th percentile of the opacity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'SingleReturnFraction';
 M.Abbreviation{k} = 'SRFrac';
+M.Description{k} = 'Fraction of single returns';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'FirstReturnFraction';
 M.Abbreviation{k} = 'FRFrac';
+M.Description{k} = 'Fraction of first returns';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'LastReturnFraction';
 M.Abbreviation{k} = 'LRFrac';
+M.Description{k} = 'Fraction of last returns';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'Intensity';
 M.Abbreviation{k} = 'Intensity';
+M.Description{k} = 'Return intensity values';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityQ25';
 M.Abbreviation{k} = 'IntQ25';
+M.Description{k} = '25th percentile of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityQ50';
 M.Abbreviation{k} = 'IntQ50';
+M.Description{k} = '50th percentile of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityQ75';
 M.Abbreviation{k} = 'IntQ75';
+M.Description{k} = '75th percentile of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityQ90';
 M.Abbreviation{k} = 'IntQ90';
+M.Description{k} = '90th percentile of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityMean';
 M.Abbreviation{k} = 'IntMean';
+M.Description{k} = 'Mean of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityMax';
 M.Abbreviation{k} = 'IntMax';
+M.Description{k} = 'Max of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensitySD';
 M.Abbreviation{k} = 'IntSD';
+M.Description{k} = 'Standard deviation of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityCV';
 M.Abbreviation{k} = 'IntCV';
+M.Description{k} = 'Coefficient of variation of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityKurtosis';
 M.Abbreviation{k} = 'IntKurt';
+M.Description{k} = 'Kurtosis of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensitySkewness';
 M.Abbreviation{k} = 'IntSkew';
+M.Description{k} = 'Skewness of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityFirstReturnQ50';
 M.Abbreviation{k} = 'IntFRQ50';
+M.Description{k} = '50th percentile of the return intensity of first returns';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensityLastReturnQ50';
 M.Abbreviation{k} = 'IntLRQ50';
+M.Description{k} = '50th percentile of the return intensity of last returns';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
 M.Name{k} = 'IntensitySingleReturnQ50';
 M.Abbreviation{k} = 'IntSRQ50';
+M.Description{k} = '50th percentile of the return intensity of single returns';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
 M.Name{k} = 'RGB';
 M.Abbreviation{k} = 'RGB';
+M.Description{k} = 'Colors (Red, Green, Blue)';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
 M.Name{k} = 'Chromaticity';
 M.Abbreviation{k} = 'Chroma';
+M.Description{k} = 'Chromaticity ()';
 M.Dependencies{k} = [];
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
 M.Name{k} = 'ChromaticityRedMedian';
 M.Abbreviation{k} = 'CrRedMed';
+M.Description{k} = 'Median of red chromaticity';
 M.Dependencies{k} = {'Chromaticity'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
 M.Name{k} = 'ChromaticityGreenMedian';
 M.Abbreviation{k} = 'CrGreenMed';
+M.Description{k} = 'Median of green chromaticity';
 M.Dependencies{k} = {'Chromaticity'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
+k = k + 1;
+
+M.Category{k} = 'ColorMetrics';
+M.Name{k} = 'ConvexHullChromaticityRedMedian';
+M.Abbreviation{k} = 'CvHullCrRedMed';
+M.Description{k} = 'Median of red chromaticity of convex hull points';
+M.Dependencies{k} = {'Chromaticity', 'ConvexHull3D'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
+M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
+k = k + 1;
+
+M.Category{k} = 'ColorMetrics';
+M.Name{k} = 'ConvexHullChromaticityGreenMedian';
+M.Abbreviation{k} = 'CvHullCrGreenMed';
+M.Description{k} = 'Median of green chromaticity of convex hull points';
+M.Dependencies{k} = {'Chromaticity', 'ConvexHull3D'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
+M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
+k = k + 1;
+
+M.Category{k} = 'ColorMetrics';
+M.Name{k} = 'ConvexHullChromaticityBlueMedian';
+M.Abbreviation{k} = 'CvHullCrBlueMed';
+M.Description{k} = 'Median of blue chromaticity of convex hull points';
+M.Dependencies{k} = {'Chromaticity', 'ConvexHull3D'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
+M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 
@@ -1213,6 +1408,14 @@ for j = 1:length(L)
                 end
                 
             end
+                    
+        case 'XConvexHull2D'
+        
+            metrics.XConvexHull2D = cellfun(@(x,k) x(k,1)', metrics.XYZ, metrics.ConvexHull2D, 'UniformOutput', false);
+        
+        case 'YConvexHull2D'
+            
+            metrics.YConvexHull2D = cellfun(@(x,k) x(k,2)', metrics.XYZ, metrics.ConvexHull2D, 'UniformOutput', false);
             
         case 'ConvexHull3D'
             
