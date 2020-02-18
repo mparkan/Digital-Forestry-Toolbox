@@ -3,7 +3,7 @@
 % Other files required: LASread.m, elevationModels.m, canopyPeaks.m, treeWatershed.m, ASCwrite.m, slicmex.mex
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2018b, GNU Octave 5.1.0 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2019b, GNU Octave 5.2.0 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
