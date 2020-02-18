@@ -121,7 +121,7 @@ parse(arg, label, xyz, intensity, returnNumber, returnTotal, rgb, dtm, refmat, v
 
 OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system is Matlab or GNU Octave
 
-nargoutchk(1,2);
+nargoutchk(1,4);
 
 void_intensity = all(isnan(intensity));
 void_return_number = all(isnan(returnNumber));
@@ -301,7 +301,6 @@ M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
 M.PrintFormat{k} = '%s';
-M.Printable{k} = true;
 k = k + 1;
 
 M.Category{k} = 'Identifier';
@@ -313,7 +312,6 @@ M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
 M.PrintFormat{k} = '%u';
-M.Printable{k} = true;
 k = k + 1;
 
 M.Category{k} = 'Basic';
@@ -325,7 +323,6 @@ M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
 M.PrintFormat{k} = '%.3f';
-M.Printable{k} = true;
 k = k + 1;
 
 M.Category{k} = 'Basic';
@@ -337,7 +334,6 @@ M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
 M.PrintFormat{k} = '%u';
-M.Printable{k} = true;
 k = k + 1;
 
 M.Category{k} = 'Basic';
@@ -1217,6 +1213,10 @@ global_order = flipud(cell2mat(G.Nodes.DependencyPath(G.Nodes.Available & G.Node
 L = global_order(ia);
 %L = unique(flipud(order), 'stable')'; % Matlab only
 
+%M.Name(G.Nodes.Available & G.Nodes.Selected)
+varargout{2} = M.PrintFormat(G.Nodes.Available & G.Nodes.Selected); % print_format
+varargout{3} = M.Scalar(G.Nodes.Available & G.Nodes.Selected); % scalar_flag
+
 if arg.Results.verbose
     
     fprintf('done!\n');
@@ -1401,7 +1401,7 @@ for j = 1:length(L)
                 
                 try
                     
-                    [metrics.ConvexHull2D{k,1}, a_convex_2d(k,1)] = convhulln(metrics.XYH{k}(:,1:2));
+                    [metrics.ConvexHull2D{k,1}, a_convex_2d(k,1)] = convhull(metrics.XYZ{k}(:,1:2));
                     
                 catch
                     
