@@ -197,8 +197,8 @@ end
     'metrics', {'UUID', 'X', 'Y', 'Z', 'TotalHeight', 'XConvexHull2D', 'YConvexHull2D', 'ConvexArea'}, ...
     'intensityScaling', true, ...
     'fieldAbbreviations', false, ...
-    'dependencies', false, ...
-    'scalarOnly', false, ...
+    'dependencies', false, ... % REMOVE
+    'scalarOnly', false, ... % REMOVE
     'verbose', true);
 
 % geometry: position, circle, convexhull, concavehull, bbox 
@@ -207,7 +207,7 @@ end
 %% Step 10 - Exporting the segment metrics to a CSV file
 
 % set print format
-
+fields = fieldnames(metrics_3d)
 
 % write cell array to CSV file
 % IMPORTANT: adjust the path to the output CSV file
