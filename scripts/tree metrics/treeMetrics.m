@@ -56,8 +56,6 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 % Outputs:
 %    metrics - structure, metrics for each segment
 %
-%    label - Nx1 integer vector, updated point label (individual tree labels)
-%
 %    scalar - Nx1 boolean vector, flag to indicate scalar fields
 %
 %    format - Nx1 cell array, print format for scalar fields
@@ -120,7 +118,7 @@ parse(arg, label, xyz, intensity, returnNumber, returnTotal, rgb, dtm, refmat, v
 
 OCTAVE_FLAG = (exist('OCTAVE_VERSION', 'builtin') ~= 0); % determine if system is Matlab or GNU Octave
 
-nargoutchk(1,4);
+nargoutchk(1,3);
 
 void_intensity = all(isnan(intensity));
 void_return_number = all(isnan(returnNumber));
@@ -137,8 +135,8 @@ idxl_filter = all(idxl_filter,2);
 [label, ~] = grp2idx(label(idxl_filter)); % reassign labels
 n_obs = length(unique(label));
 
-varargout{1} = zeros(length(label),1);
-varargout{1}(idxl_filter) = label;
+%varargout{1} = zeros(length(label),1);
+%varargout{1}(idxl_filter) = label;
 
 xyz = xyz(idxl_filter,:);
 intensity = double(intensity(idxl_filter));
@@ -1213,10 +1211,8 @@ L = global_order(ia);
 %L = unique(flipud(order), 'stable')'; % Matlab only
 
 %M.Name(G.Nodes.Available & G.Nodes.Selected)
-varargout{2} = M.PrintFormat(G.Nodes.Available & G.Nodes.Selected); % print_format
-varargout{3} = logical(M.Scalar(G.Nodes.Available & G.Nodes.Selected)); % scalar_flag
-
-
+varargout{1} = M.PrintFormat(G.Nodes.Available & G.Nodes.Selected); % print_format
+varargout{2} = logical(M.Scalar(G.Nodes.Available & G.Nodes.Selected)); % scalar_flag
 
 if arg.Results.verbose
     
