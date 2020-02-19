@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 18, 2020
+% Last revision: February 19, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -194,192 +194,70 @@ end
     nan(length(pc.record.x), 3), ...
     models.terrain.values, ...
     refmat, ...
-    'metrics', {'UUID', 'X', 'Y', 'Z', 'TotalHeight', 'XConvexHull2D', 'YConvexHull2D', 'ConvexArea'}, ...
+    'metrics', {'UUID', 'XPos', 'YPos', 'ZPos', 'TotalHeight', 'XConvexHull2D', 'YConvexHull2D', 'ConvexArea', 'IntensityQ50'}, ...
     'intensityScaling', true, ...
     'fieldAbbreviations', false, ...
-    'dependencies', false, ... % REMOVE
-    'scalarOnly', false, ... % REMOVE
     'verbose', true);
 
-% geometry: position, circle, convexhull, concavehull, bbox 
-
+% list field names
+fields = fieldnames(metrics_3d);
 
 %% Step 10 - Exporting the segment metrics to a CSV file
 
-% set print format
-fields = fieldnames(metrics_3d)
-
-% write cell array to CSV file
-% IMPORTANT: adjust the path to the output CSV file
+% IMPORTANT: adjust the path to the output CSV file (otherwise it will be created in the current folder)
 fid = fopen('zh_2014_a_seg_metrics.csv', 'w+'); % open file
-fprintf(fid, '%s\n', strjoin(fields, ',')); % write header line
-fprintf(fid, fmt, C{:}); % write metrics
+fprintf(fid, '%s\n', strjoin(fields(idxl_scalar), ',')); % write header line
+C = struct2cell(rmfield(metrics_3d, fields(~idxl_scalar))); % convert structure to cell array
+fprintf(fid, [strjoin(fmt(idxl_scalar), ','), '\n'], C{:}); % write cell array to CSV file
 fclose(fid); % close file
+
 
 %% Step 11 - Exporting the segment polygons (and metrics) to a SHP file
 
-% compute bounding boxes of the polygons
-bbox = cellfun(@(x,y) [min(x), min(y); max(x), max(y)], 
-            metrics_3d.XConvexHull2D, 
-            metrics_3d.YConvexHull2D, 
+% duplicate the metrics structure (scalar fields only)
+S1 = rmfield(metrics_3d, fields(~idxl_scalar));
+
+% add the geometry type
+[S1.Geometry] = deal('Polygon');
+
+% add the X coordinates of the polygons
+[S1.X] = metrics_3d.XConvexHull2D;
+
+% add the Y coordinates of the polygons
+[S1.Y] = metrics_3d.YConvexHull2D;
+
+% add the bounding boxes [minX, minY; maxX, maxY]      
+bbox = cellfun(@(x,y) [min(x), min(y); max(x), max(y)], ...
+            {metrics_3d.XConvexHull2D}', ...
+            {metrics_3d.YConvexHull2D}', ...
             'UniformOutput', false);
-            
-% create a non-scalar structure
-S1 = struct('Geometry', repmat({'Polygon'}, n,1), ...
-      'X', metrics_3d.XConvexHull2D, ...
-      'Y', metrics_3d.YConvexHull2D, ...
-      'BoundingBox', bbox, ... % [minX, minY; maxX, maxY]
-      'Height', num2cell(metrics_3d.TotalHeight), 
-      'ConvexArea', num2cell(metrics_3d.ConvexArea), 
-      'XProxy', num2cell(metrics_3d.X), ...
-      'YProxy', num2cell(metrics_3d.Y), ...
-      'ZProxy', num2cell(metrics_3d.Z), ...
-      'UUID', metrics_3d.UUID);
- 
+[S1.BoundingBox] = bbox{:};
+
 % write non-scalar structure to SHP file
 % IMPORTANT: Matlab users, 
-shapewrite(S1, 'zh_2014_a_seg_polygons.shp'); % IMPORTANT: adjust the path to the output SHP file
+shapewrite(S1, 'zh_2014_a_seg_polygons.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
+clear S1
 
 %% Step 12 - Exporting the segment points (and metrics) to a SHP file
-       
-% create a non-scalar structure
-S2 = struct('Geometry', repmat({'Point'}, n,1), ...
-      'X', num2cell(metrics_3d.X), ...
-      'Y', num2cell(metrics_3d.Y), ...
-      'Height', num2cell(metrics_3d.TotalHeight), 
-      'ConvexArea', num2cell(metrics_3d.ConvexArea), 
-      'XProxy', num2cell(metrics_3d.X), ...
-      'YProxy', num2cell(metrics_3d.Y), ...
-      'ZProxy', num2cell(metrics_3d.Z), ...
-      'UUID', metrics_3d.UUID);
- 
+
+% duplicate the metrics structure (scalar fields only)
+S2 = rmfield(metrics_3d, fields(~idxl_scalar));
+
+% add the geometry type
+[S2.Geometry] = deal('Point');
+
+% add the X coordinates of the polygons
+[S2.X] = metrics_3d.XPos;
+
+% add the Y coordinates of the polygons
+[S2.Y] = metrics_3d.YPos;
+
 % write non-scalar structure to SHP file
 % IMPORTANT: Matlab users, 
-shapewrite(S2, 'zh_2014_a_seg_points.shp'); % IMPORTANT: adjust the path to the output SHP file
+shapewrite(S2, 'zh_2014_a_seg_points.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
+clear S2
 
-
-
-
- 
-XPOLY = cellfun(@(x,k) x(k,1)', metrics_3d.XYZ, metrics_3d.ConvHull2D, 'UniformOutput', false);
-YPOLY = cellfun(@(x,k) x(k,2)', metrics_3d.XYZ, metrics_3d.ConvHull2D, 'UniformOutput', false);
-bbox = cellfun(@(x,y) [min(x), min(y); max(x), max(y)], XPOLY, YPOLY, 'UniformOutput', false);
-
-n = length(metrics_3d.UUID);
-XPOLY{1}
-
-S = struct('Geometry', repmat({'Polygon'}, n,1), ...
-      'X', XPOLY, ...
-      'Y', YPOLY, ...
-      'BoundingBox', bbox, ... % [minX, minY; maxX, maxY]
-      'Height', num2cell(metrics_3d.TotalHeight), 
-      'XProxy', num2cell(metrics_3d.X), ...
-      'YProxy', num2cell(metrics_3d.Y), ...
-      'ZProxy', num2cell(metrics_3d.Z), ...
-      'UUID', metrics_3d.UUID);
-                        
-shapewrite(S, 'zh_2014_a_polygons.shp');
-  
-figure
-plot(T(1).X, T(1).Y)
-axis equal tight    
-
-
-extent = struct;
-
-j = 1;
-extent(j,1).Geometry = 'Polygon';
-extent(j,1).X = [597620 597630 597630 597620 597620];
-extent(j,1).Y = [170230 170230 170220 170220 170230];
-extent(j,1).BoundingBox = [min(extent(j).X), min(extent(j).Y); max(extent(j).X), max(extent(j).Y)];
-extent(j,1).Custom1 = 'cdf';        
-        
-j = 2;      
-extent(j,1).Geometry = 'Polygon';  
-extent(j,1).X = [597650 597680 597630 597620 597620];
-extent(j,1).Y = [170130 170270 170220 170210 170130];
-extent(j,1).BoundingBox = [min(extent(j).X), min(extent(j).Y); max(extent(j).X), max(extent(j).Y)];
-extent(j,1).Custom1 = 'cdf2';
-
-shapewrite(extent, 'test_extent.shp');
-        
-      
-      
-  
-xx = metrics_3d.XYZ{1}(:,1);
-yy = metrics_3d.XYZ{1}(:,2);
-[idxn_v, a] = convhull([xx, yy]);
-
-xy_chull = [xx(idxn_v), yy(idxn_v)];
-xy_chull_m = mean(xy_chull,1)
-
-
-
-
-[xxx, yyy] = poly2cw(xx(idxn_v), yy(idxn_v));
-% https://stackoverflow.com/questions/6989100/sort-points-in-clockwise-order
-  
-figure
-plot(xx(idxn_v), yy(idxn_v))
-axis equal tight       
-  
-figure
-for k = 1:150
-plot(T(k).X, T(k).Y)
-hold on
-end
-axis equal tight                
-                
-%% Step 10 - Exporting the segment metrics to CSV and SHP files
-
-fields = fieldnames(metrics_3d);
-m = length(fields);
-n = length(metrics_3d.(fields{1}));
-
-% determine print format
-idxl_num = structfun(@(x) isnumeric(x), metrics_3d);
-fmt = repmat({'%s'}, [1 m]);
-fmt(idxl_num) = {'%.3f'}; % print 3 decimal places
-fmt = [strjoin(fmt, ','), '\n'];
-
-% convert structure to cell array
-C = cell(m, n);
-for j = 1:m
-    
-    if isnumeric(metrics_3d.(fields{j}))
-       
-        C(j,:) = num2cell(metrics_3d.(fields{j}));
-
-    else
-        
-        C(j,:) = metrics_3d.(fields{j});
-       
-    end
-    
-end
-
-% write cell array to CSV file
-% IMPORTANT: adjust the path to the output CSV file
-fid = fopen('zh_2014_a_seg_metrics.csv', 'w+'); % open file
-fprintf(fid, '%s\n', strjoin(fields, ',')); % write header line
-fprintf(fid, fmt, C{:}); % write metrics
-fclose(fid); % close file
-
-% create a non-scalar structure
-S = cell2struct(C, fields);
-clear C
-
-% add geometry field
-[S.Geometry] = deal('Point');
-
-% write non-scalar structure to SHP file
-% IMPORTANT: Octave users, please make sure you are using the latest versions of 
-% the 'io' (2.4.12 or above) and 'mapping' (1.4.0 or above) packages. 
-% Previous versions contain critical issues in the shapewrite function.
-shapewrite(S, 'zh_2014_a_seg_metrics2.shp'); % IMPORTANT: adjust the path to the output SHP file
-
-
-%% Step 11 - Exporting the labelled and colored point cloud to a LAS file
+%% Step 13 - Exporting the labelled and colored point cloud to a LAS file
 
 % duplicate the source file
 r = pc;
