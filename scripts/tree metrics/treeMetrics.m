@@ -91,7 +91,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 18, 2020
+% Last revision: February 19, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -112,8 +112,6 @@ addRequired(arg, 'refmat', @(x) all(size(x) == [3,2]));
 addParameter(arg, 'metrics', {'all'}, @(x) iscell(x) && ~isempty(x));
 addParameter(arg, 'treePos', [], @(x) (size(x,2) == 3) && isnumeric(x));
 addParameter(arg, 'intensityScaling', true, @(x) islogical(x) && (numel(x) == 1));
-%addParameter(arg, 'dependencies', false, @(x) islogical(x) && (numel(x) == 1));
-%addParameter(arg, 'scalarOnly', false, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'fieldAbbreviations', true, @(x) islogical(x) && (numel(x) == 1));
 addParameter(arg, 'nameLengths', 'long', @(x) ismember(x, {'long','short'}) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
@@ -371,8 +369,8 @@ M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'X';
-M.Abbreviation{k} = 'X';
+M.Name{k} = 'XPos';
+M.Abbreviation{k} = 'XPos';
 M.Description{k} = 'X coordinate of the position proxy';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = true;
@@ -382,8 +380,8 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'Y';
-M.Abbreviation{k} = 'Y';
+M.Name{k} = 'YPos';
+M.Abbreviation{k} = 'YPos';
 M.Description{k} = 'Y coordinate of the position proxy';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = true;
@@ -393,8 +391,8 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'Z';
-M.Abbreviation{k} = 'Z';
+M.Name{k} = 'ZPos';
+M.Abbreviation{k} = 'ZPos';
 M.Description{k} = 'Z coordinate of the position proxy';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = true;
@@ -658,7 +656,7 @@ M.Category{k} = 'ExternalShapeMetrics';
 M.Name{k} = 'TotalHeight';
 M.Abbreviation{k} = 'TotHeight';
 M.Description{k} = 'Total height';
-M.Dependencies{k} = {'XYZ', 'X', 'Y', 'Z'};
+M.Dependencies{k} = {'XYZ', 'XPos', 'YPos', 'ZPos'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -1216,7 +1214,9 @@ L = global_order(ia);
 
 %M.Name(G.Nodes.Available & G.Nodes.Selected)
 varargout{2} = M.PrintFormat(G.Nodes.Available & G.Nodes.Selected); % print_format
-varargout{3} = M.Scalar(G.Nodes.Available & G.Nodes.Selected); % scalar_flag
+varargout{3} = logical(M.Scalar(G.Nodes.Available & G.Nodes.Selected)); % scalar_flag
+
+
 
 if arg.Results.verbose
     
@@ -1282,20 +1282,20 @@ for j = 1:length(L)
             % red, green, blue triplets
             metrics.RGB = mat2cell(rgb, metrics.NPoints, 3);
             
-        case 'X'
+        case 'XPos'
             
             % x root coordinate
-            metrics.X = xyz_proxy(:,1);
+            metrics.XPos = xyz_proxy(:,1);
             
-        case 'Y'
+        case 'YPos'
             
             % y root coordinate
-            metrics.Y = xyz_proxy(:,2);
+            metrics.YPos = xyz_proxy(:,2);
             
-        case 'Z'
+        case 'ZPos'
             
             % z root coordinate
-            metrics.Z = xyz_proxy(:,3);
+            metrics.ZPos = xyz_proxy(:,3);
             
         case 'XYH'
             
@@ -1397,12 +1397,14 @@ for j = 1:length(L)
             % 2D convex alpha shape
             metrics.ConvexHull2D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
             a_convex_2d = nan(n_obs,1);
+            idxl_convex_hull = false(n_obs,1);
             
             for k = find(metrics.NPoints > 2)' %1:n_obs
                 
                 try
                     
                     [metrics.ConvexHull2D{k,1}, a_convex_2d(k,1)] = convhull(metrics.XYZ{k}(:,1:2));
+                    idxl_convex_hull_2d(k,1) = true;
                     
                 catch
                     
@@ -1412,11 +1414,24 @@ for j = 1:length(L)
                     
         case 'XConvexHull2D'
         
-            metrics.XConvexHull2D = cellfun(@(x,k) x(k,1)', metrics.XYZ, metrics.ConvexHull2D, 'UniformOutput', false);
+            metrics.XConvexHull2D = repmat({nan}, n_obs, 1);
+            for k = find(idxl_convex_hull_2d)'
+                
+                metrics.XConvexHull2D{k,1} = metrics.XYZ{k}(metrics.ConvexHull2D{k},1)';
+            
+            end
+            % metrics.XConvexHull2D = cellfun(@(x,k) x(k,1)', metrics.XYZ, metrics.ConvexHull2D, 'UniformOutput', false);
         
         case 'YConvexHull2D'
             
-            metrics.YConvexHull2D = cellfun(@(x,k) x(k,2)', metrics.XYZ, metrics.ConvexHull2D, 'UniformOutput', false);
+            metrics.YConvexHull2D = repmat({nan}, n_obs, 1);
+            for k = find(idxl_convex_hull_2d)'
+                
+                metrics.YConvexHull2D{k,1} = metrics.XYZ{k}(metrics.ConvexHull2D{k},2)';
+            
+            end
+            
+            % metrics.YConvexHull2D = cellfun(@(x,k) x(k,2)', metrics.XYZ, metrics.ConvexHull2D, 'UniformOutput', false);
             
         case 'ConvexHull3D'
             
@@ -1732,23 +1747,11 @@ for j = 1:length(L)
     
 end
 
-% remove dependencies from metrics
-%if ~arg.Results.dependencies
-%  
-%   metrics = rmfield(metrics, intersect(G.Nodes.Name(L), G.Nodes.Name(~idxl_filter)));
-%   
-%end
-
-% remove non-scalar metrics
-%if arg.Results.scalarOnly
-%    
-%    metrics = rmfield(metrics, setdiff(fieldnames(metrics), M.Name(logical(M.Scalar))));
-%    
-%end
-
 % remove dependency fields
 metrics = rmfield(metrics, setdiff(fieldnames(metrics), M.Name(logical(G.Nodes.Available & G.Nodes.Selected))));
 
+% reorder field names
+metrics = orderfields(metrics, M.Name(logical(G.Nodes.Available & G.Nodes.Selected)));
 
 % use field name abbreviations instead of full names
 if arg.Results.fieldAbbreviations
@@ -1770,3 +1773,30 @@ if arg.Results.fieldAbbreviations
     clear metrics_new
 
 end
+
+% convert to non-scalar structure
+
+fields = fieldnames(metrics);
+m = length(fields);
+n = length(metrics.(fields{1}));
+
+% convert structure to cell array
+C = cell(m, n);
+for j = 1:m
+    
+    if isnumeric(metrics.(fields{j}))
+       
+        C(j,:) = num2cell(metrics.(fields{j}));
+
+    else
+        
+        C(j,:) = metrics.(fields{j});
+       
+    end
+    
+end
+
+clear metrics
+metrics = cell2struct(C, fields, 1);
+
+
