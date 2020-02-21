@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 19, 2020
+% Last revision: February 20, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -39,7 +39,7 @@ pc = LASread('zh_2014_a.las');
 
 %% Step 2 - Computing a raster Canopy Height Model (CHM)
 
-cellSize = 0.5;
+cellSize = 0.8;
 [models, refmat] = elevationModels([pc.record.x, pc.record.y, pc.record.z], ...
     pc.record.classification, ...
     'classTerrain', [2], ...
@@ -185,7 +185,8 @@ end
 
 
 %% Step 9 - Computing segment metrics from the labelled point cloud
-         
+
+
 [metrics_3d, fmt, idxl_scalar] = treeMetrics(label_3d, ...
     [pc.record.x, pc.record.y, pc.record.z], ...
     pc.record.intensity, ...
@@ -212,52 +213,26 @@ fprintf(fid, [strjoin(fmt(idxl_scalar), ','), '\n'], C{:}); % write cell array t
 fclose(fid); % close file
 
 
-%% Step 11 - Exporting the segment polygons (and metrics) to a SHP file
+%% Step 11 - Exporting the segment points (and metrics) to a SHP file
 
 % duplicate the metrics structure (scalar fields only)
-S1 = rmfield(metrics_3d, fields(~idxl_scalar));
+S = rmfield(metrics_3d, fields(~idxl_scalar));
 
 % add the geometry type
-[S1.Geometry] = deal('Polygon');
+[S.Geometry] = deal('Point');
 
 % add the X coordinates of the polygons
-[S1.X] = metrics_3d.XConvexHull2D;
+[S.X] = metrics_3d.XPos;
 
 % add the Y coordinates of the polygons
-[S1.Y] = metrics_3d.YConvexHull2D;
-
-% add the bounding boxes [minX, minY; maxX, maxY]      
-bbox = cellfun(@(x,y) [min(x), min(y); max(x), max(y)], ...
-            {metrics_3d.XConvexHull2D}', ...
-            {metrics_3d.YConvexHull2D}', ...
-            'UniformOutput', false);
-[S1.BoundingBox] = bbox{:};
+[S.Y] = metrics_3d.YPos;
 
 % write non-scalar structure to SHP file
 % IMPORTANT: Matlab users, 
-shapewrite(S1, 'zh_2014_a_seg_polygons.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
-clear S1
+shapewrite(S, 'zh_2014_a_seg_points.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
+clear S
 
-%% Step 12 - Exporting the segment points (and metrics) to a SHP file
-
-% duplicate the metrics structure (scalar fields only)
-S2 = rmfield(metrics_3d, fields(~idxl_scalar));
-
-% add the geometry type
-[S2.Geometry] = deal('Point');
-
-% add the X coordinates of the polygons
-[S2.X] = metrics_3d.XPos;
-
-% add the Y coordinates of the polygons
-[S2.Y] = metrics_3d.YPos;
-
-% write non-scalar structure to SHP file
-% IMPORTANT: Matlab users, 
-shapewrite(S2, 'zh_2014_a_seg_points.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
-clear S2
-
-%% Step 13 - Exporting the labelled and colored point cloud to a LAS file
+%% Step 12 - Exporting the labelled and colored point cloud to a LAS file
 
 % duplicate the source file
 r = pc;
