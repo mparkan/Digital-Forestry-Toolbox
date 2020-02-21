@@ -3,7 +3,7 @@
 % Other m-files required: LASread.m, elevationModels.m, treeStems.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 5.1.0 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2019b, GNU Octave 5.2.0 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -11,7 +11,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: August 3, 2019
+% Last revision: February 20, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -25,8 +25,6 @@ if OCTAVE_FLAG
     
     pkg load statistics
     pkg load image
-    pkg load io
-    pkg load mapping
 
 end
     
@@ -93,17 +91,16 @@ fclose(fid); % close file
 
 %% Step 6 - Export stem attributes to an ESRI shapefile
 
-S = struct;
-for j = 1:size(xyh_stem,1)
-    
-    S(j,1).Geometry = 'Point';
-    S(j,1).BoundingBox = [];
-    S(j,1).ID = j;
-    S(j,1).X = xyh_stem(j,1);
-    S(j,1).Y = xyh_stem(j,2);
-    S(j,1).H = xyh_stem(j,3);
-     
-end
+S = struct('Geometry', repmat({'Point'}, size(xyh_stem,1),1), ...
+      'X', num2cell(xyh_stem(:,1)), ...
+      'Y', num2cell(xyh_stem(:,2)), ...
+      'BoundingBox', [], ...
+      'H', num2cell(xyh_stem(:,3)));
+                        
 
-% IMPORTANT: adjust the path to the output SHP file
-shapewrite(S, 'ge_2017_a_stems.shp'); 
+% IMPORTANT: the shapewrite function included here is currently 
+% not compatible with Matlab. Matlab users should use the shapewrite 
+% function from the offical Matlab mapping toolbox instead.
+
+% write non-scalar structure to SHP file
+shapewrite(S, 'ge_2017_a_stems.shp'); % IMPORTANT: adjust the path to the output SHP file
