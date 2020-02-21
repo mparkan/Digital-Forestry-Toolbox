@@ -34,7 +34,7 @@ function extent = LASextent(points, varargin)
 % Other m-files required: LASread.m, LASwrite.m, subsample.m, gps2utc.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2017b, GNU Octave 4.2.1 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2019b, GNU Octave 5.2.0 (configured for "x86_64-w64-mingw32")
 % 
 % See also: LASCLIP, LASMERGE
 % 
@@ -42,7 +42,7 @@ function extent = LASextent(points, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: March 28, 2018
+% Last revision: February 20, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -353,63 +353,7 @@ if ~isempty(arg.Results.outputFilepath)
             
         end
         
-        figure
-        plot(extent(j,1).X, extent(j,1).Y)
-        axis equal tight
-        
-        j = 1;
-        extent2 = struct;
-        extent2(j,1).Geometry = 'Polygon';
-        extent2(j,1).X = [597620 597630 597630 597620 597620];
-        extent2(j,1).Y = [170230 170230 170220 170220 170230];
-        extent2(j,1).BoundingBox = [min(extent2(j).X), min(extent2(j).Y); max(extent2(j).X), max(extent2(j).Y)];
-        extent2(j,1).Custom1 = 'cdf';        
-        
-        
-        extent2(j,1).BoundingBox = [extent(j,1).XMIN, extent(j,1).YMIN; extent(j,1).XMAX, extent(j,1).YMAX];
-        extent2(j,1).X = extent(j,1).X';
-        extent2(j,1).Y = extent(j,1).Y';
-        extent2(j,1).Custom1 = 'cdf';
-
         shapewrite(extent, arg.Results.outputFilepath);
-        
-        
-        s = struct;
-        j = 1;
-        s(j,1).Geometry = 'Polygon';
-        s(j,1).X = [590610 590620 590620 590610 590610];
-        s(j,1).Y = [178220 178220 178210 178210 178220];
-        
-        
-        
-        s(j,1).BoundingBox = [min(s(j,1).X), min(s(j,1).Y); max(s(j,1).X), max(s(j,1).Y)];
-        s(j,1).Custom1 = 'abc';
-        s(j,1).Custom2 = 42;
-        
-        %j = 2;
-        %s(j,1).Geometry = 'Polygon';
-        %s(j,1).X = [597620 597630 597630 597620 597620];
-        %s(j,1).Y = [170230 170230 170220 170220 170230];
-        %s(j,1).BoundingBox = [min(s(j).X), min(s(j).Y); max(s(j).X), max(s(j).Y)];
-        %s(j,1).Custom1 = 'cdf';
-        %s(j,1).Custom2 = 43;
-        
-        s2 = struct;
-        j = 1;
-        s2(j,1).Geometry = 'Point';
-        s2(j,1).X = [590610];
-        s2(j,1).Y = [178220];
-        s2(j,1).id = 1;
-        
-       
-        %s(j,1).BoundingBox = [min(s(j,1).X), min(s(j,1).Y); max(s(j,1).X), max(s(j,1).Y)];
-        %s(j,1).Custom1 = 'abc';
-        %s(j,1).Custom2 = 42;
-        
-        % test if input and output have the same field values
-        shapewrite(s2, 'point_oct.shp')
-        
-        
 
     if arg.Results.verbose
         
