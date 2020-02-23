@@ -19,46 +19,40 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 %
 %    rgb - Nx3 numeric vector, [red, green, blue] triplets. Set to
 %    zeros(N,3) if the point cloud has no color.
-% 
+%
 %    dtm - numeric matrix, terrain elevation model
-% 
+%
 %    refmat - 3x2 numeric matrix, spatial referencing matrix of the terrain model, such that xy_map = [row, col, ones(nrows,1)] * refmat
 %
 %    metrics (optional, default: {'all'}) - cell array of strings, list of
 %    metrics to compute for each segment. The list can contain a
 %    combination of individual features (e.g. 'UUID', 'ConvexVolume',
 %    'TotalHeight', 'IntensityMedian') or feature categories. Supported
-%    feature categories are: 'Identifier', 'Basic', 'PointPatternMetrics', 
+%    feature categories are: 'Identifier', 'Basic', 'PointPatternMetrics',
 %    'IntensityMetrics', 'OpacityMetrics', 'ColorMetrics',
 %    'ExternalShapeMetrics'. If you want to compute all metrics specify
 %    {'all'}.
 %
 %    treePos (optional, default: []) - Mx3 numeric matrix, xyz coordinates of
-%    the tree positions. M is the number of segments (trees). If not specified, 
-%    the tree positions are automatically computed using the tree top 
+%    the tree positions. M is the number of segments (trees). If not specified,
+%    the tree positions are automatically computed using the tree top
 %    (highest point in segment) as a proxy for tree position
 %
 %    intensityScaling (optional, default: true) - boolean value, rescale
 %    intensity between 0 and 1 using the [0.001, 0.99] quantiles as limits
 %
-%    dependencies (optional, default: false) - boolean value, flag
-%    indicating if feature dependencies are included in the output
-%    (e.g. the 3D convex hull is a dependency of the volume)
-%
 %    scalarOnly (optional, default: true) - boolean value, flag indicating
 %    if only scalar values should be returned
-%
-%    fieldAbbreviations (optional, default: true) - boolean value, flag indicating
-%    if field name abbreviations should be used in the output structure
 %
 %    verbose (optional, default: true) - boolean value, verbosiy switch
 %
 % Outputs:
-%    metrics - structure, metrics for each segment
+%    metrics - Mx1 structure, list metrics for each segment.
 %
-%    scalar - Nx1 boolean vector, flag to indicate scalar fields
+%    scalar - 1xF boolean vector, flag to indicate scalar fields. F is the number of output metrics.
 %
-%    format - Nx1 cell array, print format for scalar fields
+%    format - 1xF cell array, print format of scalar fields (non-scalar fields have an empty print format).
+%    F is the number of output metrics.
 %
 % Example:
 %
@@ -72,9 +66,6 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 %         refmat, ...
 %         'metrics', {'Identifier', 'IntensityMetrics', 'OpacityMetrics', 'ConvexVolume', 'ConvexArea'}, ...
 %         'intensityScaling', true, ...
-%         'scalarOnly', true, ...
-%         'dependencies', true, ...
-%         'fieldAbbreviations', true, ...
 %         'verbose', true);
 %
 % Other m-files required: none
@@ -89,7 +80,7 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 19, 2020
+% Last revision: February 23, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
@@ -110,8 +101,6 @@ addRequired(arg, 'refmat', @(x) all(size(x) == [3,2]));
 addParameter(arg, 'metrics', {'all'}, @(x) iscell(x) && ~isempty(x));
 addParameter(arg, 'treePos', [], @(x) (size(x,2) == 3) && isnumeric(x));
 addParameter(arg, 'intensityScaling', true, @(x) islogical(x) && (numel(x) == 1));
-addParameter(arg, 'fieldAbbreviations', true, @(x) islogical(x) && (numel(x) == 1));
-addParameter(arg, 'nameLengths', 'long', @(x) ismember(x, {'long','short'}) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, label, xyz, intensity, returnNumber, returnTotal, rgb, dtm, refmat, varargin{:});
@@ -124,6 +113,7 @@ void_intensity = all(isnan(intensity));
 void_return_number = all(isnan(returnNumber));
 void_return_total = all(isnan(returnTotal));
 void_rgb = all(isnan(rgb(:)));
+
 
 %% filter points
 
@@ -188,7 +178,7 @@ if arg.Results.verbose
 end
 
 
-     
+
 % position proxy (root, centroid, apex)
 if isempty(arg.Results.treePos)
     
@@ -198,7 +188,7 @@ if isempty(arg.Results.treePos)
     switch proxy
         
         case 'root'
-           
+            
             z_min = accumarray(label, xyz(:,3), [n_obs,1], @min, nan);
             [~, idxn_min] = ismember([(1:n_obs)', z_min], [label, xyz(:,3)], 'rows');
             xyz_proxy(:,1:2) = xyz(idxn_min,1:2);
@@ -213,15 +203,15 @@ if isempty(arg.Results.treePos)
             z_max = accumarray(label, xyz(:,3), [n_obs,1], @max, nan);
             [~, idxn_max] = ismember([(1:n_obs)', z_max], [label, xyz(:,3)], 'rows');
             xyz_proxy(:,1:2) = xyz(idxn_max,1:2);
-
+            
     end
     
-     % convert map coordinates (x,y) to image coordinates (column, row)
-     RC = round([xyz_proxy(:,1) - refmat(3,1), xyz_proxy(:,2) - refmat(3,2)] / refmat(1:2,:));
-     ind = sub2ind(size(dtm), RC(:,1), RC(:,2));
-     
-     % find terrain elevation at tree proxy coordinates
-     xyz_proxy(:,3) = dtm(ind);
+    % convert map coordinates (x,y) to image coordinates (column, row)
+    RC = round([xyz_proxy(:,1) - refmat(3,1), xyz_proxy(:,2) - refmat(3,2)] / refmat(1:2,:));
+    ind = sub2ind(size(dtm), RC(:,1), RC(:,2));
+    
+    % find terrain elevation at tree proxy coordinates
+    xyz_proxy(:,3) = dtm(ind);
     
 else
     
@@ -230,7 +220,7 @@ else
     % convert map coordinates (x,y) to image coordinates (column, row)
     RC = round([xyz_proxy(:,1) - refmat(3,1), xyz_proxy(:,2) - refmat(3,2)] / refmat(1:2,:));
     ind = sub2ind(size(dtm), RC(:,1), RC(:,2));
-     
+    
     % find terrain elevation at tree proxy coordinates
     xyz_proxy(:,3) = dtm(ind);
     
@@ -277,21 +267,21 @@ end
 
 
 %% list feature dependencies
-
 warning off
 M = struct;
 
 M.Category = {};
 M.Name = {};
+M.Description = {};
 M.Dependencies = {};
 M.Scalar = [];
 M.Octave = [];
 M.ScaleDependant = [];
+M.PrintFormat = {};
 
 k = 1;
 M.Category{k} = 'Identifier';
 M.Name{k} = 'UUID';
-M.Abbreviation{k} = 'UUID';
 M.Description{k} = 'Universally Unique Identifier';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -302,7 +292,6 @@ k = k + 1;
 
 M.Category{k} = 'Identifier';
 M.Name{k} = 'LUID';
-M.Abbreviation{k} = 'LUID';
 M.Description{k} = 'Locally Unique Identifier';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -312,8 +301,7 @@ M.PrintFormat{k} = '%u';
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'RandomControl';
-M.Abbreviation{k} = 'RandomCtrl';
+M.Name{k} = 'Random';
 M.Description{k} = 'Random Number (between 0 and 1)';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -324,7 +312,6 @@ k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'NPoints';
-M.Abbreviation{k} = 'NPoints';
 M.Description{k} = 'Number of points';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -335,7 +322,6 @@ k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'XYZ';
-M.Abbreviation{k} = 'XYZ';
 M.Description{k} = 'Raw 3D coordinates (x,y,z)';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
@@ -346,8 +332,7 @@ k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'XYH';
-M.Abbreviation{k} = 'XYH';
-M.Description{k} = '';
+M.Description{k} = 'Normalized 3D coordinates (x,y,h)';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
@@ -357,7 +342,6 @@ k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'UVW';
-M.Abbreviation{k} = 'UVW';
 M.Description{k} = 'Principal components 3D coordinates (u,v,w)';
 M.Dependencies{k} = {'XYH'};
 M.Scalar(k) = false;
@@ -368,7 +352,6 @@ k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'XPos';
-M.Abbreviation{k} = 'XPos';
 M.Description{k} = 'X coordinate of the position proxy';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = true;
@@ -379,7 +362,6 @@ k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'YPos';
-M.Abbreviation{k} = 'YPos';
 M.Description{k} = 'Y coordinate of the position proxy';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = true;
@@ -390,7 +372,6 @@ k = k + 1;
 
 M.Category{k} = 'Basic';
 M.Name{k} = 'ZPos';
-M.Abbreviation{k} = 'ZPos';
 M.Description{k} = 'Z coordinate of the position proxy';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = true;
@@ -400,10 +381,29 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'ConvexHull2D';
-M.Abbreviation{k} = 'ConvHull2D';
+M.Name{k} = 'BBOX2D';
+M.Description{k} = '2D bounding box';
+M.Dependencies{k} = {'XYZ'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
+M.ScaleDependant(k) = true;
+M.PrintFormat{k} = [];
+k = k + 1;
+
+M.Category{k} = 'Basic';
+M.Name{k} = 'BBOX3D';
+M.Description{k} = '3D bounding box';
+M.Dependencies{k} = {'XYZ'};
+M.Scalar(k) = false;
+M.Octave(k) = true;
+M.ScaleDependant(k) = true;
+M.PrintFormat{k} = [];
+k = k + 1;
+
+M.Category{k} = 'Basic';
+M.Name{k} = 'CVH2D';
 M.Description{k} = '2D convex hull';
-M.Dependencies{k} = {'XYZ', 'NPoints'};
+M.Dependencies{k} = {'XYZ'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -411,30 +411,27 @@ M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'XConvexHull2D';
-M.Abbreviation{k} = 'XConvHull2D';
+M.Name{k} = 'XCVH2D';
 M.Description{k} = 'X coordinates of 2D convex hull';
-M.Dependencies{k} = {'XYZ', 'ConvexHull2D'};
+M.Dependencies{k} = {'CVH2D'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'YConvexHull2D';
-M.Abbreviation{k} = 'YConvHull2D';
+M.Name{k} = 'YCVH2D';
 M.Description{k} = 'Y coordinates of 2D convex hull';
-M.Dependencies{k} = {'XYZ', 'ConvexHull2D'};
+M.Dependencies{k} = {'CVH2D'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'ConvexHull3D';
-M.Abbreviation{k} = 'ConvHull3D';
+M.Name{k} = 'CVH3D';
 M.Description{k} = '3D convex hull';
-M.Dependencies{k} = {'XYH', 'NPoints'};
+M.Dependencies{k} = {'XYZ'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -442,10 +439,9 @@ M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'ConcaveHull2D';
-M.Abbreviation{k} = 'ConcHull2D';
+M.Name{k} = 'CCH2D';
 M.Description{k} = '2D concave hull';
-M.Dependencies{k} = {'XYH', 'NPoints'};
+M.Dependencies{k} = {'XYZ'};
 M.Scalar(k) = false;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
@@ -453,10 +449,9 @@ M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'Basic';
-M.Name{k} = 'ConcaveHull3D';
-M.Abbreviation{k} = 'ConcHull3D';
+M.Name{k} = 'CCH3D';
 M.Description{k} = '3D concave hull';
-M.Dependencies{k} = {'XYH', 'NPoints'};
+M.Dependencies{k} = {'XYZ'};
 M.Scalar(k) = false;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
@@ -464,8 +459,7 @@ M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'HeightMean';
-M.Abbreviation{k} = 'HeightMean';
+M.Name{k} = 'HMean';
 M.Description{k} = 'Mean of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -475,19 +469,7 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'HeightMedian';
-M.Abbreviation{k} = 'HeightMed';
-M.Description{k} = 'Median of the point heights';
-M.Dependencies{k} = [];
-M.Scalar(k) = true;
-M.Octave(k) = true;
-M.ScaleDependant(k) = true;
-M.PrintFormat{k} = '%.3f';
-k = k + 1;
-
-M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'HeightSD';
-M.Abbreviation{k} = 'HeightSD';
+M.Name{k} = 'HStdDev';
 M.Description{k} = 'Standard deviation of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -497,8 +479,7 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'HeightCV';
-M.Abbreviation{k} = 'HeightCV';
+M.Name{k} = 'HCoefVar';
 M.Description{k} = 'Coefficient of variation of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -508,8 +489,7 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'HeightKurtosis';
-M.Abbreviation{k} = 'HeightKurt';
+M.Name{k} = 'HKurt';
 M.Description{k} = 'Kurtosis of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -519,8 +499,7 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'HeightSkewness';
-M.Abbreviation{k} = 'HeightSkew';
+M.Name{k} = 'HSkew';
 M.Description{k} = 'Skewness of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -530,8 +509,7 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'HeightQ25';
-M.Abbreviation{k} = 'HeightQ25';
+M.Name{k} = 'HQ25';
 M.Description{k} = '25th percentile of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -541,9 +519,8 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'HeightQ50';
-M.Abbreviation{k} = 'HeightQ50';
-M.Description{k} = '50th percentile of the point heights';
+M.Name{k} = 'HQ50';
+M.Description{k} = '50th percentile (median) of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
@@ -552,8 +529,7 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'HeightQ75';
-M.Abbreviation{k} = 'HeightQ75';
+M.Name{k} = 'HQ75';
 M.Description{k} = '75th percentile of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -563,8 +539,7 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'HeightQ90';
-M.Abbreviation{k} = 'HeightQ90';
+M.Name{k} = 'HQ90';
 M.Description{k} = '90th percentile of the point heights';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -574,10 +549,9 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'PrinCompVar1';
-M.Abbreviation{k} = 'PCVar1';
+M.Name{k} = 'PCVar1';
 M.Description{k} = 'Variance of the first principal component';
-M.Dependencies{k} = {'UVW', 'NPoints'};
+M.Dependencies{k} = {'UVW'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -585,10 +559,9 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'PrinCompVar2';
-M.Abbreviation{k} = 'PCVar2';
+M.Name{k} = 'PCVar2';
 M.Description{k} = 'Variance of the second principal component';
-M.Dependencies{k} = {'UVW', 'NPoints'};
+M.Dependencies{k} = {'UVW'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -596,10 +569,9 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'PrinCompVar3';
-M.Abbreviation{k} = 'PCVar3';
+M.Name{k} = 'PCVar3';
 M.Description{k} = 'Variance of the third principal component';
-M.Dependencies{k} = {'UVW', 'NPoints'};
+M.Dependencies{k} = {'UVW'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -607,10 +579,9 @@ M.PrintFormat{k} = '%.3f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'ConcaveBoundaryFraction';
-M.Abbreviation{k} = 'ConcFrac';
-M.Description{k} = 'Fraction of points located on the concave hull';
-M.Dependencies{k} = {'ConcaveHull3D'};
+M.Name{k} = 'CCH3DRa';
+M.Description{k} = 'Ratio of points located on the concave hull';
+M.Dependencies{k} = {'CCH3D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
@@ -618,10 +589,9 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'ConvexBoundaryFraction';
-M.Abbreviation{k} = 'ConvFrac';
+M.Name{k} = 'CVH3DRa';
 M.Description{k} = 'Fraction of points located on the convex hull';
-M.Dependencies{k} = {'ConvexHull3D'};
+M.Dependencies{k} = {'CVH3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -629,10 +599,9 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'ConcavePointDensity';
-M.Abbreviation{k} = 'ConcDens';
+M.Name{k} = 'CCH3DPD';
 M.Description{k} = 'Number of points divided by the 3D concave hull volume';
-M.Dependencies{k} = {'NPoints', 'ConcaveVolume'};
+M.Dependencies{k} = {'NPoints', 'CCH3DVol'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
@@ -640,10 +609,9 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'PointPatternMetrics';
-M.Name{k} = 'ConvexPointDensity';
-M.Abbreviation{k} = 'ConvDens';
+M.Name{k} = 'CVH3DPD';
 M.Description{k} = 'Number of points divided by the 3D convex hull volume';
-M.Dependencies{k} = {'NPoints', 'ConvexVolume'};
+M.Dependencies{k} = {'NPoints', 'CVH3DVol'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -651,8 +619,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'TotalHeight';
-M.Abbreviation{k} = 'TotHeight';
+M.Name{k} = 'H';
 M.Description{k} = 'Total height';
 M.Dependencies{k} = {'XYZ', 'XPos', 'YPos', 'ZPos'};
 M.Scalar(k) = true;
@@ -662,10 +629,9 @@ M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'ConcaveArea';
-M.Abbreviation{k} = 'ConcArea';
+M.Name{k} = 'CCH2DArea';
 M.Description{k} = 'Area of the 2D concave hull';
-M.Dependencies{k} = {'ConcaveHull2D'};
+M.Dependencies{k} = {'CCH2D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = true;
@@ -673,10 +639,9 @@ M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'ConcaveSurfaceArea';
-M.Abbreviation{k} = 'ConcSuArea';
+M.Name{k} = 'CCH3DArea';
 M.Description{k} = 'Surface area of the 3D concave hull';
-M.Dependencies{k} = {'ConcaveHull3D'};
+M.Dependencies{k} = {'CCH3D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = true;
@@ -684,10 +649,9 @@ M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'ConcaveVolume';
-M.Abbreviation{k} = 'ConcVol';
+M.Name{k} = 'CCH3DVol';
 M.Description{k} = 'Volume of the 3D concave hull';
-M.Dependencies{k} = {'ConcaveHull3D'};
+M.Dependencies{k} = {'CCH3D'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = true;
@@ -695,10 +659,9 @@ M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'ConcaveSpecificSurface';
-M.Abbreviation{k} = 'ConcSpSurf';
+M.Name{k} = 'CCH3DSS';
 M.Description{k} = 'Specific surface of the 3D concave hull';
-M.Dependencies{k} = {'ConcaveVolume', 'ConcaveSurfaceArea'};
+M.Dependencies{k} = {'CCH3DVol', 'CCH3DArea'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
@@ -706,10 +669,9 @@ M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'ConvexArea';
-M.Abbreviation{k} = 'ConvArea';
+M.Name{k} = 'CVH2DArea';
 M.Description{k} = 'Area of the 2D convex hull';
-M.Dependencies{k} = {'ConvexHull2D'};
+M.Dependencies{k} = {'CVH2D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -717,10 +679,9 @@ M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'CrownDiameter';
-M.Abbreviation{k} = 'CrownDiam';
+M.Name{k} = 'CD';
 M.Description{k} = 'Diameter of the equivalent area circle';
-M.Dependencies{k} = {'ConvexArea'};
+M.Dependencies{k} = {'CVH2DArea'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -728,10 +689,9 @@ M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'ConvexSurfaceArea';
-M.Abbreviation{k} = 'ConvSuArea';
+M.Name{k} = 'CVH3DArea';
 M.Description{k} = 'Surface area of the 3D convex hull';
-M.Dependencies{k} = {'ConvexHull3D'};
+M.Dependencies{k} = {'CVH3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -739,10 +699,9 @@ M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'ConvexVolume';
-M.Abbreviation{k} = 'ConvVol';
+M.Name{k} = 'CVH3DVol';
 M.Description{k} = 'Volume of the 3D convex hull';
-M.Dependencies{k} = {'ConvexHull3D'};
+M.Dependencies{k} = {'CVH3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = true;
@@ -750,10 +709,9 @@ M.PrintFormat{k} = '%.1f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'Convexity';
-M.Abbreviation{k} = 'Convexity';
-M.Description{k} = 'Convexity (concave surface area divided by convex surface area)';
-M.Dependencies{k} = {'ConvexSurfaceArea', 'ConcaveSurfaceArea'};
+M.Name{k} = 'Cvty3D';
+M.Description{k} = '3D convexity (concave surface area divided by convex surface area)';
+M.Dependencies{k} = {'CVH3DArea', 'CCH3DArea'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
@@ -761,10 +719,9 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'ConvexHullLacunarity';
-M.Abbreviation{k} = 'ConvLacuna';
+M.Name{k} = 'CVH3DLac';
 M.Description{k} = 'Convex hull lacunarity (concave volume divided by convex volume)';
-M.Dependencies{k} = {'ConvexVolume', 'ConcaveVolume'};
+M.Dependencies{k} = {'CVH3DVol', 'CCH3DVol'};
 M.Scalar(k) = true;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
@@ -772,10 +729,9 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'ConvexSpecificSurface';
-M.Abbreviation{k} = 'ConvSpSurf';
+M.Name{k} = 'CVH3DSS';
 M.Description{k} = 'Convex hull specific surface ()';
-M.Dependencies{k} = {'ConvexVolume', 'ConvexSurfaceArea'};
+M.Dependencies{k} = {'CVH3DVol', 'CVH3DArea'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -783,10 +739,19 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ExternalShapeMetrics';
-M.Name{k} = 'AspectRatio';
-M.Abbreviation{k} = 'AspRatio';
+M.Name{k} = 'AspRatio';
 M.Description{k} = 'Aspect ratio (height divided by convex area)';
-M.Dependencies{k} = {'ConvexArea', 'TotalHeight'};
+M.Dependencies{k} = {'CVH2DArea', 'H'};
+M.Scalar(k) = true;
+M.Octave(k) = true;
+M.ScaleDependant(k) = false;
+M.PrintFormat{k} = '%.2f';
+k = k + 1;
+
+M.Category{k} = 'ExternalShapeMetrics';
+M.Name{k} = 'Sphericity';
+M.Description{k} = 'Sphericity';
+M.Dependencies{k} = {'CVH3DVol', 'CVH3DArea'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -795,7 +760,6 @@ k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'Opacity';
-M.Abbreviation{k} = 'Opacity';
 M.Description{k} = 'Opacity ()';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
@@ -806,8 +770,7 @@ k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
 M.Name{k} = 'OpacityQ50';
-M.Abbreviation{k} = 'OpacityQ50';
-M.Description{k} = '50th percentile of the opacity';
+M.Description{k} = '50th percentile (median) of the opacity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
 M.Octave(k) = true;
@@ -816,8 +779,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
-M.Name{k} = 'SingleReturnFraction';
-M.Abbreviation{k} = 'SRFrac';
+M.Name{k} = 'SRFrac';
 M.Description{k} = 'Fraction of single returns';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -827,8 +789,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
-M.Name{k} = 'FirstReturnFraction';
-M.Abbreviation{k} = 'FRFrac';
+M.Name{k} = 'FRFrac';
 M.Description{k} = 'Fraction of first returns';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -838,8 +799,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'OpacityMetrics';
-M.Name{k} = 'LastReturnFraction';
-M.Abbreviation{k} = 'LRFrac';
+M.Name{k} = 'LRFrac';
 M.Description{k} = 'Fraction of last returns';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -849,8 +809,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'Intensity';
-M.Abbreviation{k} = 'Intensity';
+M.Name{k} = 'I';
 M.Description{k} = 'Return intensity values';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
@@ -860,8 +819,7 @@ M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensityQ25';
-M.Abbreviation{k} = 'IntQ25';
+M.Name{k} = 'IQ25';
 M.Description{k} = '25th percentile of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -871,8 +829,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensityQ50';
-M.Abbreviation{k} = 'IntQ50';
+M.Name{k} = 'IQ50';
 M.Description{k} = '50th percentile of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -882,8 +839,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensityQ75';
-M.Abbreviation{k} = 'IntQ75';
+M.Name{k} = 'IQ75';
 M.Description{k} = '75th percentile of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -893,8 +849,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensityQ90';
-M.Abbreviation{k} = 'IntQ90';
+M.Name{k} = 'IQ90';
 M.Description{k} = '90th percentile of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -904,8 +859,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensityMean';
-M.Abbreviation{k} = 'IntMean';
+M.Name{k} = 'IMean';
 M.Description{k} = 'Mean of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -915,8 +869,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensityMax';
-M.Abbreviation{k} = 'IntMax';
+M.Name{k} = 'IMax';
 M.Description{k} = 'Max of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -926,8 +879,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensitySD';
-M.Abbreviation{k} = 'IntSD';
+M.Name{k} = 'IStdDev';
 M.Description{k} = 'Standard deviation of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -937,8 +889,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensityCV';
-M.Abbreviation{k} = 'IntCV';
+M.Name{k} = 'ICoefVar';
 M.Description{k} = 'Coefficient of variation of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -948,8 +899,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensityKurtosis';
-M.Abbreviation{k} = 'IntKurt';
+M.Name{k} = 'IKurt';
 M.Description{k} = 'Kurtosis of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -959,8 +909,7 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensitySkewness';
-M.Abbreviation{k} = 'IntSkew';
+M.Name{k} = 'ISkew';
 M.Description{k} = 'Skewness of the return intensity';
 M.Dependencies{k} = [];
 M.Scalar(k) = true;
@@ -969,42 +918,38 @@ M.ScaleDependant(k) = false;
 M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
-M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensityFirstReturnQ50';
-M.Abbreviation{k} = 'IntFRQ50';
-M.Description{k} = '50th percentile of the return intensity of first returns';
-M.Dependencies{k} = [];
-M.Scalar(k) = true;
-M.Octave(k) = true;
-M.ScaleDependant(k) = false;
-M.PrintFormat{k} = '%.2f';
-k = k + 1;
-
-M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensityLastReturnQ50';
-M.Abbreviation{k} = 'IntLRQ50';
-M.Description{k} = '50th percentile of the return intensity of last returns';
-M.Dependencies{k} = [];
-M.Scalar(k) = true;
-M.Octave(k) = true;
-M.ScaleDependant(k) = false;
-M.PrintFormat{k} = '%.2f';
-k = k + 1;
-
-M.Category{k} = 'IntensityMetrics';
-M.Name{k} = 'IntensitySingleReturnQ50';
-M.Abbreviation{k} = 'IntSRQ50';
-M.Description{k} = '50th percentile of the return intensity of single returns';
-M.Dependencies{k} = [];
-M.Scalar(k) = true;
-M.Octave(k) = true;
-M.ScaleDependant(k) = false;
-M.PrintFormat{k} = '%.2f';
-k = k + 1;
+% M.Category{k} = 'IntensityMetrics';
+% M.Name{k} = 'IFRQ50';
+% M.Description{k} = '50th percentile (median) of the return intensity of first returns';
+% M.Dependencies{k} = [];
+% M.Scalar(k) = true;
+% M.Octave(k) = true;
+% M.ScaleDependant(k) = false;
+% M.PrintFormat{k} = '%.2f';
+% k = k + 1;
+% 
+% M.Category{k} = 'IntensityMetrics';
+% M.Name{k} = 'ILRQ50';
+% M.Description{k} = '50th percentile (median) of the return intensity of last returns';
+% M.Dependencies{k} = [];
+% M.Scalar(k) = true;
+% M.Octave(k) = true;
+% M.ScaleDependant(k) = false;
+% M.PrintFormat{k} = '%.2f';
+% k = k + 1;
+% 
+% M.Category{k} = 'IntensityMetrics';
+% M.Name{k} = 'ISRQ50';
+% M.Description{k} = '50th percentile of the return intensity of single returns';
+% M.Dependencies{k} = [];
+% M.Scalar(k) = true;
+% M.Octave(k) = true;
+% M.ScaleDependant(k) = false;
+% M.PrintFormat{k} = '%.2f';
+% k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
 M.Name{k} = 'RGB';
-M.Abbreviation{k} = 'RGB';
 M.Description{k} = 'Colors (Red, Green, Blue)';
 M.Dependencies{k} = {'NPoints'};
 M.Scalar(k) = false;
@@ -1014,9 +959,8 @@ M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
-M.Name{k} = 'Chromaticity';
-M.Abbreviation{k} = 'Chroma';
-M.Description{k} = 'Chromaticity ()';
+M.Name{k} = 'Chroma';
+M.Description{k} = 'Chromaticity';
 M.Dependencies{k} = [];
 M.Scalar(k) = false;
 M.Octave(k) = true;
@@ -1025,10 +969,9 @@ M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
-M.Name{k} = 'ChromaticityRedMedian';
-M.Abbreviation{k} = 'CrRedMed';
+M.Name{k} = 'RChroQ50';
 M.Description{k} = 'Median of red chromaticity';
-M.Dependencies{k} = {'Chromaticity'};
+M.Dependencies{k} = {'Chroma'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -1036,10 +979,9 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
-M.Name{k} = 'ChromaticityGreenMedian';
-M.Abbreviation{k} = 'CrGreenMed';
+M.Name{k} = 'GChroQ50';
 M.Description{k} = 'Median of green chromaticity';
-M.Dependencies{k} = {'Chromaticity'};
+M.Dependencies{k} = {'Chroma'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -1047,10 +989,9 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
-M.Name{k} = 'ConvexHullChromaticityRedMedian';
-M.Abbreviation{k} = 'CvHullCrRedMed';
+M.Name{k} = 'RChroHQ50';
 M.Description{k} = 'Median of red chromaticity of convex hull points';
-M.Dependencies{k} = {'Chromaticity', 'ConvexHull3D'};
+M.Dependencies{k} = {'Chroma', 'CVH3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -1058,10 +999,9 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
-M.Name{k} = 'ConvexHullChromaticityGreenMedian';
-M.Abbreviation{k} = 'CvHullCrGreenMed';
+M.Name{k} = 'GChroHQ50';
 M.Description{k} = 'Median of green chromaticity of convex hull points';
-M.Dependencies{k} = {'Chromaticity', 'ConvexHull3D'};
+M.Dependencies{k} = {'Chroma', 'CVH3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
@@ -1069,16 +1009,14 @@ M.PrintFormat{k} = '%.2f';
 k = k + 1;
 
 M.Category{k} = 'ColorMetrics';
-M.Name{k} = 'ConvexHullChromaticityBlueMedian';
-M.Abbreviation{k} = 'CvHullCrBlueMed';
+M.Name{k} = 'BChroHQ50';
 M.Description{k} = 'Median of blue chromaticity of convex hull points';
-M.Dependencies{k} = {'Chromaticity', 'ConvexHull3D'};
+M.Dependencies{k} = {'Chroma', 'CVH3D'};
 M.Scalar(k) = true;
 M.Octave(k) = true;
 M.ScaleDependant(k) = false;
 M.PrintFormat{k} = '%.2f';
 k = k + 1;
-
 
 % Add additional metrics here
 
@@ -1148,6 +1086,7 @@ G.Nodes.Name = M.Name';
 
 % compute indegree
 G.Nodes.Degree = sum(A,1)';
+G.Nodes.Indegree = sum(A,1)';
 
 % add edges
 if any(A(:))
@@ -1172,64 +1111,70 @@ else
     
 end
 
-% topological sorting with depth first search
-idxn_start = 1:n;
-for j = 1:length(idxn_start)
+%% determine dependency paths
+
+G.Nodes.DependencyPath = cell(n,1);
+G.Nodes.Available = idxl_filter';
+
+idxn_start = find(G.Nodes.Selected & G.Nodes.Available)';
+
+for j = idxn_start
     
-    discovered = false(n,1);
-    S = idxn_start(j);
-    order = S;
+    idxn_child = j;
+    G.Nodes.DependencyPath{j,1} = idxn_child;
     
-    while ~isempty(S) % while S is not empty
+    while ~isempty(idxn_child)
         
-        v = S(end);
-        S(end) = [];
-        
-        if ~discovered(v)
-            
-            discovered(v) = true;
-            idxl_adj = G.Edges.EndNodes(:,2) == v; % find parent nodes
-            S = [S; G.Edges.EndNodes(idxl_adj,1)];
-            order = [order; G.Edges.EndNodes(idxl_adj,1)];
-            
-        end
+        idxl_adj = ismember(G.Edges.EndNodes(:,2), idxn_child); % find parent node(s) of current node
+        idxn_parent = unique(G.Edges.EndNodes(idxl_adj,1));
+        G.Nodes.DependencyPath{j,1} = [idxn_parent; G.Nodes.DependencyPath{j,1}];
+        idxn_child = idxn_parent;
         
     end
-    
-    % store dependency path
-    G.Nodes.DependencyPath{j,1} = order;
-    
-    % mark selected nodes
-    G.Nodes.Available(j,1) = all(ismember(order, find(idxl_filter)));
 
 end
 
-global_order = flipud(cell2mat(G.Nodes.DependencyPath(G.Nodes.Available & G.Nodes.Selected)));
-[~, ia, ~] = unique(global_order, 'first');
-[ia, ~] = sort(ia);
-L = global_order(ia);
-%L = unique(flipud(order), 'stable')'; % Matlab only
-
-%M.Name(G.Nodes.Available & G.Nodes.Selected)
-varargout{1} = M.PrintFormat(G.Nodes.Available & G.Nodes.Selected); % print_format
-varargout{2} = logical(M.Scalar(G.Nodes.Available & G.Nodes.Selected)); % scalar_flag
+G.Nodes.Include = false(n,1);
+G.Nodes.Include(cell2mat(G.Nodes.DependencyPath(G.Nodes.Available & G.Nodes.Selected))) = true;
 
 if arg.Results.verbose
-    
+
     fprintf('done!\n');
     toc
+
+end
+
+%% schedule tasks with topological sorting
+
+Indegree = G.Nodes.Indegree;
+
+L = []; % Empty list that will contain the sorted elements
+S = find(G.Nodes.Degree == 0); % Set of all nodes with no incoming edge
+e = G.Edges.EndNodes;
+
+while ~isempty(S)
+    
+    n = S(1);
+    S(1) = []; % curent (queue) - remove a node n from S (queue)
+    L = [L; n]; % sorted list - add n to tail of L (sorted list)
+    
+    idxl_adj = e(:,1) == n; % find nodes that have n as a parent
+    Indegree(e(idxl_adj,2)) = Indegree(e(idxl_adj,2)) - 1;
+    S = [S; intersect(e(idxl_adj,2), find(Indegree == 0))];
+    e(idxl_adj,:) = nan; % remove edge e from the graph
     
 end
 
+L = L(ismember(L, find(G.Nodes.Include)));
+
 % figure % Matlab only
-% plot(digraph(A), 'NodeLabel', G.Nodes.Name) 
-% 
+% plot(digraph(A), 'NodeLabel', G.Nodes.Name)
+%
 % figure % Matlab only
 % plot(digraph(A))
 
 
 %% compute metrics
-
 metrics = struct();
 
 for j = 1:length(L)
@@ -1243,10 +1188,10 @@ for j = 1:length(L)
     
     switch G.Nodes.Name{L(j)}
         
-        case 'RandomControl'
+        case 'Random'
             
             % random control number
-            metrics.RandomControl = rand(n_obs,1);
+            metrics.Random = rand(n_obs,1);
             
         case 'UUID'
             
@@ -1318,88 +1263,108 @@ for j = 1:length(L)
                 end
             end
             
-        case 'PrinCompVar1'
+        case 'PCVar1'
             
             % spatial coordinates first principal component variance
-            metrics.PrinCompVar1 = pc_variance(:,1);
+            metrics.PCVar1 = pc_variance(:,1);
             
-        case 'PrinCompVar2'
+        case 'PCVar2'
             
             % spatial coordinates second principal component variance
-            metrics.PrinCompVar2 = pc_variance(:,2);
+            metrics.PCVar2 = pc_variance(:,2);
             
-        case 'PrinCompVar3'
+        case 'PCVar3'
             
-            % spatial coordinates third principal component variance  
-            metrics.PrinCompVar3 = pc_variance(:,3); 
+            % spatial coordinates third principal component variance
+            metrics.PCVar3 = pc_variance(:,3);
             
-        case 'HeightMean'
+        case 'HMean'
             
             % mean of point heights
-            metrics.HeightMean = accumarray(label, h_n, [], @mean, nan);
+            metrics.HMean = accumarray(label, h_n, [], @mean, nan);
             
-        case 'HeightMedian'
+        case 'HMedian'
             
             % median of point heights
-            metrics.HeightMedian = accumarray(label, h_n, [], @median, nan);
+            metrics.HMedian = accumarray(label, h_n, [], @median, nan);
             
-        case 'HeightSD'
+        case 'HStdDev'
             
             % standard deviation of point heights
-            metrics.HeightSD = accumarray(label, h_n, [], @std, nan);
+            metrics.HStdDev = accumarray(label, h_n, [], @std, nan);
             
-        case 'HeightCV'
+        case 'HCoefVar'
             
             % coefficient of variation of point heights
-            metrics.HeightCV = accumarray(label, h_n, [], @(x) std(x)/mean(x), nan);
+            metrics.HCoefVar = accumarray(label, h_n, [], @(x) std(x)/mean(x), nan);
             
-        case 'HeightKurtosis'
+        case 'HKurt'
             
             % kurtosis of point heights
-            metrics.HeightKurtosis = accumarray(label, h_n, [], @kurtosis, nan);
+            metrics.HKurt = accumarray(label, h_n, [], @kurtosis, nan);
             
-        case 'HeightSkewness'
+        case 'HSkew'
             
             % skewness of point heights
-            metrics.HeightSkewness = accumarray(label, h_n, [], @skewness, nan);
+            metrics.HSkew = accumarray(label, h_n, [], @skewness, nan);
             
-        case 'HeightQ25'
+        case 'HQ25'
             
             % 25% quantile of point heights
-            metrics.HeightQ25 = accumarray(label, h_n, [], @(x) quantile(x, 0.25), nan);
+            metrics.HQ25 = accumarray(label, h_n, [], @(x) quantile(x, 0.25), nan);
             
-        case 'HeightQ50'
+        case 'HQ50'
             
             % 50% quantile of point heights
-            metrics.HeightQ50 = accumarray(label, h_n, [], @(x) quantile(x, 0.5), nan);
+            metrics.HQ50 = accumarray(label, h_n, [], @(x) quantile(x, 0.5), nan);
             
-        case 'HeightQ75'
+        case 'HQ75'
             
             % 75% quantile of point heights
-            metrics.HeightQ75 = accumarray(label, h_n, [], @(x) quantile(x, 0.75), nan);
+            metrics.HQ75 = accumarray(label, h_n, [], @(x) quantile(x, 0.75), nan);
             
-        case 'HeightQ90'
+        case 'HQ90'
             
             % 90% quantile of point heights
-            metrics.HeightQ90 = accumarray(label, h_n, [], @(x) quantile(x, 0.9), nan);
+            metrics.HQ90 = accumarray(label, h_n, [], @(x) quantile(x, 0.9), nan);
             
-        case 'TotalHeight'
+        case 'H'
             
             % total height
-            metrics.TotalHeight = h_tot;
+            metrics.H = h_tot;
             
-        case 'ConvexHull2D'
+        case 'BBOX2D'
+            
+            metrics.BBOX2D = cell(n_obs,1);
+            
+            for k = 1:n_obs
+                
+                metrics.BBOX2D{k,1} = [min(metrics.XYZ{k}(:,1:2), [], 1); max(metrics.XYZ{k}(:,1:2), [], 1)]; % [min(x), min(y); max(x), max(y)]
+                
+            end
+            
+        case 'BBOX3D'
+            
+            metrics.BBOX3D = cell(n_obs,1);
+            
+            for k = 1:n_obs
+                
+                metrics.BBOX3D{k,1} = [min(metrics.XYZ{k}(:,1:3), [], 1); max(metrics.XYZ{k}(:,1:3), [], 1)]; % [min(x), min(y); max(x), max(y)]
+                
+            end
+            
+        case 'CVH2D'
             
             % 2D convex alpha shape
-            metrics.ConvexHull2D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
+            metrics.CVH2D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
             a_convex_2d = nan(n_obs,1);
-            idxl_convex_hull = false(n_obs,1);
+            idxl_convex_hull_2d = false(n_obs,1);
             
-            for k = find(metrics.NPoints > 2)' %1:n_obs
+            for k = find(metrics.NPoints >= 3)' % at least 3 points are required to compute the 2D alpha shape
                 
                 try
                     
-                    [metrics.ConvexHull2D{k,1}, a_convex_2d(k,1)] = convhull(metrics.XYZ{k}(:,1:2));
+                    [metrics.CVH2D{k,1}, a_convex_2d(k,1)] = convhull(metrics.XYZ{k}(:,1:2));
                     idxl_convex_hull_2d(k,1) = true;
                     
                 catch
@@ -1407,210 +1372,210 @@ for j = 1:length(L)
                 end
                 
             end
-                    
-        case 'XConvexHull2D'
-        
-            metrics.XConvexHull2D = repmat({nan}, n_obs, 1);
+            
+        case 'XCVH2D'
+            
+            metrics.XCVH2D = repmat({nan}, n_obs, 1);
             for k = find(idxl_convex_hull_2d)'
                 
-                metrics.XConvexHull2D{k,1} = metrics.XYZ{k}(metrics.ConvexHull2D{k},1)';
-            
+                metrics.XCVH2D{k,1} = metrics.XYZ{k}(metrics.CVH2D{k},1)';
+                
             end
-            % metrics.XConvexHull2D = cellfun(@(x,k) x(k,1)', metrics.XYZ, metrics.ConvexHull2D, 'UniformOutput', false);
-        
-        case 'YConvexHull2D'
+            % metrics.XCVH2D = cellfun(@(x,k) x(k,1)', metrics.XYZ, metrics.CVH2D, 'UniformOutput', false);
             
-            metrics.YConvexHull2D = repmat({nan}, n_obs, 1);
+        case 'YCVH2D'
+            
+            metrics.YCVH2D = repmat({nan}, n_obs, 1);
             for k = find(idxl_convex_hull_2d)'
                 
-                metrics.YConvexHull2D{k,1} = metrics.XYZ{k}(metrics.ConvexHull2D{k},2)';
-            
+                metrics.YCVH2D{k,1} = metrics.XYZ{k}(metrics.CVH2D{k},2)';
+                
             end
             
-            % metrics.YConvexHull2D = cellfun(@(x,k) x(k,2)', metrics.XYZ, metrics.ConvexHull2D, 'UniformOutput', false);
+            % metrics.YCVH2D = cellfun(@(x,k) x(k,2)', metrics.XYZ, metrics.CVH2D, 'UniformOutput', false);
             
-        case 'ConvexHull3D'
+        case 'CVH3D'
             
             %  3D convex alpha shape
-            metrics.ConvexHull3D = repmat({nan}, n_obs, 1); %cell(n_obs,1);
+            metrics.CVH3D = repmat({nan}, n_obs, 1);
             v_convex_3d = nan(n_obs,1);
             
-            for k = find(metrics.NPoints > 3)' %1:n_obs
+            for k = find(metrics.NPoints >= 4)' % at least 4 points are required to compute the 3D alpha shape
                 
                 try
                     
-                    [metrics.ConvexHull3D{k,1}, v_convex_3d(k,1)] = convhulln(metrics.XYH{k});
+                    [metrics.CVH3D{k,1}, v_convex_3d(k,1)] = convhulln(metrics.XYZ{k});
                     
                 catch
                     
-                    metrics.ConvexHull3D{k,1} = nan;
+                    metrics.CVH3D{k,1} = nan;
                     
                 end
                 
             end
             
-        case 'ConcaveHull2D'
+        case 'CCH2D'
             
             % single region 2D alpha shape
-            metrics.ConcaveHull2D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
+            metrics.CCH2D = repmat({nan}, n_obs, 1);
             
-            for k = find(metrics.NPoints > 2)' %1:n_obs
+            for k = find(metrics.NPoints >= 3)' % at least 3 points are required to compute the 2D alpha shape
                 
                 try
                     
-                    shp = alphaShape(metrics.XYH{k}(:,1:2), inf);
+                    shp = alphaShape(metrics.XYZ{k}(:,1:2), inf);
                     alpha = criticalAlpha(shp, 'one-region');
-                    metrics.ConcaveHull2D{k,1} = alphaShape(metrics.XYH{k}(:,1:2), ...
+                    metrics.CCH2D{k,1} = alphaShape(metrics.XYZ{k}(:,1:2), ...
                         alpha, ...
                         'HoleThreshold', 10^9);
                     
                 catch
                     
-                    metrics.ConcaveHull2D{k,1} = nan;
+                    metrics.CCH2D{k,1} = nan;
                     
                 end
                 
                 
             end
             
-        case 'ConcaveHull3D'
+        case 'CCH3D'
             
             % single region 3D alpha shape
-            metrics.ConcaveHull3D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
+            metrics.CCH3D = repmat({nan}, n_obs, 1); % cell(n_obs,1);
             
-            for k = find(metrics.NPoints > 3)' %1:n_obs
+            for k = find(metrics.NPoints >= 4)' % at least 4 points are required to compute the 3D alpha shape
                 
                 try
                     
-                    shp = alphaShape(metrics.XYH{k}, inf);
+                    shp = alphaShape(metrics.XYZ{k}, inf);
                     alpha = criticalAlpha(shp, 'one-region');
-                    metrics.ConcaveHull3D{k,1} = alphaShape(metrics.XYH{k}, alpha);
+                    metrics.CCH3D{k,1} = alphaShape(metrics.XYZ{k}, alpha);
                     
                 catch
                     
-                    metrics.ConcaveHull3D{k,1} = nan;
+                    metrics.CCH3D{k,1} = nan;
                     
                 end
                 
             end
             
-        case 'ConcaveArea'
+        case 'CCH2DArea'
             
             % concave area
-            metrics.ConcaveArea = nan(n_obs,1);
-            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.ConcaveHull2D);
+            metrics.CCH2DArea = nan(n_obs,1);
+            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.CCH2D);
             for k = find(idxl_valid)'
                 
-                metrics.ConcaveArea(k) = area(metrics.ConcaveHull2D{k});
+                metrics.CCH2DArea(k) = area(metrics.CCH2D{k});
                 
             end
-
-        case 'CrownDiameter'
+            
+        case 'CD'
             
             % crown diameter
-            metrics.CrownDiameter = 2 * sqrt(metrics.ConvexArea ./ pi);
+            metrics.CD = 2 * sqrt(metrics.CVH2DArea ./ pi);
             
-        case 'ConcaveSurfaceArea'
-     
+        case 'CCH3DArea'
+            
             % concave surface area
-            metrics.ConcaveSurfaceArea = nan(n_obs,1);
-            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.ConcaveHull3D);
+            metrics.CCH3DArea = nan(n_obs,1);
+            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.CCH3D);
             for k = find(idxl_valid)'
                 
-                metrics.ConcaveSurfaceArea(k) = surfaceArea(metrics.ConcaveHull3D{k});
+                metrics.CCH3DArea(k) = surfaceArea(metrics.CCH3D{k});
                 
             end
             
-        case 'ConcaveVolume'
+        case 'CCH3DVol'
             
             % concave volume
-            metrics.ConcaveVolume = nan(n_obs,1);
-            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.ConcaveHull3D);
+            metrics.CCH3DVol = nan(n_obs,1);
+            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.CCH3D);
             for k = find(idxl_valid)'
                 
-                metrics.ConcaveVolume(k) = volume(metrics.ConcaveHull3D{k});
+                metrics.CCH3DVol(k) = volume(metrics.CCH3D{k});
                 
             end
-
-        case 'ConcaveSpecificSurface'
+            
+        case 'CCH3DSS'
             
             % concave specific surface
-            metrics.ConcaveSpecificSurface = metrics.ConcaveSurfaceArea ./ metrics.ConcaveVolume;
+            metrics.CCH3DSS = metrics.CCH3DArea ./ metrics.CCH3DVol;
             
-        case 'ConvexSurfaceArea'
+        case 'CVH3DArea'
             
             % convex surface area
-            metrics.ConvexSurfaceArea = nan(n_obs,1);
-            idxl_valid = cellfun(@(x) ~isnan(x(1)), metrics.ConvexHull3D);
-             
+            metrics.CVH3DArea = nan(n_obs,1);
+            idxl_valid = cellfun(@(x) ~isnan(x(1)), metrics.CVH3D);
+            
             for k = find(idxl_valid)'
-               
-                P1 = metrics.XYH{k,1}(metrics.ConvexHull3D{k,1}(:,1),:);
-                P2 = metrics.XYH{k,1}(metrics.ConvexHull3D{k,1}(:,2),:);
-                P3 = metrics.XYH{k,1}(metrics.ConvexHull3D{k,1}(:,3),:);
+                
+                P1 = metrics.XYZ{k,1}(metrics.CVH3D{k,1}(:,1),:);
+                P2 = metrics.XYZ{k,1}(metrics.CVH3D{k,1}(:,2),:);
+                P3 = metrics.XYZ{k,1}(metrics.CVH3D{k,1}(:,3),:);
                 
                 % compute triangle normals
                 v_n = cross(P1-P2, P1-P3, 2);
                 
                 % compute triangle areas (= half the length of normal vectors)
-                metrics.ConvexSurfaceArea(k,1) = sum(0.5 * sqrt(sum(v_n.^2,2)));
+                metrics.CVH3DArea(k,1) = sum(0.5 * sqrt(sum(v_n.^2,2)));
                 
             end
             
-        case 'ConcaveBoundaryFraction'
+        case 'CCH3DRa'
             
             % concave boundary fraction
-            metrics.ConcaveBoundaryFraction = nan(n_obs,1);
-            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.ConcaveHull3D);
+            metrics.CCH3DRa = nan(n_obs,1);
+            idxl_valid = cellfun(@(x) isa(x, 'alphaShape'), metrics.CCH3D);
             for k = find(idxl_valid)'
                 
-                [P, ~] = boundaryFacets(metrics.ConcaveHull3D{k});
-                metrics.ConcaveBoundaryFraction(k,1) = size(P,1);
+                [P, ~] = boundaryFacets(metrics.CCH3D{k});
+                metrics.CCH3DRa(k,1) = size(P,1);
                 
             end
             
-            metrics.ConcaveBoundaryFraction = metrics.ConcaveBoundaryFraction ./ metrics.NPoints;
+            metrics.CCH3DRa = metrics.CCH3DRa ./ metrics.NPoints;
             
-        case 'ConvexArea'
+        case 'CVH2DArea'
             
             % convex area
-            metrics.ConvexArea = a_convex_2d;
-
-        case 'ConvexVolume'
+            metrics.CVH2DArea = a_convex_2d;
+            
+        case 'CVH3DVol'
             
             % convex volume
-            metrics.ConvexVolume = v_convex_3d;
+            metrics.CVH3DVol = v_convex_3d;
             
-        case 'ConvexSpecificSurface'
+        case 'CVH3DSS'
             
             % convex specific surface
-            metrics.ConvexSpecificSurface = metrics.ConvexSurfaceArea ./ metrics.ConvexVolume;
+            metrics.CVH3DSS = metrics.CVH3DArea ./ metrics.CVH3DVol;
             
-        case 'Convexity'
+        case 'Cvty3D'
             
             % convexity
-            metrics.Convexity = metrics.ConcaveSurfaceArea ./ metrics.ConvexSurfaceArea;
+            metrics.Cvty3D = metrics.CCH3DArea ./ metrics.CVH3DArea;
             
         case 'Sphericity'
             
-            % sphericity
-            metrics.Sphericity = 3 * sqrt(4*pi) * metrics.Volume ./ (metrics.SurfaceArea .^(3/2));
+            % convex sphericity
+            metrics.Sphericity = 3 * sqrt(4*pi) * metrics.CVH3DVol ./ (metrics.CVH3DArea .^(3/2));
             
-        case 'AspectRatio'
+        case 'AspRatio'
             
             % aspect ratio
-            metrics.AspectRatio = 2*sqrt(metrics.ConvexArea/pi) ./ metrics.TotalHeight;
+            metrics.AspRatio = 2*sqrt(metrics.CVH2DArea/pi) ./ metrics.H;
             
-        case 'ConvexHullLacunarity'
+        case 'CVH3DLac'
             
             % convex hull lacunarity
-            metrics.ConvexHullLacunarity = (metrics.ConvexVolume - metrics.ConcaveVolume) ./ metrics.ConvexVolume;
+            metrics.CVH3DLac = (metrics.CVH3DVol - metrics.CCH3DVol) ./ metrics.CVH3DVol;
             
-        case 'ConvexBoundaryFraction'
+        case 'CVH3DRa'
             
             % convex boundary fraction
-            metrics.ConvexBoundaryFraction = cellfun(@(x) size(x,1), metrics.ConvexHull3D) ./ metrics.NPoints;
-
+            metrics.CVH3DRa = cellfun(@(x) size(x,1), metrics.CVH3D) ./ metrics.NPoints;
+            
         case 'Opacity'
             
             % opacity
@@ -1621,117 +1586,117 @@ for j = 1:length(L)
             % opacity (50% quantile)
             metrics.OpacityQ50 = accumarray(label, opacity, [], @(x) quantile(x, 0.5), nan);
             
-        case 'SingleReturnFraction'
+        case 'SRFrac'
             
             % fraction of single returns
-            metrics.SingleReturnFraction = accumarray(label, idxl_single, [], @(x) nnz(x)/length(x), nan);
+            metrics.SRFrac = accumarray(label, idxl_single, [], @(x) nnz(x)/length(x), nan);
             
-        case 'FirstReturnFraction'
+        case 'FRFrac'
             
             % fraction of first returns
-            metrics.FirstReturnFraction = accumarray(label, idxl_first, [], @(x) nnz(x)/length(x), nan);
+            metrics.FRFrac = accumarray(label, idxl_first, [], @(x) nnz(x)/length(x), nan);
             
-        case 'LastReturnFraction'
+        case 'LRFrac'
             
             % fraction of last returns
-            metrics.LastReturnFraction = accumarray(label, idxl_last, [], @(x) nnz(x)/length(x), nan);
+            metrics.LRFrac = accumarray(label, idxl_last, [], @(x) nnz(x)/length(x), nan);
             
-        case 'Intensity'
+        case 'I'
             
             % intensity
-            metrics.Intensity = accumarray(label, intensity, [], @(x) {x}, {nan});
+            metrics.I = accumarray(label, intensity, [], @(x) {x}, {nan});
             
-        case 'IntensityQ25'
+        case 'IQ25'
             
             % intensity 25% quantile
-            metrics.IntensityQ25 = accumarray(label, intensity, [], @(x) quantile(x, 0.25), nan);
+            metrics.IQ25 = accumarray(label, intensity, [], @(x) quantile(x, 0.25), nan);
             
-        case 'IntensityQ50'
+        case 'IQ50'
             
             % intensity 50% quantile
-            metrics.IntensityQ50 = accumarray(label, intensity, [], @(x) quantile(x, 0.5), nan);
+            metrics.IQ50 = accumarray(label, intensity, [], @(x) quantile(x, 0.5), nan);
             
-        case 'IntensityQ75'
+        case 'IQ75'
             
             % intensity 75% quantile
-            metrics.IntensityQ75 = accumarray(label, intensity, [], @(x) quantile(x, 0.75), nan);
+            metrics.IQ75 = accumarray(label, intensity, [], @(x) quantile(x, 0.75), nan);
             
-        case 'IntensityQ90'
+        case 'IQ90'
             
             % intensity 90% quantile
-            metrics.IntensityQ90 = accumarray(label, intensity, [], @(x) quantile(x, 0.9), nan);
+            metrics.IQ90 = accumarray(label, intensity, [], @(x) quantile(x, 0.9), nan);
             
-        case 'IntensityMean'
+        case 'IMean'
             
             % intensity mean
-            metrics.IntensityMean = accumarray(label, intensity, [], @mean, nan);
+            metrics.IMean = accumarray(label, intensity, [], @mean, nan);
             
-        case 'IntensityMax'
+        case 'IMax'
             
             % intensity maximum
-            metrics.IntensityMax = accumarray(label, intensity, [], @max, nan); 
+            metrics.IMax = accumarray(label, intensity, [], @max, nan);
             
-        case 'IntensitySD'
+        case 'IStdDev'
             
             % intensity standard deviation
-            metrics.IntensitySD = accumarray(label, intensity, [], @std, nan); 
+            metrics.IStdDev = accumarray(label, intensity, [], @std, nan);
             
-        case 'IntensityCV'
+        case 'ICoefVar'
             
             % intensity coefficient of variation
-            metrics.IntensityCV = accumarray(label, intensity, [], @(x) std(x)/mean(x), nan);
+            metrics.ICoefVar = accumarray(label, intensity, [], @(x) std(x)/mean(x), nan);
             
-        case 'IntensityKurtosis'
+        case 'IKurt'
             
             % intensity kurtosis
-            metrics.IntensityKurtosis = accumarray(label, intensity, [], @kurtosis, nan);
+            metrics.IKurt = accumarray(label, intensity, [], @kurtosis, nan);
             
-        case 'IntensitySkewness'
+        case 'ISkew'
             
             % intensity skewness
-            metrics.IntensitySkewness = accumarray(label, intensity, [], @skewness, nan);
+            metrics.ISkew = accumarray(label, intensity, [], @skewness, nan);
             
-        case 'IntensityFirstReturnQ50'
+        case 'IFRQ50'
             
             % intensity of first returns 50% quantile
-            metrics.IntensityFirstReturnQ50 = accumarray(label, intensity_first, [], @(x) nanmedian([x; nan]), nan); % @(x) median(x(~isnan(x)))
+            metrics.IFRQ50 = accumarray(label, intensity_first, [], @(x) nanmedian([x; nan]), nan); % @(x) median(x(~isnan(x)))
             
-        case 'IntensityLastReturnQ50'
+        case 'ILRQ50'
             
             % intensity of last returns 50% quantile
-            metrics.IntensityLastReturnQ50 = accumarray(label, intensity_last, [], @(x) nanmedian([x; nan]), nan);
+            metrics.ILRQ50 = accumarray(label, intensity_last, [], @(x) nanmedian([x; nan]), nan);
             
-        case 'IntensitySingleReturnQ50'
+        case 'ISRQ50'
             
             % intensity of single returns 50% quantile
-            metrics.IntensitySingleReturnQ50 = accumarray(label, intensity_single, [], @(x) nanmedian([x; nan]), nan); % @(x) median([x(~isnan(x)), nan])
+            metrics.ISRQ50 = accumarray(label, intensity_single, [], @(x) nanmedian([x; nan]), nan); % @(x) median([x(~isnan(x)), nan])
             
-        case 'ConcavePointDensity'
+        case 'CCH3DPD'
             
             % point density in concave hull
-            metrics.ConcavePointDensity = metrics.NPoints ./ metrics.ConcaveVolume;
+            metrics.CCH3DPD = metrics.NPoints ./ metrics.CCH3DVol;
             
-        case 'ConvexPointDensity'
+        case 'CVH3DPD'
             
             % point density in convex hull
-            metrics.ConvexPointDensity = metrics.NPoints ./ metrics.ConvexVolume;
+            metrics.CVH3DPD = metrics.NPoints ./ metrics.CVH3DVol;
             
-        case 'Chromaticity'
+        case 'Chroma'
             
             % chromaticity
-            metrics.Chromaticity = mat2cell(rg_chromaticity, metrics.NPoints, 3);
+            metrics.Chroma = mat2cell(rg_chromaticity, metrics.NPoints, 3);
             
-        case 'ChromaticityRedMedian'
+        case 'RChroQ50'
             
             % red chromaticity median
-            metrics.ChromaticityRedMedian = accumarray(label, rg_chromaticity(:,1), [], @median, nan);
+            metrics.RChroQ50 = accumarray(label, rg_chromaticity(:,1), [], @median, nan);
             
-        case 'ChromaticityGreenMedian'
+        case 'GChroQ50'
             
             % green chromaticity median
-            metrics.ChromaticityGreenMedian = accumarray(label, rg_chromaticity(:,2), [], @median, nan);
+            metrics.GChroQ50 = accumarray(label, rg_chromaticity(:,2), [], @median, nan);
             
-    
+            
     end
     
     if arg.Results.verbose
@@ -1749,50 +1714,35 @@ metrics = rmfield(metrics, setdiff(fieldnames(metrics), M.Name(logical(G.Nodes.A
 % reorder field names
 metrics = orderfields(metrics, M.Name(logical(G.Nodes.Available & G.Nodes.Selected)));
 
-% use field name abbreviations instead of full names
-if arg.Results.fieldAbbreviations
-    
-    metrics_new = struct;
-    
-    field_names = fieldnames(metrics);
-    [~, idxn_name] = ismember(field_names, M.Name);
-    
-    for j = 1:length(field_names)
-    
-        % add new fields
-        metrics_new.(M.Abbreviation{idxn_name(j)}) = metrics.(field_names{j});
-        
-    end
-    
-    % remove old fields
-    metrics = metrics_new;
-    clear metrics_new
-
-end
+% set print format and scalar flag
+varargout{1} = M.PrintFormat(G.Nodes.Available & G.Nodes.Selected); % print_format
+varargout{2} = logical(M.Scalar(G.Nodes.Available & G.Nodes.Selected)); % scalar_flag
 
 % convert to non-scalar structure
-
-fields = fieldnames(metrics);
-m = length(fields);
-n = length(metrics.(fields{1}));
+sfields = fieldnames(metrics);
+m = length(sfields);
+n = length(metrics.(sfields{1}));
 
 % convert structure to cell array
 C = cell(m, n);
 for j = 1:m
     
-    if isnumeric(metrics.(fields{j}))
-       
-        C(j,:) = num2cell(metrics.(fields{j}));
-
+    if isnumeric(metrics.(sfields{j}))
+        
+        C(j,:) = num2cell(metrics.(sfields{j}));
+        
     else
         
-        C(j,:) = metrics.(fields{j});
-       
+        C(j,:) = metrics.(sfields{j});
+        
     end
     
 end
 
-clear metrics
-metrics = cell2struct(C, fields, 1);
+% delete records containing NaN
+idxl_nan = any(cellfun(@(x) any(isnan(x(:))), C, 'UniformOutput', true), 1);
+C(:,idxl_nan) = [];
 
+clear metrics
+metrics = cell2struct(C, sfields, 1);
 
