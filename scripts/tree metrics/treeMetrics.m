@@ -1349,7 +1349,7 @@ for j = 1:length(L)
             
             for k = 1:n_obs
                 
-                metrics.BBOX3D{k,1} = [min(metrics.XYZ{k}(:,1:3), [], 1); max(metrics.XYZ{k}(:,1:3), [], 1)]; % [min(x), min(y); max(x), max(y)]
+                metrics.BBOX3D{k,1} = [min(metrics.XYZ{k}(:,1:3), [], 1); max(metrics.XYZ{k}(:,1:3), [], 1)]; % [min(x), min(y), min(z); max(x), max(y), max(z)]
                 
             end
             
@@ -1368,6 +1368,8 @@ for j = 1:length(L)
                     idxl_convex_hull_2d(k,1) = true;
                     
                 catch
+                   
+                    idxl_convex_hull_2d(k,1) = false;
                     
                 end
                 
@@ -1391,7 +1393,6 @@ for j = 1:length(L)
                 metrics.YCVH2D{k,1} = metrics.XYZ{k}(metrics.CVH2D{k},2)';
                 
             end
-            
             % metrics.YCVH2D = cellfun(@(x,k) x(k,2)', metrics.XYZ, metrics.CVH2D, 'UniformOutput', false);
             
         case 'CVH3D'
@@ -1739,9 +1740,15 @@ for j = 1:m
     
 end
 
+
 % delete records containing NaN
-idxl_nan = any(cellfun(@(x) any(isnan(x(:))), C, 'UniformOutput', true), 1);
-C(:,idxl_nan) = [];
+fclass = cellfun(@class, C(:,1), 'UniformOutput', false);
+idxl_alphashape = ismember(fclass, 'alphaShape');
+
+idxl_nan = any(cellfun(@(x) any(isnan(x(:))), C(~idxl_alphashape,:), 'UniformOutput', true), 1);
+idxl_void = any(cellfun(@(x) isempty(x), C, 'UniformOutput', true), 1);
+
+C(:,idxl_nan | idxl_void) = [];
 
 clear metrics
 metrics = cell2struct(C, sfields, 1);
