@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 20, 2020
+% Last revision: February 23, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -186,6 +186,18 @@ end
 
 %% Step 9 - Computing segment metrics from the labelled point cloud
 
+% compute metrics
+[metrics_3d, fmt, idxl_scalar] = treeMetrics(label_3d, ...
+    [pc.record.x, pc.record.y, pc.record.z], ...
+    pc.record.intensity, ...
+    pc.record.return_number, ...
+    pc.record.number_of_returns, ...
+    nan(length(pc.record.x), 3), ...
+    models.terrain.values, ...
+    refmat, ...
+    'metrics', {'UUID', 'XPos', 'YPos', 'ZPos', 'H', 'BBOX2D', 'XCVH2D', 'YCVH2D', 'CVH2DArea', 'IQ50'}, ...
+    'intensityScaling', true, ...
+    'verbose', true);
 
 [metrics_3d, fmt, idxl_scalar] = treeMetrics(label_3d, ...
     [pc.record.x, pc.record.y, pc.record.z], ...
@@ -195,20 +207,35 @@ end
     nan(length(pc.record.x), 3), ...
     models.terrain.values, ...
     refmat, ...
-    'metrics', {'UUID', 'XPos', 'YPos', 'ZPos', 'TotalHeight', 'ConvexArea', 'IntensityQ50'}, ...
+    'metrics', {'all'}, ...
     'intensityScaling', true, ...
-    'fieldAbbreviations', false, ...
     'verbose', true);
 
+
+% compute metrics
+[metrics_3d, fmt, idxl_scalar] = treeMetrics(label_3d, ...
+    [pc.record.x, pc.record.y, pc.record.z], ...
+    pc.record.intensity, ...
+    pc.record.return_number, ...
+    pc.record.number_of_returns, ...
+    nan(length(pc.record.x), 3), ...
+    models.terrain.values, ...
+    refmat, ...
+    'metrics', {'UUID', 'CCH2D'}, ...
+    'intensityScaling', true, ...
+    'verbose', true);
+
+
 % list field names
-fields = fieldnames(metrics_3d);
+sfields = fieldnames(metrics_3d);
+
 
 %% Step 10 - Exporting the segment metrics to a CSV file
 
 % IMPORTANT: adjust the path to the output CSV file (otherwise it will be created in the current folder)
 fid = fopen('zh_2014_a_seg_metrics.csv', 'w+'); % open file
-fprintf(fid, '%s\n', strjoin(fields(idxl_scalar), ',')); % write header line
-C = struct2cell(rmfield(metrics_3d, fields(~idxl_scalar))); % convert structure to cell array
+fprintf(fid, '%s\n', strjoin(sfields(idxl_scalar), ',')); % write header line
+C = struct2cell(rmfield(metrics_3d, sfields(~idxl_scalar))); % convert structure to cell array
 fprintf(fid, [strjoin(fmt(idxl_scalar), ','), '\n'], C{:}); % write cell array to CSV file
 fclose(fid); % close file
 
@@ -216,23 +243,49 @@ fclose(fid); % close file
 %% Step 11 - Exporting the segment points (and metrics) to a SHP file
 
 % duplicate the metrics structure (scalar fields only)
-S = rmfield(metrics_3d, fields(~idxl_scalar));
+S1 = rmfield(metrics_3d, sfields(~idxl_scalar));
 
 % add the geometry type
-[S.Geometry] = deal('Point');
+[S1.Geometry] = deal('Point');
 
 % add the X coordinates of the polygons
-[S.X] = metrics_3d.XPos;
+[S1.X] = metrics_3d.XPos;
 
 % add the Y coordinates of the polygons
-[S.Y] = metrics_3d.YPos;
+[S1.Y] = metrics_3d.YPos;
 
 % write non-scalar structure to SHP file
 % IMPORTANT: Matlab users, 
-shapewrite(S, 'zh_2014_a_seg_points.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
-clear S
+shapewrite(S1, 'zh_2014_a_seg_points.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
+clear S1
 
-%% Step 12 - Exporting the labelled and colored point cloud to a LAS file
+
+%% Step 12 - Exporting the segment polygons (and metrics) to a SHP file
+
+% duplicate the metrics structure (scalar fields only)
+S2 = rmfield(metrics_3d, sfields(~idxl_scalar));
+
+% add the geometry type
+[S2.Geometry] = deal('Polygon');
+
+% add the X coordinates of the polygons
+[S2.X] = metrics_3d.XCVH2D;
+
+% add the Y coordinates of the polygons
+[S2.Y] = metrics_3d.YCVH2D;
+
+% add the bounding boxes [minX, minY; maxX, maxY]
+[S2.BoundingBox] = metrics_3d.BBOX2D;
+
+% IMPORTANT: the shapewrite function included here is currently 
+% not compatible with Matlab. Matlab users should use the shapewrite 
+% function from the offical Matlab mapping toolbox instead.
+
+% write non-scalar structure to SHP file
+shapewrite(S2, 'zh_2014_a_seg_polygons.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
+clear S2
+
+%% Step 13 - Exporting the labelled and colored point cloud to a LAS file
 
 % duplicate the source file
 r = pc;
