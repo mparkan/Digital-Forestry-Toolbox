@@ -11,7 +11,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 20, 2020
+% Last revision: February 24, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -96,11 +96,9 @@ S = struct('Geometry', repmat({'Point'}, size(xyh_stem,1),1), ...
       'Y', num2cell(xyh_stem(:,2)), ...
       'BoundingBox', [], ...
       'H', num2cell(xyh_stem(:,3)));
-                        
-
-% IMPORTANT: the shapewrite function included here is currently 
-% not compatible with Matlab. Matlab users should use the shapewrite 
-% function from the offical Matlab mapping toolbox instead.
 
 % write non-scalar structure to SHP file
+% IMPORTANT: the shapewrite() function included here is currently 
+% not compatible with Matlab. Matlab users should use the shapewrite()
+% function from the offical Matlab mapping toolbox instead.
 shapewrite(S, 'ge_2017_a_stems.shp'); % IMPORTANT: adjust the path to the output SHP file
