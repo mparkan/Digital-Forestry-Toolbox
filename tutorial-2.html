@@ -181,7 +181,7 @@
             </h2>
 
             <p>To export the elevation models that were computed in the previous step to ARC/INFO ASCII grid files, use:</p>
-            
+
             <pre><code>% export the Digital Terrain Model (DTM) to an ARC/INFO ASCII grid file
 ASCwrite('zh_2014_a_dtm.asc', ...
     models.terrain.values, ...
@@ -189,7 +189,7 @@ ASCwrite('zh_2014_a_dtm.asc', ...
     'precision', 2, ...
     'noData', -99999, ...
     'verbose', true);
-            
+
 % export the Digital Surface Model (DSM) to an ARC/INFO ASCII grid file
 ASCwrite('zh_2014_a_dsm.asc', ...
     models.surface.values, ...
@@ -205,11 +205,11 @@ ASCwrite('zh_2014_a_dhm.asc', ...
     'precision', 2, ...
     'noData', -99999, ...
     'verbose', true);</code></pre>
-            
+
             <h2>
                 <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Tree top detection
             </h2>
-            
+
             <p>In this step, tree top (local maxima) detection is applied to the CHM. Following the method described in <a href="#references">Chen et al. (2006)</a>, a power law was used to describe the relation between crown radius and height. Non-linear regression was applied to a set of (manually delineated) reference observations, to determine the parameter values of the power law model (see figure 2). Subsequently, the lower 95% prediction bound of the regression was used as the mimimum separation (merging) range (r) between tree tops as a function of their height (h):</p>
             <!--            (n.b. this step is not covered in the tutorial)-->
 
@@ -424,11 +424,11 @@ fclose(fid); % close file</code></pre>
 
             <p>After exporting the CSV file, you can try opening it in any text editor (e.g. <a href="https://notepad-plus-plus.org/">Notepad++</a>).</p>
 
-            
+
             <h2>
                 <a id="step-11" class="anchor" href="step-11" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 11</b> - Exporting the segment points (and metrics) to a SHP file
             </h2>
-            
+
             <p>To export the detected tree top points and associated metrics to an ESRI shapefile, we first make a copy (<code>S1</code>) of the <code>metrics</code> list, then remove all the non-scalar fields from it and finally add "Geometry", "X" and "Y" fields to it:</p>
 
             <pre><code>% duplicate the metrics structure (scalar fields only)
@@ -449,7 +449,7 @@ S1 = rmfield(metrics_3d, sfields(~idxl_scalar));
                 <p style="text-align: center"><i class="fa fa-exclamation-triangle fa-2x" aria-hidden="true"></i></p>
 
                 <b>Matlab users</b>, the shapewrite() function included here is currently not compatible with Matlab. Please use the <a href="https://www.mathworks.com/help/map/ref/shapewrite.html">shapewrite()</a> function from the offical Matlab mapping toolbox instead.
-                
+
                 <!--<b>Octave users</b>, please make sure you are using the latest versions of the <a href="https://sourceforge.net/p/octave/io/ci/default/tree/"><b>'io' (2.4.12 or above)</b></a> and <a href="https://sourceforge.net/p/octave/mapping/ci/default/tree/"> <b>'mapping' (1.4.0 snapshot or above)</b></a> packages. Previous versions contain critical issues in the shapewrite function.-->
 
             </div>
@@ -467,11 +467,11 @@ clear S1</code></pre>
             <h2>
                 <a id="step-12" class="anchor" href="step-12" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 12</b> - Exporting the segment polygons (and metrics) to a SHP file
             </h2>
-            
+
             <p>To export the detected tree extent polygons and associated metrics to an ESRI shapefile, we first make a copy (<code>S2</code>) of the <code>metrics</code> list, then remove all the non-scalar fields from it and finally add "Geometry", "X", "Y" and "BoundingBox" fields to it:</p>
-            
-            
-             <pre><code>% duplicate the metrics structure (scalar fields only)
+
+
+            <pre><code>% duplicate the metrics structure (scalar fields only)
 S2 = rmfield(metrics_3d, sfields(~idxl_scalar));
 
 % add the geometry type
@@ -485,13 +485,13 @@ S2 = rmfield(metrics_3d, sfields(~idxl_scalar));
 
 % add the bounding boxes [minX, minY; maxX, maxY]
 [S2.BoundingBox] = metrics_3d.BBOX2D;</code></pre>
-            
+
             <p>As previously, we then use <code>shapewrite()</code> to write the SHP file:</p>
-            
+
             <pre><code>% write non-scalar structure to SHP file
 shapewrite(S2, 'zh_2014_a_seg_polygons.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
 clear S2</code></pre>
-            
+
             <h2>
                 <a id="step-13" class="anchor" href="step-13" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 13</b> - Exporting the labelled and colored point cloud to a LAS 1.4 file
             </h2>
@@ -649,7 +649,7 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
                 resolutions: pixelResolutions
             });
 
-            // define vector layer
+            // define vector layer 1
             var vectorLayer1 = new ol.layer.Vector({
                 title: 'Tree tops',
                 type: 'overlay',
@@ -668,6 +668,29 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
                     }))
                 })
             });
+
+            // define vector layer 2
+            var vectorLayer2 = new ol.layer.Vector({
+                title: 'Tree convex hulls',
+                type: 'overlay',
+                source: new ol.source.Vector({
+                    format: new ol.format.GeoJSON(),
+                    url: './data/tutorial_2/vector/zh_2014_a_seg_polygons.geojson',
+                    crossOrigin: 'anonymous',
+                    projection: 'EPSG:2056',
+                }),
+                style: new ol.style.Style({
+                    stroke: new Stroke({
+                        color: 'orange',
+                        width: 3
+                    }),
+                    fill: new Fill({
+                        color: 'rgba(0, 0, 255, 0.1)'
+                    })
+                })
+            });
+
+
 
             // define XYZ tiles layer
             var rasterTileLayer1 = new ol.layer.Tile({
@@ -734,7 +757,8 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
             var layerGroup2 = new ol.layer.Group({
                 title: 'Overlays',
                 layers: [
-                    vectorLayer1
+                    vectorLayer1,
+                    vectorLayer2
                 ]
             });
 
