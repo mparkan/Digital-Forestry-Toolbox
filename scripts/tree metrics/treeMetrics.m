@@ -41,8 +41,9 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 %    intensityScaling (optional, default: true) - boolean value, rescale
 %    intensity between 0 and 1 using the [0.001, 0.99] quantiles as limits
 %
-%    scalarOnly (optional, default: true) - boolean value, flag indicating
-%    if only scalar values should be returned
+%    alpha (optional, default: []) - scalar, minimum alpha value that should be used
+%    when computing concave alpha shapes. By default, the smallest alpha producing a single region
+%    shape is used      
 %
 %    verbose (optional, default: true) - boolean value, verbosiy switch
 %
@@ -64,8 +65,9 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 %         [pc.record.red, pc.record.green, pc.record.blue], ...
 %         models.terrain.values, ...
 %         refmat, ...
-%         'metrics', {'Identifier', 'IntensityMetrics', 'OpacityMetrics', 'ConvexVolume', 'ConvexArea'}, ...
+%         'metrics', {'UUID', 'XPos', 'YPos', 'ZPos', 'H','BBOX2D', 'XCVH2D', 'YCVH2D', 'CVH2DArea', 'IQ50'}, ...
 %         'intensityScaling', true, ...
+%         'alphaMin', 1.5, ...
 %         'verbose', true);
 %
 % Other m-files required: none
@@ -80,10 +82,87 @@ function [metrics, varargout] = treeMetrics(label, xyz, intensity, returnNumber,
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 23, 2020
+% Last revision: February 24, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood
 % Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
+%
+%
+%|    Octave compatible |               Category |            Name | Description 
+%.......................................................................................................................................
+%|                  Yes |             Identifier |            UUID | Universally Unique Identifier
+%|                  Yes |             Identifier |            LUID | Locally Unique Identifier
+%|                  Yes |                  Basic |          Random | Random Number (between 0 and 1)
+%|                  Yes |                  Basic |         NPoints | Number of points
+%|                  Yes |                  Basic |             XYZ | Raw 3D coordinates (x,y,z)
+%|                  Yes |                  Basic |             XYH | Normalized 3D coordinates (x,y,h)
+%|                  Yes |                  Basic |             UVW | Principal components 3D coordinates (u,v,w)
+%|                  Yes |                  Basic |            XPos | X coordinate of the position proxy
+%|                  Yes |                  Basic |            YPos | Y coordinate of the position proxy
+%|                  Yes |                  Basic |            ZPos | Z coordinate of the position proxy
+%|                  Yes |                  Basic |          BBOX2D | 2D bounding box
+%|                  Yes |                  Basic |          BBOX3D | 3D bounding box
+%|                  Yes |                  Basic |           CVH2D | 2D convex hull
+%|                  Yes |                  Basic |          XCVH2D | X coordinates of 2D convex hull
+%|                  Yes |                  Basic |          YCVH2D | Y coordinates of 2D convex hull
+%|                  Yes |                  Basic |           CVH3D | 3D convex hull
+%|                   No |                  Basic |           CCH2D | 2D concave hull
+%|                   No |                  Basic |          XCCH2D | X coordinates of 2D concave hull
+%|                   No |                  Basic |          YCCH2D | Y coordinates of 2D concave hull
+%|                   No |                  Basic |           CCH3D | 3D concave hull
+%|                  Yes |    PointPatternMetrics |           HMean | Mean of the point heights
+%|                  Yes |    PointPatternMetrics |         HStdDev | Standard deviation of the point heights
+%|                  Yes |    PointPatternMetrics |        HCoefVar | Coefficient of variation of the point heights
+%|                  Yes |    PointPatternMetrics |           HKurt | Kurtosis of the point heights
+%|                  Yes |    PointPatternMetrics |           HSkew | Skewness of the point heights
+%|                  Yes |    PointPatternMetrics |            HQ25 | 25th percentile of the point heights
+%|                  Yes |    PointPatternMetrics |            HQ50 | 50th percentile (median) of the point heights
+%|                  Yes |    PointPatternMetrics |            HQ75 | 75th percentile of the point heights
+%|                  Yes |    PointPatternMetrics |            HQ90 | 90th percentile of the point heights
+%|                  Yes |    PointPatternMetrics |          PCVar1 | Variance of the first principal component
+%|                  Yes |    PointPatternMetrics |          PCVar2 | Variance of the second principal component
+%|                  Yes |    PointPatternMetrics |          PCVar3 | Variance of the third principal component
+%|                   No |    PointPatternMetrics |         CCH3DRa | Ratio of points located on the concave hull
+%|                  Yes |    PointPatternMetrics |         CVH3DRa | Fraction of points located on the convex hull
+%|                   No |    PointPatternMetrics |         CCH3DPD | Number of points divided by the 3D concave hull volume
+%|                  Yes |    PointPatternMetrics |         CVH3DPD | Number of points divided by the 3D convex hull volume
+%|                  Yes |   ExternalShapeMetrics |               H | Total height
+%|                   No |   ExternalShapeMetrics |       CCH2DArea | Area of the 2D concave hull
+%|                   No |   ExternalShapeMetrics |       CCH3DArea | Surface area of the 3D concave hull
+%|                   No |   ExternalShapeMetrics |        CCH3DVol | Volume of the 3D concave hull
+%|                   No |   ExternalShapeMetrics |         CCH3DSS | Specific surface of the 3D concave hull
+%|                  Yes |   ExternalShapeMetrics |       CVH2DArea | Area of the 2D convex hull
+%|                  Yes |   ExternalShapeMetrics |              CD | Diameter of the equivalent area circle
+%|                  Yes |   ExternalShapeMetrics |       CVH3DArea | Surface area of the 3D convex hull
+%|                  Yes |   ExternalShapeMetrics |        CVH3DVol | Volume of the 3D convex hull
+%|                   No |   ExternalShapeMetrics |          Cvty3D | 3D convexity (concave surface area divided by convex surface area)
+%|                   No |   ExternalShapeMetrics |        CVH3DLac | Convex hull lacunarity (concave volume divided by convex volume)
+%|                  Yes |   ExternalShapeMetrics |         CVH3DSS | Convex hull specific surface ()
+%|                  Yes |   ExternalShapeMetrics |        AspRatio | Aspect ratio (height divided by convex area)
+%|                  Yes |   ExternalShapeMetrics |      Sphericity | Sphericity
+%|                  Yes |         OpacityMetrics |         Opacity | Opacity
+%|                  Yes |         OpacityMetrics |      OpacityQ50 | 50th percentile (median) of the opacity
+%|                  Yes |         OpacityMetrics |          SRFrac | Fraction of single returns
+%|                  Yes |         OpacityMetrics |          FRFrac | Fraction of first returns
+%|                  Yes |         OpacityMetrics |          LRFrac | Fraction of last returns
+%|                  Yes |       IntensityMetrics |               I | Return intensity values
+%|                  Yes |       IntensityMetrics |            IQ25 | 25th percentile of the return intensity
+%|                  Yes |       IntensityMetrics |            IQ50 | 50th percentile of the return intensity
+%|                  Yes |       IntensityMetrics |            IQ75 | 75th percentile of the return intensity
+%|                  Yes |       IntensityMetrics |            IQ90 | 90th percentile of the return intensity
+%|                  Yes |       IntensityMetrics |           IMean | Mean of the return intensity
+%|                  Yes |       IntensityMetrics |            IMax | Max of the return intensity
+%|                  Yes |       IntensityMetrics |         IStdDev | Standard deviation of the return intensity
+%|                  Yes |       IntensityMetrics |        ICoefVar | Coefficient of variation of the return intensity
+%|                  Yes |       IntensityMetrics |           IKurt | Kurtosis of the return intensity
+%|                  Yes |       IntensityMetrics |           ISkew | Skewness of the return intensity
+%|                  Yes |           ColorMetrics |             RGB | Colors (Red, Green, Blue)
+%|                  Yes |           ColorMetrics |          Chroma | Chromaticity
+%|                  Yes |           ColorMetrics |        RChroQ50 | Median of red chromaticity
+%|                  Yes |           ColorMetrics |        GChroQ50 | Median of green chromaticity
+%|                  Yes |           ColorMetrics |       RChroHQ50 | Median of red chromaticity of convex hull points
+%|                  Yes |           ColorMetrics |       GChroHQ50 | Median of green chromaticity of convex hull points
+%|                  Yes |           ColorMetrics |       BChroHQ50 | Median of blue chromaticity of convex hull points
 
 
 %% check argument validity
@@ -101,6 +180,7 @@ addRequired(arg, 'refmat', @(x) all(size(x) == [3,2]));
 addParameter(arg, 'metrics', {'all'}, @(x) iscell(x) && ~isempty(x));
 addParameter(arg, 'treePos', [], @(x) (size(x,2) == 3) && isnumeric(x));
 addParameter(arg, 'intensityScaling', true, @(x) islogical(x) && (numel(x) == 1));
+addParameter(arg, 'alphaMin', [], @(x) isnumeric(x) && (x > 0) && (numel(x) == 1));
 addParameter(arg, 'verbose', true, @(x) islogical(x) && (numel(x) == 1));
 
 parse(arg, label, xyz, intensity, returnNumber, returnTotal, rgb, dtm, refmat, varargin{:});
@@ -267,6 +347,7 @@ end
 
 
 %% list feature dependencies
+
 warning off
 M = struct;
 
@@ -416,7 +497,8 @@ M.Description{k} = 'X coordinates of 2D convex hull';
 M.Dependencies{k} = {'CVH2D'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
-M.ScaleDependant(k) = false;
+M.ScaleDependant(k) = true;
+M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'Basic';
@@ -425,7 +507,8 @@ M.Description{k} = 'Y coordinates of 2D convex hull';
 M.Dependencies{k} = {'CVH2D'};
 M.Scalar(k) = false;
 M.Octave(k) = true;
-M.ScaleDependant(k) = false;
+M.ScaleDependant(k) = true;
+M.PrintFormat{k} = [];
 k = k + 1;
 
 M.Category{k} = 'Basic';
@@ -445,6 +528,26 @@ M.Dependencies{k} = {'XYZ'};
 M.Scalar(k) = false;
 M.Octave(k) = false;
 M.ScaleDependant(k) = false;
+M.PrintFormat{k} = [];
+k = k + 1;
+
+M.Category{k} = 'Basic';
+M.Name{k} = 'XCCH2D';
+M.Description{k} = 'X coordinates of 2D concave hull';
+M.Dependencies{k} = {'CCH2D'};
+M.Scalar(k) = false;
+M.Octave(k) = false;
+M.ScaleDependant(k) = true;
+M.PrintFormat{k} = [];
+k = k + 1;
+
+M.Category{k} = 'Basic';
+M.Name{k} = 'YCCH2D';
+M.Description{k} = 'Y coordinates of 2D concave hull';
+M.Dependencies{k} = {'CCH2D'};
+M.Scalar(k) = false;
+M.Octave(k) = false;
+M.ScaleDependant(k) = true;
 M.PrintFormat{k} = [];
 k = k + 1;
 
@@ -927,7 +1030,7 @@ k = k + 1;
 % M.ScaleDependant(k) = false;
 % M.PrintFormat{k} = '%.2f';
 % k = k + 1;
-% 
+%
 % M.Category{k} = 'IntensityMetrics';
 % M.Name{k} = 'ILRQ50';
 % M.Description{k} = '50th percentile (median) of the return intensity of last returns';
@@ -937,7 +1040,7 @@ k = k + 1;
 % M.ScaleDependant(k) = false;
 % M.PrintFormat{k} = '%.2f';
 % k = k + 1;
-% 
+%
 % M.Category{k} = 'IntensityMetrics';
 % M.Name{k} = 'ISRQ50';
 % M.Description{k} = '50th percentile of the return intensity of single returns';
@@ -1131,17 +1234,17 @@ for j = idxn_start
         idxn_child = idxn_parent;
         
     end
-
+    
 end
 
 G.Nodes.Include = false(n,1);
 G.Nodes.Include(cell2mat(G.Nodes.DependencyPath(G.Nodes.Available & G.Nodes.Selected))) = true;
 
 if arg.Results.verbose
-
+    
     fprintf('done!\n');
     toc
-
+    
 end
 
 %% schedule tasks with topological sorting
@@ -1368,32 +1471,39 @@ for j = 1:length(L)
                     idxl_convex_hull_2d(k,1) = true;
                     
                 catch
-                   
+                    
                     idxl_convex_hull_2d(k,1) = false;
                     
                 end
                 
             end
             
-        case 'XCVH2D'
+        case {'XCVH2D', 'YCVH2D'}
             
-            metrics.XCVH2D = repmat({nan}, n_obs, 1);
-            for k = find(idxl_convex_hull_2d)'
+            if ~all([isfield(metrics,'XCVH2D'), isfield(metrics,'YCVH2D')])
                 
-                metrics.XCVH2D{k,1} = metrics.XYZ{k}(metrics.CVH2D{k},1)';
+                metrics.XCVH2D = repmat({nan}, n_obs, 1);
+                metrics.YCVH2D = repmat({nan}, n_obs, 1);
+                
+                for k = find(idxl_convex_hull_2d)'
+                    
+                    metrics.XCVH2D{k,1} = metrics.XYZ{k}(metrics.CVH2D{k},1)';
+                    metrics.YCVH2D{k,1} = metrics.XYZ{k}(metrics.CVH2D{k},2)';
+                    
+                end
                 
             end
             % metrics.XCVH2D = cellfun(@(x,k) x(k,1)', metrics.XYZ, metrics.CVH2D, 'UniformOutput', false);
             
-        case 'YCVH2D'
-            
-            metrics.YCVH2D = repmat({nan}, n_obs, 1);
-            for k = find(idxl_convex_hull_2d)'
-                
-                metrics.YCVH2D{k,1} = metrics.XYZ{k}(metrics.CVH2D{k},2)';
-                
-            end
-            % metrics.YCVH2D = cellfun(@(x,k) x(k,2)', metrics.XYZ, metrics.CVH2D, 'UniformOutput', false);
+            %         case 'YCVH2D'
+            %
+            %             metrics.YCVH2D = repmat({nan}, n_obs, 1);
+            %             for k = find(idxl_convex_hull_2d)'
+            %
+            %                 metrics.YCVH2D{k,1} = metrics.XYZ{k}(metrics.CVH2D{k},2)';
+            %
+            %             end
+            %             % metrics.YCVH2D = cellfun(@(x,k) x(k,2)', metrics.XYZ, metrics.CVH2D, 'UniformOutput', false);
             
         case 'CVH3D'
             
@@ -1419,23 +1529,47 @@ for j = 1:length(L)
             
             % single region 2D alpha shape
             metrics.CCH2D = repmat({nan}, n_obs, 1);
+            %idxl_concave_hull_2d = false(n_obs,1);
             
             for k = find(metrics.NPoints >= 3)' % at least 3 points are required to compute the 2D alpha shape
                 
                 try
                     
                     shp = alphaShape(metrics.XYZ{k}(:,1:2), inf);
-                    alpha = criticalAlpha(shp, 'one-region');
+                    alpha = max([criticalAlpha(shp, 'one-region'), arg.Results.alphaMin]);
                     metrics.CCH2D{k,1} = alphaShape(metrics.XYZ{k}(:,1:2), ...
                         alpha, ...
                         'HoleThreshold', 10^9);
+                    %idxl_concave_hull_2d(k,1) = true;
                     
                 catch
                     
                     metrics.CCH2D{k,1} = nan;
+                    %idxl_concave_hull_2d(k,1) = true;
                     
                 end
                 
+            end
+            
+            idxl_concave_hull_2d = cellfun(@(x) isa(x, 'alphaShape'), metrics.CCH2D);
+            
+        case {'XCCH2D','YCCH2D'}
+            
+            if ~all([isfield(metrics,'XCCH2D'), isfield(metrics,'YCCH2D')])
+                
+                for k = find(idxl_concave_hull_2d)'
+                    
+                    [idxn_bf, xy_b] = boundaryFacets(metrics.CCH2D{k});
+                    x_b = xy_b(:,1);
+                    y_b = xy_b(:,2);
+                    metrics.XCCH2D{k,1} = reshape(x_b(idxn_bf)', 1, []);
+                    metrics.YCCH2D{k,1} = reshape(y_b(idxn_bf)', 1, []);
+                    
+                    % pgon = polyshape(xy_b(:,1), xy_b(:,2));
+                    % metrics.XCCH2D{k,1} = [pgon.Vertices(:,1); pgon.Vertices(1,1)]';
+                    % metrics.YCCH2D{k,1} = [pgon.Vertices(:,2); pgon.Vertices(1,2)]';
+                    
+                end
                 
             end
             
@@ -1449,7 +1583,7 @@ for j = 1:length(L)
                 try
                     
                     shp = alphaShape(metrics.XYZ{k}, inf);
-                    alpha = criticalAlpha(shp, 'one-region');
+                    alpha = max([criticalAlpha(shp, 'one-region'), arg.Results.alphaMin]);
                     metrics.CCH3D{k,1} = alphaShape(metrics.XYZ{k}, alpha);
                     
                 catch
@@ -1739,7 +1873,6 @@ for j = 1:m
     end
     
 end
-
 
 % delete records containing NaN
 fclass = cellfun(@class, C(:,1), 'UniformOutput', false);
