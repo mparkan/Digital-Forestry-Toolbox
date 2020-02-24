@@ -670,6 +670,7 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
             });
 
             // define vector layer 2
+            /*
             var vectorLayer2 = new ol.layer.Vector({
                 title: 'Tree convex hulls',
                 type: 'overlay',
@@ -689,8 +690,7 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
                     })
                 })
             });
-
-
+            */
 
             // define XYZ tiles layer
             var rasterTileLayer1 = new ol.layer.Tile({
@@ -757,8 +757,7 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
             var layerGroup2 = new ol.layer.Group({
                 title: 'Overlays',
                 layers: [
-                    vectorLayer1,
-                    vectorLayer2
+                    vectorLayer1 //, vectorLayer2
                 ]
             });
 
