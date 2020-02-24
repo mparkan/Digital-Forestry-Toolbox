@@ -52,8 +52,8 @@
             <h1>Tree stem detection</h1>
 
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Published</b>: December 7, 2018 / <b>Last updated</b>: December 7, 2018</p>
-            <p style="text-align: center"><b>Tested on Matlab r2017b, GNU Octave 4.4.1</b></p>
+            <p style="text-align: center"><b>Published</b>: December 7, 2018 / <b>Last updated</b>: February 24, 2020</p>
+            <p style="text-align: center"><b>Tested on Matlab r2019b, GNU Octave 5.2.0</b></p>
 
             <h2>
                 <a id="introduction" class="anchor" href="introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Introduction</b>
@@ -298,24 +298,19 @@ fclose(fid); % close file</code></pre>
 
                 <p style="text-align: center"><i class="fa fa-exclamation-triangle fa-2x" aria-hidden="true"></i></p>
 
-                <b>Octave users</b>, please make sure you are using the latest versions of the <a href="https://sourceforge.net/p/octave/io/ci/default/tree/"><b>'io' (2.4.12 or above)</b></a> and <a href="https://sourceforge.net/p/octave/mapping/ci/default/tree/"> <b>'mapping' (1.4.0 snapshot or above)</b></a> packages. Previous versions contain critical issues in the shapewrite function.
+                <b>Matlab users</b>, the shapewrite() function included here is currently not compatible with Matlab. Please use the <a href="https://www.mathworks.com/help/map/ref/shapewrite.html">shapewrite()</a> function from the offical Matlab mapping toolbox instead.
+                <!--<b>Octave users</b>, please make sure you are using the latest versions of the <a href="https://sourceforge.net/p/octave/io/ci/default/tree/"><b>'io' (2.4.13 or above)</b></a> and <a href="https://sourceforge.net/p/octave/mapping/ci/default/tree/"> <b>'mapping' (1.4.0 or above)</b></a> packages. Previous versions contain critical issues in the shapewrite function.-->
 
             </div>
             <br>
 
             <p>To export the stem attributes to an ESRI shapefile, you first have to format them into a non-scalar structure and add a "Geometry" field:</p>
 
-            <pre><code>S = struct;
-for j = 1:size(xyh_stem,1)
-
-    S(j,1).Geometry = 'Point';
-    S(j,1).BoundingBox = [];
-    S(j,1).ID = j;
-    S(j,1).X = xyh_stem(j,1);
-    S(j,1).Y = xyh_stem(j,2);
-    S(j,1).H = xyh_stem(j,3);
-
-end</code></pre>
+            <pre><code>S = struct('Geometry', repmat({'Point'}, size(xyh_stem,1),1), ...
+      'X', num2cell(xyh_stem(:,1)), ...
+      'Y', num2cell(xyh_stem(:,2)), ...
+      'BoundingBox', [], ...
+      'H', num2cell(xyh_stem(:,3)));</code></pre>
 
             <p>Specify the output filepath (by default, the file is created in the current working directory) and use <code>shapewrite()</code> to write the file:</p>
 
