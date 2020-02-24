@@ -55,8 +55,8 @@
             <h1>Individual tree crown detection using marker controlled watershed segmentation</h1>
 
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Published</b>: May 15, 2018 / <b>Last updated</b>: January 8, 2019</p>
-            <p style="text-align: center"><b>Tested on Matlab r2017b, GNU Octave 4.4.1</b></p>
+            <p style="text-align: center"><b>Published</b>: May 15, 2018 / <b>Last updated</b>: February 24, 2020</p>
+            <p style="text-align: center"><b>Tested on Matlab r2019b, GNU Octave 5.2.0</b></p>
 
             <!--<p> In this tutorial, you will learn how to detect individual tree crowns from a raster Canopy Height Model (CHM) using marker controlled watershed segmentation.-->
 
@@ -177,10 +177,39 @@
 
 
             <h2>
-                <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Tree top detection
+                <a id="step-3" class="anchor" href="step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 3</b> - Exporting the elevation models to ARC/INFO ASCII grid file
             </h2>
 
+            <p>To export the elevation models that were computed in the previous step to ARC/INFO ASCII grid files, use:</p>
+            
+            <pre><code>% export the Digital Terrain Model (DTM) to an ARC/INFO ASCII grid file
+ASCwrite('zh_2014_a_dtm.asc', ...
+    models.terrain.values, ...
+    refmat, ...
+    'precision', 2, ...
+    'noData', -99999, ...
+    'verbose', true);
+            
+% export the Digital Surface Model (DSM) to an ARC/INFO ASCII grid file
+ASCwrite('zh_2014_a_dsm.asc', ...
+    models.surface.values, ...
+    refmat, ...
+    'precision', 2, ...
+    'noData', -99999, ...
+    'verbose', true);
 
+% export the Digital Height Model (DHM) to an ARC/INFO ASCII grid file
+ASCwrite('zh_2014_a_dhm.asc', ...
+    models.height.values, ...
+    refmat, ...
+    'precision', 2, ...
+    'noData', -99999, ...
+    'verbose', true);</code></pre>
+            
+            <h2>
+                <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Tree top detection
+            </h2>
+            
             <p>In this step, tree top (local maxima) detection is applied to the CHM. Following the method described in <a href="#references">Chen et al. (2006)</a>, a power law was used to describe the relation between crown radius and height. Non-linear regression was applied to a set of (manually delineated) reference observations, to determine the parameter values of the power law model (see figure 2). Subsequently, the lower 95% prediction bound of the regression was used as the mimimum separation (merging) range (r) between tree tops as a function of their height (h):</p>
             <!--            (n.b. this step is not covered in the tutorial)-->
 
@@ -215,7 +244,7 @@ r(h) = 0.5 + 0.25 \cdot ln(\max_h(h,1)) $$-->
 </figure>-->
 
             <h2>
-                <a id="step-4" class="anchor" href="step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 4</b> - Marker controlled watershed segmentation
+                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Marker controlled watershed segmentation
             </h2>
 
             <p>Using the previously computed CHM, tree top coordinates and boolean mask, we now compute the marker controlled watershed segmentation with <code>treeWatershed()</code>:</p>
@@ -239,7 +268,7 @@ r(h) = 0.5 + 0.25 \cdot ln(\max_h(h,1)) $$-->
 
 
             <h2>
-                <a id="step-5" class="anchor" href="step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 5</b> - Computing segment metrics from the label matrix
+                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Computing segment metrics from the label matrix
             </h2>
 
             <p>From the labelled matrix, it is possible to compute a set of basic features (note that some of the metrics in regionprops() are currently only available in Matlab):</p>
@@ -249,7 +278,7 @@ r(h) = 0.5 + 0.25 \cdot ln(\max_h(h,1)) $$-->
 
 
             <h2>
-                <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Transferring 2D labels to the 3D point cloud
+                <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Transferring 2D labels to the 3D point cloud
             </h2>
 
             <p>The next step is transferring the 2D labels and colors to the 3D point cloud:</p>
@@ -287,7 +316,7 @@ cmap = [0, 0, 0;
     177,89,40] ./ 255;</code></pre>
 
             <h2>
-                <a id="step-7" class="anchor" href="step-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 7</b> - Plotting the colored points cloud
+                <a id="step-8" class="anchor" href="step-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 8</b> - Plotting the colored points cloud
             </h2>
 
             <br>
@@ -357,99 +386,114 @@ end</code></pre>
 
 
             <h2>
-                <a id="step-8" class="anchor" href="step-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 8</b> - Computing segment metrics from the labelled point cloud
+                <a id="step-9" class="anchor" href="step-9" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 9</b> - Computing segment metrics from the labelled point cloud
             </h2>
 
             <p>We now compute descriptive metrics directly from the point cloud for each segment using <code>treeMetrics()</code>:</p>
 
-            <pre><code>metrics_3d = treeMetrics(label_3d, ...
-                    [pc.record.x, pc.record.y, pc.record.z], ...
-                    pc.record.intensity, ...
-                    pc.record.return_number, ...
-                    pc.record.number_of_returns, ...
-                    nan(length(pc.record.x), 3), ...
-                    models.terrain.values, ...
-                    refmat, ...
-                    'metrics', {'all'}, ...
-                    'intensityScaling', true, ...
-                    'dependencies', false, ...
-                    'scalarOnly', true, ...
-                    'verbose', true);
+            <pre><code>% compute metrics
+[metrics_3d, fmt, idxl_scalar] = treeMetrics(label_3d, ...
+    [pc.record.x, pc.record.y, pc.record.z], ...
+    pc.record.intensity, ...
+    pc.record.return_number, ...
+    pc.record.number_of_returns, ...
+    nan(length(pc.record.x), 3), ...
+    models.terrain.values, ...
+    refmat, ...
+    'metrics', {'UUID', 'XPos', 'YPos', 'ZPos', 'H','BBOX2D', 'XCVH2D', 'YCVH2D', 'CVH2DArea', 'IQ50'}, ...
+    'intensityScaling', true, ...
+    'alphaMin', 1.5, ...
+    'verbose', true);
+
+% list field names
+sfields = fieldnames(metrics_3d);
 </code></pre>
 
             <h2>
-                <a id="step-9" class="anchor" href="step-9" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 9</b> - Exporting the segment metrics to CSV and SHP files
+                <a id="step-10" class="anchor" href="step-10" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 10</b> - Exporting the segment metrics to a CSV file
             </h2>
 
-            <p>The following illustrates how to export the segmentation metrics to a Comma Separated Values text file (.csv). You first have to convert the <code>metrics_3d</code> structure to a cell array:</p>
+            <p>The following illustrates how to export the segmentation metrics to a Comma Separated Values text file (.csv):</p>
 
-            <pre><code>fields = fieldnames(metrics_3d);
-m = length(fields);
-n = length(metrics_3d.(fields{1}));
-
-% determine print format
-idxl_num = structfun(@(x) isnumeric(x), metrics_3d);
-fmt = repmat({'%s'}, [1 m]);
-fmt(idxl_num) = {'%.3f'};
-fmt = [strjoin(fmt, ','), '\n'];
-
-% convert structure to cell array
-C = cell(m, n);
-for j = 1:m
-
-    if isnumeric(metrics_3d.(fields{j}))
-
-        C(j,:) = num2cell(metrics_3d.(fields{j}));
-
-    else
-
-        C(j,:) = metrics_3d.(fields{j});
-
-    end
-
-end</code></pre>
-
-            <p>You can then write the data to a CSV file with:</p>
-
-            <pre><code>% write cell array to CSV file
-% IMPORTANT: adjust the path to the output CSV file
+            <pre><code>% IMPORTANT: adjust the path to the output CSV file (otherwise it will be created in the current folder)
 fid = fopen('zh_2014_a_seg_metrics.csv', 'w+'); % open file
-fprintf(fid, '%s\n', strjoin(fields, ',')); % write header line
-fprintf(fid, fmt, C{:}); % write metrics
+fprintf(fid, '%s\n', strjoin(sfields(idxl_scalar), ',')); % write header line
+C = struct2cell(rmfield(metrics_3d, sfields(~idxl_scalar))); % convert structure to cell array
+fprintf(fid, [strjoin(fmt(idxl_scalar), ','), '\n'], C{:}); % write cell array to CSV file
 fclose(fid); % close file</code></pre>
 
             <p>After exporting the CSV file, you can try opening it in any text editor (e.g. <a href="https://notepad-plus-plus.org/">Notepad++</a>).</p>
 
-            <p>To export the segmentation metrics to an ESRI shapefile you first have to convert the cell array <code>C</code> to a non-scalar structure and add a "Geometry" field:</p>
+            
+            <h2>
+                <a id="step-11" class="anchor" href="step-11" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 11</b> - Exporting the segment points (and metrics) to a SHP file
+            </h2>
+            
+            <p>To export the detected tree top points and associated metrics to an ESRI shapefile, we first make a copy (<code>S1</code>) of the <code>metrics</code> list, then remove all the non-scalar fields from it and finally add "Geometry", "X" and "Y" fields to it:</p>
 
-            <pre><code>% create a non-scalar structure
-S = cell2struct(C, fields);
-clear C
+            <pre><code>% duplicate the metrics structure (scalar fields only)
+S1 = rmfield(metrics_3d, sfields(~idxl_scalar));
 
-% add geometry field
-[S.Geometry] = deal('Point');</code></pre>
+% add the geometry type
+[S1.Geometry] = deal('Point');
+
+% add the X coordinates of the polygons
+[S1.X] = metrics_3d.XPos;
+
+% add the Y coordinates of the polygons
+[S1.Y] = metrics_3d.YPos;</code></pre>
 
             <br>
             <div class="box">
 
                 <p style="text-align: center"><i class="fa fa-exclamation-triangle fa-2x" aria-hidden="true"></i></p>
 
-                <b>Octave users</b>, please make sure you are using the latest versions of the <a href="https://sourceforge.net/p/octave/io/ci/default/tree/"><b>'io' (2.4.12 or above)</b></a> and <a href="https://sourceforge.net/p/octave/mapping/ci/default/tree/"> <b>'mapping' (1.4.0 snapshot or above)</b></a> packages. Previous versions contain critical issues in the shapewrite function.
+                <b>Matlab users</b>, the shapewrite() function included here is currently not compatible with Matlab. Please use the <a href="https://www.mathworks.com/help/map/ref/shapewrite.html">shapewrite()</a> function from the offical Matlab mapping toolbox instead.
+                
+                <!--<b>Octave users</b>, please make sure you are using the latest versions of the <a href="https://sourceforge.net/p/octave/io/ci/default/tree/"><b>'io' (2.4.12 or above)</b></a> and <a href="https://sourceforge.net/p/octave/mapping/ci/default/tree/"> <b>'mapping' (1.4.0 snapshot or above)</b></a> packages. Previous versions contain critical issues in the shapewrite function.-->
 
             </div>
             <br>
 
-            <p>Then use <code>shapewrite()</code> to write the file:</p>
+            <p>Then use <code>shapewrite()</code> to write the SHP file:</p>
 
             <pre><code>% write non-scalar structure to SHP file
-% IMPORTANT: adjust the path to the output SHP file
-shapewrite(S, 'zh_2014_a_seg_metrics.shp');</code></pre>
+shapewrite(S1, 'zh_2014_a_seg_points.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
+clear S1</code></pre>
 
 
             <p>After exporting the SHP file, you can try opening it in any GIS software (e.g. <a href="http://www.qgis.org">Quantum GIS</a>).</p>
 
             <h2>
-                <a id="step-10" class="anchor" href="step-10" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 10</b> - Exporting the labelled and colored point cloud to a LAS 1.4 file
+                <a id="step-12" class="anchor" href="step-12" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 12</b> - Exporting the segment polygons (and metrics) to a SHP file
+            </h2>
+            
+            <p>To export the detected tree extent polygons and associated metrics to an ESRI shapefile, we first make a copy (<code>S2</code>) of the <code>metrics</code> list, then remove all the non-scalar fields from it and finally add "Geometry", "X", "Y" and "BoundingBox" fields to it:</p>
+            
+            
+             <pre><code>% duplicate the metrics structure (scalar fields only)
+S2 = rmfield(metrics_3d, sfields(~idxl_scalar));
+
+% add the geometry type
+[S2.Geometry] = deal('Polygon');
+
+% add the X coordinates of the polygons
+[S2.X] = metrics_3d.XCVH2D;
+
+% add the Y coordinates of the polygons
+[S2.Y] = metrics_3d.YCVH2D;
+
+% add the bounding boxes [minX, minY; maxX, maxY]
+[S2.BoundingBox] = metrics_3d.BBOX2D;</code></pre>
+            
+            <p>As previously, we then use <code>shapewrite()</code> to write the SHP file:</p>
+            
+            <pre><code>% write non-scalar structure to SHP file
+shapewrite(S2, 'zh_2014_a_seg_polygons.shp'); % IMPORTANT: adjust the path to the output SHP file (otherwise it will be created in the current folder)
+clear S2</code></pre>
+            
+            <h2>
+                <a id="step-13" class="anchor" href="step-13" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 13</b> - Exporting the labelled and colored point cloud to a LAS 1.4 file
             </h2>
 
 
