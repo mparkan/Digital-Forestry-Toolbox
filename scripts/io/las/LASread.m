@@ -1642,13 +1642,13 @@ r.extra_bytes(k).byte_length = 'NaN';
 k = k + 1;
 
 r.extra_bytes(k).id = 1;
-r.extra_bytes(k).type = 'uchar';
+r.extra_bytes(k).type = 'uint8'; % uchar
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
 
 r.extra_bytes(k).id = 2;
-r.extra_bytes(k).type = 'char';
+r.extra_bytes(k).type = 'uint8'; % char
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
@@ -1702,13 +1702,13 @@ r.extra_bytes(k).byte_length = 8;
 k = k + 1;
 
 r.extra_bytes(k).id = 11;
-r.extra_bytes(k).type = 'uchar';
+r.extra_bytes(k).type = 'uint8'; % uchar
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
 
 r.extra_bytes(k).id = 12;
-r.extra_bytes(k).type = 'char';
+r.extra_bytes(k).type = 'uint8'; % char
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
@@ -1762,13 +1762,13 @@ r.extra_bytes(k).byte_length = 8;
 k = k + 1;
 
 r.extra_bytes(k).id = 21;
-r.extra_bytes(k).type = 'uchar';
+r.extra_bytes(k).type = 'uint8'; % uchar
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
 
 r.extra_bytes(k).id = 22;
-r.extra_bytes(k).type = 'char';
+r.extra_bytes(k).type = 'uint8'; % char
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
