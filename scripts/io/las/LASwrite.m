@@ -2169,7 +2169,7 @@ for j = 1:length(r.header)
             
         case {'n_points_by_return'}
             
-            if las_version < 14
+            if arg.Results.recordFormat < 6 % las_version < 14
                 
                 r.header(j).value = histc(r.record(pdr_skeys.return_number).value, 1:5); % Number of points by return N
                 
