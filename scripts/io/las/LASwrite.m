@@ -58,7 +58,7 @@ function varargout = LASwrite(s, filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 25, 2020
+% Last revision: October 10, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -2113,7 +2113,7 @@ for k = 1:length(n_records_per_attribute)
     
 end
 
-if ~(range(n_records_per_attribute) == 0)
+if ~(max(n_records_per_attribute) - min(n_records_per_attribute) == 0)
     
     error('LASwrite:unequalRecordLengths', 'The lengths of point data records are unequal');
     
