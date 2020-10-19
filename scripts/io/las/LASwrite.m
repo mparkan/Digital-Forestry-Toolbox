@@ -58,7 +58,7 @@ function varargout = LASwrite(s, filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: October 10, 2020
+% Last revision: October 19, 2020
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -1639,8 +1639,8 @@ r.record(k).version_compatibility = [13, 14];
 r.record(k).format_compatibility = [4, 5, 9, 10];
 r.record(k).bit_position = [328, 376, 344, 408];
 r.record(k).byte_position = r.record(k).bit_position ./ 8;
-r.record(k).type = {'uint32', 'uint32', 'uint32', 'uint32'};
-r.record(k).storage_type = {'uint32', 'uint32', 'uint32', 'uint32'};
+r.record(k).type = {'single', 'single', 'single', 'single'};
+r.record(k).storage_type = {'single', 'single', 'single', 'single'};
 r.record(k).bit_offset = [1, 1, 1, 1];
 r.record(k).bit_length = [32, 32, 32, 32];
 r.record(k).byte_length = r.record(k).bit_length / 8;
