@@ -4,7 +4,7 @@
 % treeWatershed.m, topoColor.m
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2019b, GNU Octave 5.2.0 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2020b, GNU Octave 6.2.0 (configured for "x86_64-w64-mingw32")
 %
 % See also:
 %
@@ -12,7 +12,7 @@
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 24, 2020
+% Last revision: April 4, 2021
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund (WHFF, OFEV), project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
