@@ -33,7 +33,7 @@ function s = LASread(filepath, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2019b, GNU Octave 5.2.0 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2020b, GNU Octave 6.2.0 (configured for "x86_64-w64-mingw32")
 %
 % See also: LASWRITE
 %
@@ -41,7 +41,7 @@ function s = LASread(filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: February 25, 2020
+% Last revision: April 4, 2021
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -1889,7 +1889,8 @@ for j = 1:length(r.header)
         
         case {'uchar','char'}
             
-            r.header(j).value = regexp(fread(fid, r.header(j).n_values, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % read until null terminator
+            %r.header(j).value = regexp(fread(fid, r.header(j).n_values, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % read until null terminator
+            r.header(j).value = regexp(native2unicode(fread(fid, r.header(j).n_values, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once'); % read until null terminator
             
         case {'uint8', 'uint16', 'uint32', 'uint64', 'double' }
             
@@ -1999,10 +2000,12 @@ if flag_vlr
         fseek(fid, byte_offset, 'bof');
         
         r.variable_length_records(j).reserved = fread(fid, 1, 'uint16', 0, MACHINE_FORMAT); % Reserved, unsigned short, 2 bytes;
-        r.variable_length_records(j).user_id = regexp(fread(fid, 16, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % read until null terminator
+        % r.variable_length_records(j).user_id = regexp(fread(fid, 16, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % read until null terminator
+        r.variable_length_records(j).user_id = regexp(native2unicode(fread(fid, 16, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once'); % read until null terminator
         r.variable_length_records(j).record_id = fread(fid, 1, 'uint16', 0, MACHINE_FORMAT); % Record ID, unsigned short, 2 bytes, *
         r.variable_length_records(j).record_length_after_header = fread(fid, 1, 'uint16', 0, MACHINE_FORMAT); % Record Length After Header, unsigned short, 2 bytes, *
-        r.variable_length_records(j).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % Description, char[32], 32 bytes
+        % r.variable_length_records(j).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % Description, char[32], 32 bytes
+        r.variable_length_records(j).description = regexp(native2unicode(fread(fid, 32, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once'); % Description, char[32], 32 bytes
         
         % read any defined variable length records
         switch r.variable_length_records(j).record_id
@@ -2020,7 +2023,8 @@ if flag_vlr
                 
             case 3 % Text area description (optional)
                 
-                r.variable_length_records(j).value = regexp(fread(fid, r.variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                %r.variable_length_records(j).value = regexp(fread(fid, r.variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                r.variable_length_records(j).value = regexp(native2unicode(fread(fid, r.variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once');
                 
             case 4 % Extra bytes (optional)
                 
@@ -2037,14 +2041,16 @@ if flag_vlr
                     r.variable_length_records(j).value(k).options.max_bit = bitget(extra_byte_options, 3);
                     r.variable_length_records(j).value(k).options.scale_bit = bitget(extra_byte_options, 4);
                     r.variable_length_records(j).value(k).options.offset_bit = bitget(extra_byte_options, 5);
-                    r.variable_length_records(j).value(k).name = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                    % r.variable_length_records(j).value(k).name = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                    r.variable_length_records(j).value(k).name = regexp(native2unicode(fread(fid, 32, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once');
                     r.variable_length_records(j).value(k).unused = fread(fid, 1, 'uint32', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).no_data = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).min = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).max = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).scale = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                     r.variable_length_records(j).value(k).offset = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
-                    r.variable_length_records(j).value(k).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                    % r.variable_length_records(j).value(k).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                    r.variable_length_records(j).value(k).description = regexp(native2unicode(fread(fid, 32, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once');
                     
                     % append extra bytes specification to the point data record template
                     ind_data_type = r.variable_length_records(j).value(k).data_type + 1;
@@ -2110,11 +2116,13 @@ if flag_vlr
                 
             case 2111 % OGC Math Transform WKT Record (optional)
                 
-                r.variable_length_records(j).value = regexp(fread(fid, r.variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                % r.variable_length_records(j).value = regexp(fread(fid, r.variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                r.variable_length_records(j).value = regexp(native2unicode(fread(fid, r.variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once');
                 
             case 2112 % OGC Coordinate System WKT Record (optional)
                 
-                r.variable_length_records(j).value = regexp(fread(fid, r.variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                %r.variable_length_records(j).value = regexp(fread(fid, r.variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                r.variable_length_records(j).value = regexp(native2unicode(fread(fid, r.variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once');
                 
             case 34735 % GeoKeyDirectoryTag Record (mandatory)
                 
@@ -2324,10 +2332,12 @@ if ~arg.Results.headerOnly && (las_version >= 14)
             
             % read common header part
             r.extended_variable_length_records(j).reserved = fread(fid, 1, 'uint16', 0, MACHINE_FORMAT); % Reserved, unsigned short, 2 bytes;
-            r.extended_variable_length_records(j).user_id = regexp(fread(fid, 16, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % read until null terminator
+            % r.extended_variable_length_records(j).user_id = regexp(fread(fid, 16, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % read until null terminator
+            r.extended_variable_length_records(j).user_id = regexp(native2unicode(fread(fid, 16, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once'); % read until null terminator
             r.extended_variable_length_records(j).record_id = fread(fid, 1, 'uint16', 0, MACHINE_FORMAT); % Record ID, unsigned short, 2 bytes, *
             r.extended_variable_length_records(j).record_length_after_header = fread(fid, 1, 'uint64', 0, MACHINE_FORMAT); % Record Length After Header, unsigned long long, 8 bytes, *
-            r.extended_variable_length_records(j).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % Description, char[32], 32 bytes
+            % r.extended_variable_length_records(j).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once'); % Description, char[32], 32 bytes
+            r.extended_variable_length_records(j).description = regexp(native2unicode(fread(fid, 32, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once'); % Description, char[32], 32 bytes
             
             % read any defined extended variable length records
             switch r.extended_variable_length_records(j).record_id
@@ -2345,7 +2355,8 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                     
                 case 3 % Text area description (optional)
                     
-                    r.extended_variable_length_records(j).value = regexp(fread(fid, r.extended_variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                    % r.extended_variable_length_records(j).value = regexp(fread(fid, r.extended_variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                    r.extended_variable_length_records(j).value = regexp(native2unicode(fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once');
                     
                 case 4 % Extra bytes (optional)
                     
@@ -2363,14 +2374,16 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                         r.extended_variable_length_records(j).value(k).options.scale_bit = bitget(extra_byte_options, 4, 'uint8');
                         r.extended_variable_length_records(j).value(k).options.offset_bit = bitget(extra_byte_options, 5, 'uint8');
                         
-                        r.extended_variable_length_records(j).value(k).name = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                        % r.extended_variable_length_records(j).value(k).name = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                        r.extended_variable_length_records(j).value(k).name = regexp(native2unicode(fread(fid, 32, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once');
                         r.extended_variable_length_records(j).value(k).unused = fread(fid, 1, 'uint32', 0, MACHINE_FORMAT);
                         r.extended_variable_length_records(j).value(k).no_data = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                         r.extended_variable_length_records(j).value(k).min = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                         r.extended_variable_length_records(j).value(k).max = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                         r.extended_variable_length_records(j).value(k).scale = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
                         r.extended_variable_length_records(j).value(k).offset = fread(fid, 3, 'double', 0, MACHINE_FORMAT);
-                        r.extended_variable_length_records(j).value(k).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                        %r.extended_variable_length_records(j).value(k).description = regexp(fread(fid, 32, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                        r.extended_variable_length_records(j).value(k).description = regexp(native2unicode(fread(fid, 32, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once');
                         
                     end
                     
@@ -2388,12 +2401,14 @@ if ~arg.Results.headerOnly && (las_version >= 14)
                     
                 case 2111 % OGC Math Transform WKT Record (optional)
                     
-                    r.extended_variable_length_records(j).value = regexp(fread(fid, r.extended_variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                    %r.extended_variable_length_records(j).value = regexp(fread(fid, r.extended_variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                    r.extended_variable_length_records(j).value = regexp(native2unicode(fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once');
                     
                 case 2112 % OGC Coordinate System WKT Record (optional)
                     
                     % r.extended_variable_length_records(j).record_length_after_header
-                    r.extended_variable_length_records(j).value = regexp(fread(fid, r.extended_variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                    % r.extended_variable_length_records(j).value = regexp(fread(fid, r.extended_variable_length_records(j).record_length_after_header, '*char', 0, MACHINE_FORMAT)', '[^\0]*', 'match', 'once');
+                    r.extended_variable_length_records(j).value = regexp(native2unicode(fread(fid, r.extended_variable_length_records(j).record_length_after_header, 'uint8', 0, MACHINE_FORMAT)'), '[^\0]*', 'match', 'once');
                     
                 case 34735 % GeoKeyDirectoryTag Record (mandatory)
                     
