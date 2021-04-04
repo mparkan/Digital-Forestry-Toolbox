@@ -55,8 +55,8 @@
             <h1>Individual tree crown detection using marker controlled watershed segmentation</h1>
 
             <p style="text-align: center"><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i></p>
-            <p style="text-align: center"><b>Published</b>: May 15, 2018 / <b>Last updated</b>: February 24, 2020</p>
-            <p style="text-align: center"><b>Tested on Matlab r2019b, GNU Octave 5.2.0</b></p>
+            <p style="text-align: center"><b>Published</b>: May 15, 2018 / <b>Last updated</b>: April 4, 2021</p>
+            <p style="text-align: center"><b>Tested on Matlab r2020b, GNU Octave 6.2.0</b></p>
 
             <!--<p> In this tutorial, you will learn how to detect individual tree crowns from a raster Canopy Height Model (CHM) using marker controlled watershed segmentation.-->
 
@@ -233,9 +233,7 @@ r(h) = 0.5 + 0.25 \cdot ln(\max_h(h,1)) $$-->
     'fig', true, ...
     'verbose', true);</code></pre>
 
-            <p>By modifing the <code>'searchRadius'</code> parameter, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection. The interactive map below illustrates the detected tree top positions.</p>
-
-            <div class="olmap" id="map2"></div>
+            <p>By modifing the <code>'searchRadius'</code> parameter, you can adjust the tradeoff between the sensitivity (recall) and the reliability (precision) of the detection.</p>
 
 
             <!--        <figure>
@@ -266,6 +264,10 @@ r(h) = 0.5 + 0.25 \cdot ln(\max_h(h,1)) $$-->
                 <figcaption><b>Figure 3</b> - Marker controlled watershed segmentation 2D labels. Note that the segments located on the edge of the CHM have been excluded due to the boolean mask we specified.</figcaption>
             </figure>
 
+            
+            <p>The interactive map below illustrates the detected tree top positions and edges of the watershed segmentation.</p>
+
+            <div class="olmap" id="map2"></div>
 
             <h2>
                 <a id="step-6" class="anchor" href="step-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><b>Step 6</b> - Computing segment metrics from the label matrix
@@ -448,7 +450,7 @@ S1 = rmfield(metrics_3d, sfields(~idxl_scalar));
 
                 <p style="text-align: center"><i class="fa fa-exclamation-triangle fa-2x" aria-hidden="true"></i></p>
 
-                <b>Matlab users</b>, the shapewrite() function included here is currently not compatible with Matlab. Please use the <a href="https://www.mathworks.com/help/map/ref/shapewrite.html">shapewrite()</a> function from the offical Matlab mapping toolbox instead.
+                <b>Matlab users</b>, the shapewrite() function included here is currently not compatible with Matlab. Please use the <a href="https://www.mathworks.com/help/map/ref/shapewrite.html">shapewrite()</a> function from the official Matlab mapping toolbox instead.
 
                 <!--<b>Octave users</b>, please make sure you are using the latest versions of the <a href="https://sourceforge.net/p/octave/io/ci/default/tree/"><b>'io' (2.4.12 or above)</b></a> and <a href="https://sourceforge.net/p/octave/mapping/ci/default/tree/"> <b>'mapping' (1.4.0 snapshot or above)</b></a> packages. Previous versions contain critical issues in the shapewrite function.-->
 
@@ -707,7 +709,7 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
             });
 
 
-            // define static image layer
+            // define static image layer 1
             var rasterStaticLayer1 = new ol.layer.Image({
                 title: 'Canopy Height Model',
                 type: 'base',
@@ -721,7 +723,20 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
                 })
             });
 
-
+            // define static image layer 2
+            var rasterStaticLayer2 = new ol.layer.Image({
+                title: 'Watershed segmentation edges',
+                type: 'overlay',
+                source: new ol.source.ImageStatic({
+                    url: './data/tutorial_2/raster/zh_2014_a_watershed_edges.png',
+                    crossOrigin: 'anonymous',
+                    projection: 'EPSG:2056',
+                    imageSize: [626,626],
+                    imageExtent: extent,
+                    attributions: 'Data courtesy of <a href=https://maps.zh.ch/>Kanton Zürich</a>'
+                })
+            });
+            
             // define scale bar control
             var scaleLineControl = new ol.control.ScaleLine();
 
@@ -749,7 +764,7 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
                 title: 'Basemaps',
                 layers: [
                     rasterTileLayer1,
-                    rasterStaticLayer1
+                    rasterStaticLayer1,
                 ]
             });
 
@@ -757,7 +772,8 @@ r2 = LASread('zh_2014_a_ws_seg.las');</code></pre>
             var layerGroup2 = new ol.layer.Group({
                 title: 'Overlays',
                 layers: [
-                    vectorLayer1 //, vectorLayer2
+                    vectorLayer1, //, vectorLayer2
+                    rasterStaticLayer2
                 ]
             });
 
