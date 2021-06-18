@@ -33,7 +33,7 @@ function s = LASread(filepath, varargin)
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
-% Compatibility: tested on Matlab R2020b, GNU Octave 6.2.0 (configured for "x86_64-w64-mingw32")
+% Compatibility: tested on Matlab R2021a, GNU Octave 6.2.0 (configured for "x86_64-w64-mingw32")
 %
 % See also: LASWRITE
 %
@@ -41,7 +41,7 @@ function s = LASread(filepath, varargin)
 %
 % Author: Matthew Parkan, EPFL - GIS Research Laboratory (LASIG)
 % Website: http://mparkan.github.io/Digital-Forestry-Toolbox/
-% Last revision: April 4, 2021
+% Last revision: June 18, 2021
 % Acknowledgments: This work was supported by the Swiss Forestry and Wood Research Fund, WHFF (OFEV) - project 2013.18
 % Licence: GNU General Public Licence (GPL), see https://www.gnu.org/licenses/gpl.html for details
 
@@ -1637,186 +1637,217 @@ r.record(k).value = [];
 k = 1;
 r.extra_bytes(k).id = 0;
 r.extra_bytes(k).type = 'NaN';
+r.extra_bytes(k).storage_type = 'NaN';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 'NaN';
 k = k + 1;
 
 r.extra_bytes(k).id = 1;
 r.extra_bytes(k).type = 'uint8'; % uchar
+r.extra_bytes(k).storage_type = 'uint8';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
 
 r.extra_bytes(k).id = 2;
 r.extra_bytes(k).type = 'uint8'; % char
+r.extra_bytes(k).storage_type = 'uint8';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
 
 r.extra_bytes(k).id = 3;
 r.extra_bytes(k).type = 'uint16';
+r.extra_bytes(k).storage_type = 'uint16';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 2;
 k = k + 1;
 
 r.extra_bytes(k).id = 4;
 r.extra_bytes(k).type = 'int16';
+r.extra_bytes(k).storage_type = 'int16';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 2;
 k = k + 1;
 
 r.extra_bytes(k).id = 5;
 r.extra_bytes(k).type = 'uint32';
+r.extra_bytes(k).storage_type = 'uint32';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 4;
 k = k + 1;
 
 r.extra_bytes(k).id = 6;
 r.extra_bytes(k).type = 'int32';
+r.extra_bytes(k).storage_type = 'int32';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 4;
 k = k + 1;
 
 r.extra_bytes(k).id = 7;
 r.extra_bytes(k).type = 'uint64';
+r.extra_bytes(k).storage_type = 'uint64';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 8;
 k = k + 1;
 
 r.extra_bytes(k).id = 8;
 r.extra_bytes(k).type = 'int64';
+r.extra_bytes(k).storage_type = 'int64';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 8;
 k = k + 1;
 
 r.extra_bytes(k).id = 9;
-r.extra_bytes(k).type = 'single';
+r.extra_bytes(k).type = 'uint32'; %'single';
+r.extra_bytes(k).storage_type = 'single';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 4;
 k = k + 1;
 
 r.extra_bytes(k).id = 10;
-r.extra_bytes(k).type = 'double';
+r.extra_bytes(k).type = 'uint64';
+r.extra_bytes(k).storage_type = 'double';
 r.extra_bytes(k).n_values = 1;
 r.extra_bytes(k).byte_length = 8;
 k = k + 1;
 
 r.extra_bytes(k).id = 11;
 r.extra_bytes(k).type = 'uint8'; % uchar
+r.extra_bytes(k).storage_type = 'uint8';
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
 
 r.extra_bytes(k).id = 12;
 r.extra_bytes(k).type = 'uint8'; % char
+r.extra_bytes(k).storage_type = 'uint8';
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
 
 r.extra_bytes(k).id = 13;
 r.extra_bytes(k).type = 'uint16';
+r.extra_bytes(k).storage_type = 'uint16';
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 2;
 k = k + 1;
 
 r.extra_bytes(k).id = 14;
 r.extra_bytes(k).type = 'int16';
+r.extra_bytes(k).storage_type = 'int16';
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 2;
 k = k + 1;
 
 r.extra_bytes(k).id = 15;
 r.extra_bytes(k).type = 'uint32';
+r.extra_bytes(k).storage_type = 'uint32';
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 4;
 k = k + 1;
 
 r.extra_bytes(k).id = 16;
 r.extra_bytes(k).type = 'int32';
+r.extra_bytes(k).storage_type = 'int32';
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 4;
 k = k + 1;
 
 r.extra_bytes(k).id = 17;
 r.extra_bytes(k).type = 'uint64';
+r.extra_bytes(k).storage_type = 'uint64';
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 8;
 k = k + 1;
 
 r.extra_bytes(k).id = 18;
 r.extra_bytes(k).type = 'int64';
+r.extra_bytes(k).storage_type = 'int64';
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 8;
 k = k + 1;
 
 r.extra_bytes(k).id = 19;
-r.extra_bytes(k).type = 'single';
+r.extra_bytes(k).type = 'uint32'; % single
+r.extra_bytes(k).storage_type = 'single';
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 4;
 k = k + 1;
 
 r.extra_bytes(k).id = 20;
-r.extra_bytes(k).type = 'double';
+r.extra_bytes(k).type = 'uint64';
+r.extra_bytes(k).storage_type = 'double';
 r.extra_bytes(k).n_values = 2;
 r.extra_bytes(k).byte_length = 8;
 k = k + 1;
 
 r.extra_bytes(k).id = 21;
 r.extra_bytes(k).type = 'uint8'; % uchar
+r.extra_bytes(k).storage_type = 'uint8';
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
 
 r.extra_bytes(k).id = 22;
 r.extra_bytes(k).type = 'uint8'; % char
+r.extra_bytes(k).storage_type = 'uint8';
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 1;
 k = k + 1;
 
 r.extra_bytes(k).id = 23;
 r.extra_bytes(k).type = 'uint16';
+r.extra_bytes(k).storage_type = 'uint16';
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 2;
 k = k + 1;
 
 r.extra_bytes(k).id = 24;
 r.extra_bytes(k).type = 'int16';
+r.extra_bytes(k).storage_type = 'int16';
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 2;
 k = k + 1;
 
 r.extra_bytes(k).id = 25;
 r.extra_bytes(k).type = 'uint32';
+r.extra_bytes(k).storage_type = 'uint32';
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 4;
 k = k + 1;
 
 r.extra_bytes(k).id = 26;
 r.extra_bytes(k).type = 'int32';
+r.extra_bytes(k).storage_type = 'int32';
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 4;
 k = k + 1;
 
 r.extra_bytes(k).id = 27;
 r.extra_bytes(k).type = 'uint64';
+r.extra_bytes(k).storage_type = 'uint64';
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 8;
 k = k + 1;
 
 r.extra_bytes(k).id = 28;
 r.extra_bytes(k).type = 'int64';
+r.extra_bytes(k).storage_type = 'int64';
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 8;
 k = k + 1;
 
 r.extra_bytes(k).id = 29;
-r.extra_bytes(k).type = 'single';
+r.extra_bytes(k).type = 'uint32';
+r.extra_bytes(k).storage_type = 'single';
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 4;
 k = k + 1;
 
 r.extra_bytes(k).id = 30;
-r.extra_bytes(k).type = 'double';
+r.extra_bytes(k).type = 'uint64';
+r.extra_bytes(k).storage_type = 'double';
 r.extra_bytes(k).n_values = 3;
 r.extra_bytes(k).byte_length = 8;
 
@@ -2065,7 +2096,7 @@ if flag_vlr
                     r.record(ind_record).byte_position =  r.record(ind_record).bit_position ./ 8;
                     r.record(ind_record).bit_offset = 1;
                     r.record(ind_record).type = {r.extra_bytes(ind_data_type).type};
-                    r.record(ind_record).storage_type = {r.extra_bytes(ind_data_type).type};
+                    r.record(ind_record).storage_type = {r.extra_bytes(ind_data_type).storage_type};
                     r.record(ind_record).byte_length = r.extra_bytes(ind_data_type).n_values * r.extra_bytes(ind_data_type).byte_length;
                     r.record(ind_record).bit_length = r.record(ind_record).byte_length * 8;
                     r.record(ind_record).flag_extra_field = true;
