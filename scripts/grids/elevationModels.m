@@ -203,7 +203,7 @@ if any(ismember(arg.Results.outputModels, {'density'}))
         'fill', 0, ...
         'fig', false);
     
-    models.density.overall = single(density_overall);
+    models.density.overall = density_overall;
     models.density.overall(~models.mask) = nan;
     
     if arg.Results.verbose
@@ -348,7 +348,7 @@ if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}))
         end
         
         % flip verticaly
-        dtm = single(dtm);
+        dtm = dtm;
         dtm(~models.mask) = nan;
         
         % store values and interpolant in structure
@@ -378,7 +378,7 @@ if any(ismember(arg.Results.outputModels, {'terrain', 'surface', 'height'}))
                 'fill', 0, ...
                 'fig', false);
             
-            models.density.terrain = single(density_terrain);
+            models.density.terrain = density_terrain;
             models.density.terrain(~models.mask) = nan;
             
             % display terrain model point density
@@ -445,7 +445,7 @@ if any(ismember(arg.Results.outputModels, {'surface', 'height'}))
     end
     
     dsm(~models.mask) = nan;
-    models.surface.values = single(dsm);
+    models.surface.values = dsm;
     
     % display surface model
     if arg.Results.fig
@@ -471,7 +471,7 @@ if any(ismember(arg.Results.outputModels, {'surface', 'height'}))
             'fill', 0, ...
             'fig', false);
         
-        models.density.surface = single(density_surface);
+        models.density.surface = density_surface;
         models.density.surface(~models.mask) = nan;
         
         % display surface model point density
